@@ -1,0 +1,94 @@
+import { App, Button, Space, Tag } from "antd";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { getCoreRowModel, getPaginationRowModel, useReactTable } from "@tanstack/react-table";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDelete, useGet, usePost, usePut } from "@/Helpers/useRequest";
+
+export default function useLocationDetail() {
+    const { notification } = App.useApp();
+    const [getRequest, getFeedback] = useGet();
+    const [postRequest, postFeedback] = usePost("location-detail");
+    const [putRequest, putFeedback] = usePut("location-detail");
+    const [deleteRequest, deleteFeedback] = useDelete("location-detail");
+
+    const [data, setData] = useState([]);
+    const [searchText, setSearchText] = useState("");
+    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+    const [totalRows, setTotalRows] = useState(0);
+    const debounceRef = useRef(null);
+
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [editingItem, setEditingItem] = useState(null);
+    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
+
+    const fetchItems = useCallback(async (params = {}) => {
+        try {
+            const res = await getRequest({
+                ...params,
+                page: (params.pageIndex !== undefined ? params.pageIndex : pagination.pageIndex) + 1,
+                load: params.pageSize || pagination.pageSize,
+                search: params.search !== undefined ? params.search : searchText,
+            }, "location-detail");
+            if (res.data?.meta?.status === 'success') {
+                setData(res.data.result.data);
+                setTotalRows(res.data.result.total);
+            }
+        } catch (error) { notification.error({ message: "Gagal mengambil data Detail Lokasi" }); }
+    }, [getRequest, pagination, searchText, notification]);
+
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearchText(value);
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => fetchItems({ search: value, pageIndex: 0 }), 400);
+    };
+
+    const handleAdd = () => { setEditingItem(null); setIsModalVisible(true); };
+    const handleEdit = (record) => { setEditingItem(record); setIsModalVisible(true); };
+
+    const handleOk = async (values) => {
+        try {
+            const res = editingItem ? await putRequest(values, editingItem.id) : await postRequest(values);
+            if (res.data?.meta?.status === 'success') {
+                notification.success({ message: editingItem ? "Berhasil diperbarui" : "Berhasil ditambahkan" });
+                setIsModalVisible(false);
+                fetchItems();
+            }
+        } catch (error) { notification.error({ message: "Gagal menyimpan data" }); }
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            const res = await deleteRequest(itemToDelete.id);
+            if (res.data?.meta?.status === 'success') {
+                notification.success({ message: "Data berhasil dihapus" });
+                setIsDeleteModalVisible(false);
+                fetchItems();
+            }
+        } catch (error) { notification.error({ message: "Gagal menghapus data" }); }
+    };
+
+    const columns = useMemo(() => [
+        { header: "LOKASI UMUM", accessorKey: "general.name", cell: ({ row }) => <Tag color="blue">{row.original.general?.name || "-"}</Tag> },
+        { header: "NAMA LOKASI DETAIL", accessorKey: "name", cell: ({ row }) => <span style={{ fontWeight: 600 }}>{row.original.name}</span> },
+        { header: "STATUS", accessorKey: "is_active", cell: ({ row }) => <Tag color={row.original.is_active ? "green" : "red"}>{row.original.is_active ? "ACTIVE" : "INACTIVE"}</Tag> },
+        {
+            id: "actions", header: "AKSI", cell: ({ row }) => (
+                <Space>
+                    <Button type="text" icon={<EditOutlined style={{ color: "#2563eb" }} />} onClick={() => handleEdit(row.original)} />
+                    <Button type="text" icon={<DeleteOutlined style={{ color: "#ef4444" }} />} onClick={() => { setItemToDelete(row.original); setIsDeleteModalVisible(true); }} />
+                </Space>
+            )
+        }
+    ], []);
+
+    const table = useReactTable({
+        data, columns, state: { pagination }, onPaginationChange: setPagination,
+        manualPagination: true, rowCount: totalRows, getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(),
+    });
+
+    useEffect(() => { fetchItems(); }, [pagination]);
+
+    return { table, loading: getFeedback.loading || postFeedback.loading || putFeedback.loading || deleteFeedback.loading, searchText, handleSearchChange, isModalVisible, setIsModalVisible, handleAdd, handleEdit, handleOk, isDeleteModalVisible, setIsDeleteModalVisible, handleConfirmDelete, itemToDelete, editingItem, totalRows };
+}
