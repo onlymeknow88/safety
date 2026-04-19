@@ -12,7 +12,7 @@ export default function Footer() {
                 fontSize: 12,
             }}
         >
-            AdminPanel ©{new Date().getFullYear()} — Built with Laravel + Inertia.js + Ant Design
+            ©{new Date().getFullYear()} — ALamtri Minerals Indonesia
         </AntFooter>
     );
 }

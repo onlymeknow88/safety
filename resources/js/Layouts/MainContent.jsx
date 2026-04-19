@@ -2,12 +2,13 @@ import { Layout } from "antd";
 
 const { Content } = Layout;
 
-export default function MainContent({ children }) {
+export default function MainContent({ children, isMobile }) {
     return (
         <Content
             style={{
-                margin: "24px",
+                margin: isMobile ? "12px" : "24px",
                 minHeight: "calc(100vh - 64px - 70px)",
+                overflow: "initial",
             }}
         >
             {children}

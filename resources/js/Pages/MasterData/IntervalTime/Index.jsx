@@ -1,26 +1,103 @@
-import DashboardLayout from "@/Layouts/DashboardLayout";
-import DeleteConfirmModal from "@/Components/DeleteConfirmModal";
-import { Head } from "@inertiajs/react";
+import { Button, Col, Row, Space, Grid } from "antd";
+import { ReloadOutlined } from "@back-design/icons";
+
 import IntervalTimeHeader from "./Partials/IntervalTimeHeader";
 import IntervalTimeModal from "./Partials/IntervalTimeModal";
 import IntervalTimeTable from "./Partials/IntervalTimeTable";
+import DashboardLayout from "@/Layouts/DashboardLayout";
+import DeleteConfirmModal from "@/Components/DeleteConfirmModal";
+import { Head } from "@inertiajs/react";
 import React from "react";
 import useIntervalTime from "./Hooks/useIntervalTime";
 import { useTheme } from "@/Contexts/ThemeContext";
 
+const { useBreakpoint } = Grid;
+
 export default function IntervalTimeIndex() {
     const { isDarkMode } = useTheme();
-    const { table, loading, searchText, handleSearchChange, isModalVisible, setIsModalVisible, handleAdd, handleOk, isDeleteModalVisible, setIsDeleteModalVisible, handleConfirmDelete, itemToDelete, editingItem, totalRows } = useIntervalTime();
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
+
+    const {
+        table,
+        loading,
+        searchText,
+        handleSearchChange,
+        isModalVisible,
+        setIsModalVisible,
+        handleAdd,
+        handleOk,
+        isDeleteModalVisible,
+        setIsDeleteModalVisible,
+        handleConfirmDelete,
+        itemToDelete,
+        editingItem,
+        totalRows,
+        fetchItems
+    } = useIntervalTime();
 
     return (
-        <DashboardLayout title="Master Data Interval Waktu">
-            <Head title="Master Data Interval Waktu" />
-            <div style={{ padding: "24px" }}>
-                <IntervalTimeHeader searchText={searchText} onSearchChange={handleSearchChange} onAddClick={handleAdd} isDarkMode={isDarkMode} table={table} />
-                <IntervalTimeTable table={table} loading={loading} totalRows={totalRows} isDarkMode={isDarkMode} />
+        <DashboardLayout title="Master Data Batas Waktu">
+            <Head title="Master Data Batas Waktu" />
+
+            <div style={{ padding: isMobile ? "0" : "24px" }}>
+                {/* Header Section */}
+                <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }}>
+                    <Col xs={24} md={12}>
+                        <h2 style={{ margin: 0, fontWeight: 700, fontSize: isMobile ? "20px" : "24px", color: isDarkMode ? "#fff" : "#1e293b" }}>
+                            Master Data Batas Waktu
+                        </h2>
+                        <p style={{ margin: 0, color: "#64748b", fontSize: isMobile ? "13px" : "14px" }}>
+                            Kelola kategori interval waktu dalam laporan.
+                        </p>
+                    </Col>
+                    <Col xs={24} md={12} style={{ textAlign: isMobile ? "left" : "right" }}>
+                        <Space>
+                            <Button 
+                                icon={<ReloadOutlined />} 
+                                onClick={() => fetchItems()}
+                                loading={loading}
+                            />
+                        </Space>
+                    </Col>
+                </Row>
+
+                {/* Filter & Action Section */}
+                <IntervalTimeHeader 
+                    searchText={searchText}
+                    onSearchChange={handleSearchChange}
+                    onAddClick={handleAdd}
+                    isDarkMode={isDarkMode}
+                    table={table}
+                />
+
+                {/* Table Section */}
+                <IntervalTimeTable 
+                    table={table} 
+                    loading={loading}
+                    totalRows={totalRows}
+                    isDarkMode={isDarkMode}
+                />
             </div>
-            <IntervalTimeModal visible={isModalVisible} onCancel={() => setIsModalVisible(false)} onFinish={handleOk} loading={loading} initialValues={editingItem} />
-            <DeleteConfirmModal visible={isDeleteModalVisible} onCancel={() => setIsDeleteModalVisible(false)} onConfirm={handleConfirmDelete} title="Hapus Interval Waktu" description={`Apakah Anda yakin ingin menghapus data "${itemToDelete?.label}"?`} loading={loading} />
+
+            {/* Modal Form */}
+            <IntervalTimeModal
+                visible={isModalVisible}
+                onCancel={() => setIsModalVisible(false)}
+                onFinish={handleOk}
+                loading={loading}
+                initialValues={editingItem}
+            />
+
+            {/* Delete Modal */}
+            <DeleteConfirmModal
+                visible={isDeleteModalVisible}
+                onCancel={() => setIsDeleteModalVisible(false)}
+                onConfirm={handleConfirmDelete}
+                title="Hapus Batas Waktu"
+                description={`Apakah Anda yakin ingin menghapus batas waktu "${itemToDelete?.name}"? Tindakan ini tidak dapat dibatalkan.`}
+                loading={loading}
+            />
         </DashboardLayout>
     );
 }

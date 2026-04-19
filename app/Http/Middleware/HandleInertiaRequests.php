@@ -32,7 +32,7 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
 
         if ($user) {
-            $user->load('roles.menus');
+            $user->load('roles.menus.parent');
         }
 
         return [
@@ -46,7 +46,15 @@ class HandleInertiaRequests extends Middleware
                     'permissions' => method_exists($user, 'getAllPermissions') ? $user->getAllPermissions()->toArray() : [],
                     // Structured menus for dynamic sidebar
                     'menus' => $user->roles->flatMap->menus
-                        ->filter(fn($m) => $m->is_active && $m->pivot->can_view)
+                        ->filter(function($m) {
+                            // Menu harus aktif
+                            if (!$m->is_active || !$m->pivot->can_view) return false;
+                            
+                            // Jika punya parent, parent tersebut juga harus aktif
+                            if ($m->parent_id && $m->parent && !$m->parent->is_active) return false;
+                            
+                            return true;
+                        })
                         ->unique('id')
                         ->map(fn($m) => [
                             'id' => $m->id,

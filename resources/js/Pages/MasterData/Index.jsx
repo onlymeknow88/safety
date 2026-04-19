@@ -1,4 +1,4 @@
-import { Card, Col, Row, Typography } from "antd";
+import { Card, Col, Row, Typography, Grid } from "antd";
 import { 
     AppstoreOutlined, 
     EnvironmentOutlined, 
@@ -16,10 +16,12 @@ import { Head, Link } from "@inertiajs/react";
 import React from "react";
 import { useTheme } from "@/Contexts/ThemeContext";
 
-const { Title, Text } = Typography;
+const { useBreakpoint } = Grid;
 
 export default function MasterDataIndex() {
     const { isDarkMode } = useTheme();
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
 
     const modules = [
         {
@@ -87,11 +89,18 @@ export default function MasterDataIndex() {
     return (
         <DashboardLayout title="Master Data Central">
             <Head title="Master Data Central" />
-            <div style={{ padding: "40px" }}>
-                <div style={{ marginBottom: 40 }}>
-                    <Title level={2}>Master Data Center</Title>
-                    <Text type="secondary">Kelola semua data master aplikasi dalam satu tempat yang terpusat.</Text>
-                </div>
+            <div style={{ padding: isMobile ? "20px" : "40px" }}>
+                {/* Header Section */}
+                <Row gutter={[16, 16]} align="middle" style={{ marginBottom: isMobile ? 24 : 40 }}>
+                    <Col xs={24} md={24}>
+                        <h2 style={{ margin: 0, fontWeight: 700, fontSize: isMobile ? "20px" : "24px", color: isDarkMode ? "#fff" : "#1e293b" }}>
+                            Master Data Center
+                        </h2>
+                        <p style={{ margin: 0, color: "#64748b", fontSize: isMobile ? "13px" : "14px" }}>
+                            Kelola semua data master aplikasi dalam satu tempat yang terpusat.
+                        </p>
+                    </Col>
+                </Row>
 
                 <Row gutter={[24, 24]}>
                     {modules.map((group, idx) => (
@@ -102,10 +111,11 @@ export default function MasterDataIndex() {
                                     borderRadius: 16, 
                                     background: isDarkMode ? "#1f1f1f" : "#fff",
                                     border: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
-                                    height: '100%'
+                                    height: '100%',
+                                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
                                 }}
                                 headStyle={{ borderBottom: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0", padding: "16px 24px" }}
-                                bodyStyle={{ padding: "24px" }}
+                                bodyStyle={{ padding: isMobile ? "16px" : "24px" }}
                             >
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                                     {group.items.map((item, i) => (

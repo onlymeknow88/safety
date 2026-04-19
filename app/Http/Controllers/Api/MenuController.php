@@ -83,7 +83,12 @@ class MenuController extends Controller
             "is_active" => "required|boolean",
         ]);
 
-        $menu->update($validated);
+        $data = $validated;
+        if (empty($data['parent_id'])) {
+            $data['parent_id'] = null;
+        }
+
+        $menu->update($data);
 
         return ResponseFormatter::success($menu, "Menu berhasil diperbarui");
     }
@@ -95,7 +100,7 @@ class MenuController extends Controller
     {
         // Optional: Check if has children
         if ($menu->children()->count() > 0) {
-            return ResponseFormatter::error(null, "Tidak dapat menghapus menu yang memiliki sub-menu", 422);
+            return ResponseFormatter::error("Tidak dapat menghapus menu yang memiliki sub-menu", 422);
         }
 
         $menu->delete();
@@ -120,7 +125,7 @@ class MenuController extends Controller
             return ResponseFormatter::success(null, "Urutan menu berhasil diperbarui");
         } catch (\Exception $e) {
             \DB::rollBack();
-            return ResponseFormatter::error(null, "Gagal memperbarui urutan menu", 500);
+            return ResponseFormatter::error("Gagal memperbarui urutan menu: " . $e->getMessage(), 500);
         }
     }
 }

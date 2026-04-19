@@ -262,7 +262,7 @@ export default function Dashboard({ stats = {} }) {
                                 type="link"
                                 size="small"
                                 icon={<ArrowRightOutlined />}
-                                iconPlacement="end"
+                                iconPosition="end"
                             >
                                 Lihat Semua
                             </Button>
@@ -352,7 +352,7 @@ export default function Dashboard({ stats = {} }) {
                                 type="link"
                                 size="small"
                                 icon={<ArrowRightOutlined />}
-                                iconPlacement="end"
+                                iconPosition="end"
                             >
                                 Detail
                             </Button>
@@ -385,7 +385,7 @@ export default function Dashboard({ stats = {} }) {
                                         from: "#1677ff",
                                         to: "#0958d9",
                                     }}
-                                    railColor={token.colorFillAlter}
+                                    trailColor={token.colorFillAlter}
                                     size={["100%", 6]}
                                 />
                             </div>
@@ -444,7 +444,7 @@ export default function Dashboard({ stats = {} }) {
                                             percent={item.percent}
                                             showInfo={false}
                                             strokeColor={item.color}
-                                            railColor={`${item.color}20`}
+                                            trailColor={`${item.color}20`}
                                             size={["100%", 4]}
                                             style={{ marginTop: 8, marginBottom: 0 }}
                                         />

@@ -1,18 +1,23 @@
-import { Button, Card, Col, Input, Row, Space } from "antd";
-import { PlusOutlined, ReloadOutlined, SearchOutlined } from "@ant-design/icons";
+import { Button, Col, Row, Space, Grid } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
 
+import ShiftHeader from "./Partials/ShiftHeader";
+import ShiftModal from "./Partials/ShiftModal";
+import ShiftTable from "./Partials/ShiftTable";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import DeleteConfirmModal from "@/Components/DeleteConfirmModal";
 import { Head } from "@inertiajs/react";
 import React from "react";
-import ShiftHeader from "./Partials/ShiftHeader";
-import ShiftModal from "./Partials/ShiftModal";
-import ShiftTable from "./Partials/ShiftTable";
 import useShift from "./Hooks/useShift";
 import { useTheme } from "@/Contexts/ThemeContext";
 
+const { useBreakpoint } = Grid;
+
 export default function ShiftIndex() {
     const { isDarkMode } = useTheme();
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
+
     const {
         table,
         loading,
@@ -21,11 +26,9 @@ export default function ShiftIndex() {
         isModalVisible,
         setIsModalVisible,
         handleAdd,
-        handleEdit,
         handleOk,
         isDeleteModalVisible,
         setIsDeleteModalVisible,
-        showDeleteModal,
         handleConfirmDelete,
         itemToDelete,
         editingItem,
@@ -37,7 +40,30 @@ export default function ShiftIndex() {
         <DashboardLayout title="Master Data Shift">
             <Head title="Master Data Shift" />
 
-                <ShiftHeader
+            <div style={{ padding: isMobile ? "0" : "24px" }}>
+                {/* Header Section */}
+                <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }}>
+                    <Col xs={24} md={12}>
+                        <h2 style={{ margin: 0, fontWeight: 700, fontSize: isMobile ? "20px" : "24px", color: isDarkMode ? "#fff" : "#1e293b" }}>
+                            Master Data Shift
+                        </h2>
+                        <p style={{ margin: 0, color: "#64748b", fontSize: isMobile ? "13px" : "14px" }}>
+                            Kelola pengaturan jam kerja shift.
+                        </p>
+                    </Col>
+                    <Col xs={24} md={12} style={{ textAlign: isMobile ? "left" : "right" }}>
+                        <Space>
+                            <Button 
+                                icon={<ReloadOutlined />} 
+                                onClick={() => fetchItems()}
+                                loading={loading}
+                            />
+                        </Space>
+                    </Col>
+                </Row>
+
+                {/* Filter & Action Section */}
+                <ShiftHeader 
                     searchText={searchText}
                     onSearchChange={handleSearchChange}
                     onAddClick={handleAdd}
@@ -45,15 +71,16 @@ export default function ShiftIndex() {
                     table={table}
                 />
 
-                <ShiftTable
-                    table={table}
+                {/* Table Section */}
+                <ShiftTable 
+                    table={table} 
                     loading={loading}
                     totalRows={totalRows}
                     isDarkMode={isDarkMode}
-                    onEdit={handleEdit}
-                    onDelete={showDeleteModal}
                 />
+            </div>
 
+            {/* Modal Form */}
             <ShiftModal
                 visible={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
@@ -62,12 +89,13 @@ export default function ShiftIndex() {
                 initialValues={editingItem}
             />
 
+            {/* Delete Modal */}
             <DeleteConfirmModal
                 visible={isDeleteModalVisible}
                 onCancel={() => setIsDeleteModalVisible(false)}
                 onConfirm={handleConfirmDelete}
                 title="Hapus Shift"
-                description={`Apakah Anda yakin ingin menghapus data Shift "${itemToDelete?.name}"? Tindakan ini tidak dapat dibatalkan.`}
+                description={`Apakah Anda yakin ingin menghapus shift "${itemToDelete?.name}"? Tindakan ini tidak dapat dibatalkan.`}
                 loading={loading}
             />
         </DashboardLayout>

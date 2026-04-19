@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AccidentNotificationController;
 use App\Http\Controllers\MasterData\Api\CcowController;
 use App\Http\Controllers\MasterData\Api\CompanyController;
 use App\Http\Controllers\MasterData\Api\DepartmentController;
@@ -69,4 +70,10 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('personal-factor', PersonalFactorController::class);
     Route::apiResource('job-factor', JobFactorController::class);
     Route::apiResource('location', LocationController::class);
+    Route::apiResource('employee', \App\Http\Controllers\MasterData\Api\EmployeeController::class);
+
+
+    // Accident Notification
+    Route::delete('accident-notification/{id}/photos/{photoId}', [AccidentNotificationController::class, 'destroyPhoto']);
+    Route::apiResource('accident-notification', AccidentNotificationController::class);
 });

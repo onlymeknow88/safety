@@ -1,9 +1,8 @@
-import { Button, Checkbox, Dropdown, Input, Space, Typography } from "antd";
-import { PlusOutlined, SearchOutlined, SettingOutlined } from "@ant-design/icons";
-
 import React from "react";
+import { Space, Input, Button, Dropdown, Checkbox, Typography, Grid } from "antd";
+import { SearchOutlined, PlusOutlined, SettingOutlined } from "@ant-design/icons";
 
-const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
 export default function JabatanHeader({
     searchText,
@@ -13,8 +12,9 @@ export default function JabatanHeader({
     table,
 }) {
     const [columnsVisible, setColumnsVisible] = React.useState(false);
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
 
-    // Jabatan for column visibility
     const columnItems = [
         {
             key: 'header',
@@ -43,50 +43,55 @@ export default function JabatanHeader({
             <div
                 style={{
                     display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
                     justifyContent: "space-between",
-                    alignItems: "center",
+                    alignItems: isMobile ? "stretch" : "center",
+                    gap: isMobile ? 12 : 0,
                     background: isDarkMode ? "#1f1f1f" : "#fff",
-                    padding: "16px 24px",
+                    padding: isMobile ? "16px" : "16px 24px",
                     borderRadius: 16,
                     boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                     position: "relative",
                     zIndex: 2,
                 }}
             >
-                <Space size={16}>
-                    <Input
-                        placeholder="Search menu name..."
-                        prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-                        value={searchText}
-                        onChange={onSearchChange}
-                        style={{
-                            width: 320,
-                            borderRadius: 10,
-                            background: isDarkMode ? "#141414" : "#f5f5f5",
-                            border: "none",
-                            height: 40,
-                        }}
-                    />
-
-                    <Dropdown
-                        menu={{ items: columnItems }}
-                        trigger={['click']}
-                        placement="bottomRight"
-                        open={columnsVisible}
-                        onOpenChange={(flag) => setColumnsVisible(flag)}
-                    >
-                        <Button
-                            icon={<SettingOutlined />}
+                <Space size={isMobile ? 8 : 16} direction={isMobile ? "vertical" : "horizontal"} style={{ width: isMobile ? '100%' : 'auto' }}>
+                    <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                        <Input
+                            placeholder="Cari jabatan..."
+                            prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                            value={searchText}
+                            onChange={onSearchChange}
                             style={{
+                                flex: 1,
+                                minWidth: 0,
                                 borderRadius: 10,
-                                height: 40,
                                 background: isDarkMode ? "#141414" : "#f5f5f5",
                                 border: "none",
+                                height: 40,
                             }}
+                        />
+
+                        <Dropdown
+                            menu={{ items: columnItems }}
+                            trigger={['click']}
+                            placement="bottomRight"
+                            open={columnsVisible}
+                            onOpenChange={(flag) => setColumnsVisible(flag)}
                         >
-                            Columns
-                        </Button>
-                    </Dropdown>
+                            <Button
+                                icon={<SettingOutlined />}
+                                style={{
+                                    borderRadius: 10,
+                                    height: 40,
+                                    background: isDarkMode ? "#141414" : "#f5f5f5",
+                                    border: "none",
+                                }}
+                            >
+                                {!isMobile && "Columns"}
+                            </Button>
+                        </Dropdown>
+                    </div>
                 </Space>
 
                 <Button
@@ -100,9 +105,10 @@ export default function JabatanHeader({
                         fontWeight: 600,
                         background: "#1677ff",
                         boxShadow: "0 4px 12px rgba(22, 119, 255, 0.2)",
+                        width: isMobile ? '100%' : 'auto',
                     }}
                 >
-                    Add New Menu
+                    Tambah Jabatan
                 </Button>
             </div>
         </div>

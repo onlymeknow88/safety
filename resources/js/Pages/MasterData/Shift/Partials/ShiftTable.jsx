@@ -1,7 +1,8 @@
-import { Pagination, Select, Space, Table } from 'antd';
-
 import React from 'react';
+import { Table, Pagination, Select, Space, Grid } from 'antd';
 import { flexRender } from '@tanstack/react-table';
+
+const { useBreakpoint } = Grid;
 
 export default function ShiftTable({
     table,
@@ -9,6 +10,10 @@ export default function ShiftTable({
     totalRows,
     isDarkMode
 }) {
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
+
+    // Mapping TanStack Columns to Ant Design Columns
     const antdColumns = table.getVisibleLeafColumns().map((column) => {
         const header = column.columnDef.header;
         const meta = column.columnDef.meta || {};
@@ -21,7 +26,7 @@ export default function ShiftTable({
             render: (value, record) => {
                 const row = table.getRowModel().flatRows.find(r => String(r.original.id) === String(record.id));
                 const cell = row?.getVisibleCells().find(c => c.column.id === column.id);
-
+                
                 if (cell) {
                     return flexRender(cell.column.columnDef.cell, cell.getContext());
                 }
@@ -30,13 +35,14 @@ export default function ShiftTable({
         };
     });
 
+    // Formatting data for Ant Design Table
     const dataSource = table.getRowModel().rows.map(row => ({
         ...row.original,
         key: row.original.id,
     }));
 
     return (
-        <div style={{
+        <div style={{ 
             background: isDarkMode ? "#141414" : "#fff",
             borderRadius: "16px",
             padding: "1px",
@@ -48,20 +54,24 @@ export default function ShiftTable({
                 columns={antdColumns}
                 dataSource={dataSource}
                 loading={loading}
-                pagination={false}
+                pagination={false} // Matikan pagination bawaan
                 scroll={{ x: 600 }}
                 className={`custom-antd-table ${isDarkMode ? 'dark-mode' : ''}`}
                 style={{ borderRadius: "16px" }}
             />
 
+            {/* Premium Pagination Bar (Identik dengan Menu) */}
             <div style={{
-                padding: "16px 24px",
+                padding: isMobile ? "16px" : "16px 24px",
                 borderTop: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
                 display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'center',
+                gap: isMobile ? 16 : 0,
             }}>
-                <Space size="middle">
+                {/* Left Side: Results Info + Page Size Selector */}
+                <Space size="middle" direction={isMobile ? "vertical" : "horizontal"} style={{ alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
                     <span style={{ color: isDarkMode ? "#8c8c8c" : "#64748b", fontSize: '13px' }}>
                         Results: {totalRows > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1) : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, totalRows || 0)} of {totalRows || 0}
                     </span>
@@ -79,6 +89,7 @@ export default function ShiftTable({
                     />
                 </Space>
 
+                {/* Right Side: Page Navigation */}
                 <Pagination
                     current={table.getState().pagination.pageIndex + 1}
                     pageSize={table.getState().pagination.pageSize}

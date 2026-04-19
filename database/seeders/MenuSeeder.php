@@ -54,6 +54,7 @@ class MenuSeeder extends Seeder
             ['slug' => 'personal-factor', 'name' => 'Personal Factor', 'url' => '/master-data/personal-factor'],
             ['slug' => 'job-factor', 'name' => 'Job Factor', 'url' => '/master-data/job-factor'],
             ['slug' => 'location', 'name' => 'Lokasi', 'url' => '/master-data/location'],
+            ['slug' => 'employee', 'name' => 'Karyawan (Employee)', 'url' => '/master-data/employee'],
         ];
 
         foreach ($modules as $idx => $item) {
@@ -66,7 +67,32 @@ class MenuSeeder extends Seeder
             ]);
         }
 
-        // 3. Administrator
+
+        // 4. Safety
+        $safetyParent = Menu::updateOrCreate(['slug' => 'safety'], [
+            'name' => 'Safety',
+            'icon' => 'SafetyOutlined',
+            'url' => null,
+            'order' => 3
+        ]);
+
+        Menu::updateOrCreate(['slug' => 'accident-notification'], [
+            'name' => 'Notifikasi Kecelakaan',
+            'icon' => 'WarningOutlined',
+            'url' => '/accident-notification',
+            'parent_id' => $safetyParent->id,
+            'order' => 1
+        ]);
+
+        // 5. Report
+        Menu::updateOrCreate(['slug' => 'report'], [
+            'name' => 'Report',
+            'icon' => 'BarChartOutlined',
+            'url' => '/report',
+            'order' => 4
+        ]);
+
+        // 6. Administrator
         $adminParent = Menu::updateOrCreate(['slug' => 'administrator'], [
             'name' => 'Administrator',
             'icon' => 'SettingOutlined',
@@ -95,14 +121,6 @@ class MenuSeeder extends Seeder
             'icon' => 'AppstoreOutlined',
             'url' => '/admin/menu',
             'parent_id' => $adminParent->id,
-            'order' => 3
-        ]);
-
-        // 4. Report
-        Menu::updateOrCreate(['slug' => 'report'], [
-            'name' => 'Report',
-            'icon' => 'BarChartOutlined',
-            'url' => '/report',
             'order' => 3
         ]);
     }

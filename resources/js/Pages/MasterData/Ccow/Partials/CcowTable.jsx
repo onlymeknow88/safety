@@ -1,6 +1,8 @@
 import React from 'react';
-import { Table, Pagination, Select, Space } from 'antd';
+import { Table, Pagination, Select, Space, Grid } from 'antd';
 import { flexRender } from '@tanstack/react-table';
+
+const { useBreakpoint } = Grid;
 
 export default function CcowTable({
     table,
@@ -8,6 +10,9 @@ export default function CcowTable({
     totalRows,
     isDarkMode
 }) {
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
+
     // Mapping TanStack Columns to Ant Design Columns
     const antdColumns = table.getVisibleLeafColumns().map((column) => {
         const header = column.columnDef.header;
@@ -57,14 +62,16 @@ export default function CcowTable({
 
             {/* Premium Pagination Bar (Identik dengan Menu) */}
             <div style={{
-                padding: "16px 24px",
+                padding: isMobile ? "16px" : "16px 24px",
                 borderTop: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
                 display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'center',
+                gap: isMobile ? 16 : 0,
             }}>
                 {/* Left Side: Results Info + Page Size Selector */}
-                <Space size="middle">
+                <Space size="middle" direction={isMobile ? "vertical" : "horizontal"} style={{ alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
                     <span style={{ color: isDarkMode ? "#8c8c8c" : "#64748b", fontSize: '13px' }}>
                         Results: {totalRows > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1) : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, totalRows || 0)} of {totalRows || 0}
                     </span>

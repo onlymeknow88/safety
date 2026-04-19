@@ -132,6 +132,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/location', function(){
             return Inertia::render('MasterData/Location/Index');
         })->name('location.index');
+        Route::get('/employee', function(){
+            return Inertia::render('MasterData/Employee/Index');
+        })->name('employee.index');
     });
 
+    // Accident Notification
+    Route::prefix('accident-notification')->name('accident-notification.')->group(function () {
+        Route::get('/',          function () {
+            $data = \App\Models\AccidentNotification::with('photos')->latest()->get();
+            return Inertia::render('AccidentNotification/Index', [
+                'accidentNotifications' => $data
+            ]);
+        })->name('index');
+
+        Route::get('/create',    function () {
+            return Inertia::render('AccidentNotification/Form');
+        })->name('create');
+
+        Route::get('/{id}/edit', function ($id) {
+            // Ambil data dari model untuk di-pass sebagai prop Inertia
+            $record = \App\Models\AccidentNotification::with('photos')->findOrFail($id);
+            return Inertia::render('AccidentNotification/Form', [
+                'accidentNotification' => $record,
+            ]);
+        })->name('edit');
+    });
+
+    // Master Data Employee (API for Select2/Autocomplete)
+    Route::get('/employees/search', [\App\Http\Controllers\MasterData\Api\EmployeeController::class, 'search'])->name('employees.search');
 });
