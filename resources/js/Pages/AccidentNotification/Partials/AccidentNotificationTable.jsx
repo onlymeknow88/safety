@@ -4,7 +4,7 @@ import { flexRender } from '@tanstack/react-table';
 
 const { useBreakpoint } = Grid;
 
-export default function CcowTable({
+export default function AccidentNotificationTable({
     table,
     loading,
     totalRows,
@@ -13,27 +13,45 @@ export default function CcowTable({
     const screens = useBreakpoint();
     const isMobile = !screens.md;
 
-    // Mapping TanStack Columns to Ant Design Columns
-    const antdColumns = table.getVisibleLeafColumns().map((column) => {
-        const header = column.columnDef.header;
-        const meta = column.columnDef.meta || {};
+    // Recursive function to map TanStack Header Groups to Ant Design Columns
+    const mapHeaderToAntd = (header) => {
+        const column = header.column;
+        const columnDef = column.columnDef;
+        const meta = columnDef.meta || {};
 
-        return {
-            title: typeof header === 'string' ? header : flexRender(header, {}),
+        const antdColumn = {
+            title: typeof columnDef.header === 'string' ? columnDef.header : flexRender(columnDef.header, header.getContext()),
             dataIndex: column.id,
             key: column.id,
             align: meta.align || 'left',
-            render: (value, record) => {
-                const row = table.getRowModel().flatRows.find(r => String(r.original.id) === String(record.id));
-                const cell = row?.getVisibleCells().find(c => c.column.id === column.id);
+            width: meta.width,
+        };
 
+        if (columnDef.columns && columnDef.columns.length > 0) {
+            // This is a group column
+            antdColumn.children = header.subHeaders.map(subHeader => mapHeaderToAntd(subHeader));
+            // Group headers don't have dataIndex usually
+            delete antdColumn.dataIndex;
+        } else {
+            // This is a leaf column
+            antdColumn.render = (value, record) => {
+                const row = table.getRowModel().rows.find(r => String(r.original.id) === String(record.id));
+                const cell = row?.getVisibleCells().find(c => c.column.id === column.id);
+                
                 if (cell) {
                     return flexRender(cell.column.columnDef.cell, cell.getContext());
                 }
                 return value !== undefined ? value : null;
-            }
-        };
-    });
+            };
+        }
+
+        return antdColumn;
+    };
+
+    // Get the top-level header groups
+    const headerGroups = table.getHeaderGroups();
+    // We only take the first header group's headers and map them recursively
+    const antdColumns = headerGroups[0].headers.map(header => mapHeaderToAntd(header));
 
     // Formatting data for Ant Design Table
     const dataSource = table.getRowModel().rows.map(row => ({
@@ -42,7 +60,7 @@ export default function CcowTable({
     }));
 
     return (
-        <div style={{
+        <div style={{ 
             background: isDarkMode ? "#141414" : "#fff",
             borderRadius: "16px",
             padding: "1px",
@@ -54,13 +72,13 @@ export default function CcowTable({
                 columns={antdColumns}
                 dataSource={dataSource}
                 loading={loading}
-                pagination={false} // Matikan pagination bawaan
-                scroll={{ x: 600 }}
+                pagination={false}
+                scroll={{ x: 3500 }}
                 className={`custom-antd-table ${isDarkMode ? 'dark-mode' : ''}`}
                 style={{ borderRadius: "16px" }}
             />
 
-            {/* Premium Pagination Bar (Identik dengan Menu) */}
+            {/* Pagination Bar */}
             <div style={{
                 padding: isMobile ? "16px" : "16px 24px",
                 borderTop: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
@@ -70,10 +88,9 @@ export default function CcowTable({
                 alignItems: 'center',
                 gap: isMobile ? 16 : 0,
             }}>
-                {/* Left Side: Results Info + Page Size Selector */}
                 <Space size="middle" direction={isMobile ? "vertical" : "horizontal"} style={{ alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
                     <span style={{ color: isDarkMode ? "#8c8c8c" : "#64748b", fontSize: '13px' }}>
-                        Results: {totalRows > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1) : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, totalRows || 0)} of {totalRows || 0}
+                        Menampilkan {totalRows > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1) : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, totalRows || 0)} dari {totalRows || 0} data
                     </span>
                     <Select
                         size="small"
@@ -89,7 +106,6 @@ export default function CcowTable({
                     />
                 </Space>
 
-                {/* Right Side: Page Navigation */}
                 <Pagination
                     current={table.getState().pagination.pageIndex + 1}
                     pageSize={table.getState().pagination.pageSize}

@@ -344,7 +344,7 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
                 borderRight: isDarkMode
                     ? "1px solid #303030"
                     : "1px solid #f0f0f0",
-                zIndex: 1001,
+                zIndex: 100,
             }}
         >
             {SidebarContent}

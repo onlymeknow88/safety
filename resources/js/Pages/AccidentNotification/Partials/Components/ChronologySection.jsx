@@ -18,7 +18,7 @@ const DynamicList = ({ title, items, setItems, placeholder, isDarkMode }) => {
     };
 
     const sectionTitleStyle = { 
-        fontSize: 10, 
+        fontSize: 12, 
         fontWeight: 800, 
         color: '#3b82f6', 
         textTransform: 'uppercase', 
@@ -74,7 +74,7 @@ const DynamicList = ({ title, items, setItems, placeholder, isDarkMode }) => {
 
 export default function ChronologySection({ incidentFacts, setIncidentFacts, correctiveActions, setCorrectiveActions, isDarkMode }) {
     const labelStyle = { 
-        fontSize: 10, 
+        fontSize: 12, 
         fontWeight: 800, 
         color: '#3b82f6', 
         textTransform: 'uppercase',

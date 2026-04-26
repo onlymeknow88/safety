@@ -20,11 +20,10 @@ class AccidentNotificationController extends Controller
         $search = $request->search;
         $load   = $request->load ?? 10;
 
-        $query = AccidentNotification::with('photos')
+        $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status'])
             ->when($search, fn($q) => $q
-                ->where('notification_number', 'like', "%$search%")
-                ->orWhere('location', 'like', "%$search%")
-                ->orWhere('incident_classification', 'like', "%$search%")
+                ->where('accident_number', 'like', "%$search%")
+                ->orWhere('notification_number', 'like', "%$search%")
             );
 
         $data = $query->latest()->paginate($load);
@@ -40,21 +39,26 @@ class AccidentNotificationController extends Controller
         $validator = Validator::make($request->all(), [
             'incident_date'           => 'required|date',
             'incident_time'           => 'required',
-            'location'                => 'required|string|max:255',
-            'company_contractor'      => 'nullable|string|max:255',
-            'incident_classification' => 'nullable|string|max:255',
-            'actual_k3'               => 'required|integer|min:1|max:5',
-            'actual_kk'               => 'required|integer|min:1|max:5',
-            'actual_lh'               => 'required|integer|min:1|max:5',
-            'potential_k3'            => 'required|integer|min:1|max:5',
-            'potential_kk'            => 'required|integer|min:1|max:5',
-            'potential_lh'            => 'required|integer|min:1|max:5',
+            'ccow_id'                 => 'required|exists:m_ccows,id',
+            'location_id'             => 'required|exists:m_locations,id',
+            'company_id'              => 'required|exists:m_company,id',
+            'incident_type_id'        => 'nullable|exists:m_incident_types,id',
+            'actual_k3'               => 'nullable|integer|min:1|max:5',
+            'actual_kk'               => 'nullable|integer|min:1|max:5',
+            'actual_lh'               => 'nullable|integer|min:1|max:5',
+            'actual_ksl'              => 'nullable|integer|min:1|max:5',
+            'actual_pp'               => 'nullable|integer|min:1|max:5',
+            'potential_k3'            => 'nullable|integer|min:1|max:5',
+            'potential_kk'            => 'nullable|integer|min:1|max:5',
+            'potential_lh'            => 'nullable|integer|min:1|max:5',
+            'potential_ksl'           => 'nullable|integer|min:1|max:5',
+            'potential_pp'            => 'nullable|integer|min:1|max:5',
             'chronology'              => 'nullable|string',
             'reporter_name'           => 'nullable|string|max:255',
             'reporter_position'       => 'nullable|string|max:255',
             'approver_name'           => 'nullable|string|max:255',
             'approver_position'       => 'nullable|string|max:255',
-            'status'                  => 'in:draft,submitted',
+            'status_id'               => 'required|exists:m_statuses,id',
             'photos'                  => 'nullable|array|max:3',
             'photos.*'                => 'file|mimes:jpg,jpeg,png|max:2048',
         ]);
@@ -116,21 +120,26 @@ class AccidentNotificationController extends Controller
         $validator = Validator::make($request->all(), [
             'incident_date'           => 'required|date',
             'incident_time'           => 'required',
-            'location'                => 'required|string|max:255',
-            'company_contractor'      => 'nullable|string|max:255',
-            'incident_classification' => 'nullable|string|max:255',
-            'actual_k3'               => 'required|integer|min:1|max:5',
-            'actual_kk'               => 'required|integer|min:1|max:5',
-            'actual_lh'               => 'required|integer|min:1|max:5',
-            'potential_k3'            => 'required|integer|min:1|max:5',
-            'potential_kk'            => 'required|integer|min:1|max:5',
-            'potential_lh'            => 'required|integer|min:1|max:5',
+            'ccow_id'                 => 'required|exists:m_ccows,id',
+            'location_id'             => 'required|exists:m_locations,id',
+            'company_id'              => 'required|exists:m_company,id',
+            'incident_type_id'        => 'nullable|exists:m_incident_types,id',
+            'actual_k3'               => 'nullable|integer|min:1|max:5',
+            'actual_kk'               => 'nullable|integer|min:1|max:5',
+            'actual_lh'               => 'nullable|integer|min:1|max:5',
+            'actual_ksl'              => 'nullable|integer|min:1|max:5',
+            'actual_pp'               => 'nullable|integer|min:1|max:5',
+            'potential_k3'            => 'nullable|integer|min:1|max:5',
+            'potential_kk'            => 'nullable|integer|min:1|max:5',
+            'potential_lh'            => 'nullable|integer|min:1|max:5',
+            'potential_ksl'           => 'nullable|integer|min:1|max:5',
+            'potential_pp'            => 'nullable|integer|min:1|max:5',
             'chronology'              => 'nullable|string',
             'reporter_name'           => 'nullable|string|max:255',
             'reporter_position'       => 'nullable|string|max:255',
             'approver_name'           => 'nullable|string|max:255',
             'approver_position'       => 'nullable|string|max:255',
-            'status'                  => 'in:draft,submitted',
+            'status_id'               => 'required|exists:m_statuses,id',
             'photos'                  => 'nullable|array|max:3',
             'photos.*'                => 'file|mimes:jpg,jpeg,png|max:2048',
         ]);

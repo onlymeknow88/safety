@@ -1,105 +1,126 @@
 import React from "react";
-import { Head, Link } from "@inertiajs/react";
-import { Button, Card, Table, Tag, Space, App } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Head } from "@inertiajs/react";
+import { Button, Space, Modal, App, Grid, Row, Col } from "antd";
+import { ReloadOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { useTheme } from "@/Contexts/ThemeContext";
-import dayjs from "dayjs";
+import AccidentNotificationModal from "./Partials/AccidentNotificationModal";
+import DeleteConfirmModal from "@/Components/DeleteConfirmModal";
 
-export default function AccidentNotificationIndex({ accidentNotifications = [] }) {
+// Consolidated Hook
+import useAccidentNotification from "./Hooks/useAccidentNotification";
+import AccidentNotificationHeader from "./Partials/AccidentNotificationHeader";
+import AccidentNotificationTable from "./Partials/AccidentNotificationTable";
+
+const { useBreakpoint } = Grid;
+
+export default function AccidentNotificationIndex({ master = {} }) {
     const { isDarkMode } = useTheme();
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
 
-    const columns = [
-        {
-            title: 'No. Notifikasi',
-            dataIndex: 'notification_number',
-            key: 'notification_number',
-            render: (text) => <span style={{ fontWeight: 700, color: '#2563eb' }}>{text}</span>
-        },
-        {
-            title: 'Tanggal',
-            dataIndex: 'incident_date',
-            key: 'incident_date',
-            render: (date) => dayjs(date).format('DD MMM YYYY')
-        },
-        {
-            title: 'Lokasi',
-            dataIndex: 'location',
-            key: 'location',
-        },
-        {
-            title: 'Status',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => (
-                <Tag color={status === 'submitted' ? 'green' : 'orange'} style={{ borderRadius: 6, fontWeight: 600 }}>
-                    {status.toUpperCase()}
-                </Tag>
-            )
-        },
-        {
-            title: 'HPRI',
-            dataIndex: 'is_hpri',
-            key: 'is_hpri',
-            render: (isHpri) => isHpri ? <Tag color="error">YA</Tag> : <Tag>TIDAK</Tag>
-        },
-        {
-            title: 'Aksi',
-            key: 'action',
-            render: (_, record) => (
-                <Space size="middle">
-                    <Link href={route('accident-notification.edit', record.id)}>
-                        <Button type="text" icon={<EditOutlined />} />
-                    </Link>
-                    <Button type="text" danger icon={<DeleteOutlined />} />
-                </Space>
-            ),
-        },
-    ];
+    const {
+        table,
+        loading,
+        searchText,
+        handleSearchChange,
+        isModalVisible,
+        setIsModalVisible,
+        handleAdd,
+        handleEdit,
+        handleSave,
+        isDeleteModalVisible,
+        setIsDeleteModalVisible,
+        handleConfirmDelete,
+        itemToDelete,
+        editingItem,
+        totalRows,
+        fetchItems,
+        isHpri, setIsHpri,
+        severity, setSeverity,
+        incidentFacts, setIncidentFacts,
+        correctiveActions, setCorrectiveActions,
+        fileList, setFileList
+    } = useAccidentNotification(master);
 
     return (
-        <DashboardLayout title="List Pemberitahuan Kecelakaan">
-            <Head title="List Pemberitahuan Kecelakaan" />
-            
-            <div style={{ padding: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                    <h2 style={{ margin: 0, fontWeight: 700, color: isDarkMode ? '#fff' : '#1e293b' }}>
-                        Pemberitahuan Kecelakaan
-                    </h2>
-                    <Link href={route('accident-notification.create')}>
-                        <Button 
-                            type="primary" 
-                            icon={<PlusOutlined />} 
-                            size="large"
-                            style={{ 
-                                borderRadius: 8, 
-                                fontWeight: 600,
-                                background: "linear-gradient(135deg, #2563eb, #3b82f6)",
-                                border: 'none'
-                            }}
-                        >
-                            Buat Baru
-                        </Button>
-                    </Link>
-                </div>
+        <DashboardLayout title="Notifikasi Kecelakaan">
+            <Head title="Notifikasi Kecelakaan" />
 
-                <Card 
-                    style={{ 
-                        borderRadius: 16, 
-                        border: 'none', 
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-                        background: isDarkMode ? '#1f1f1f' : '#fff'
-                    }}
-                    bodyStyle={{ padding: 0 }}
-                >
-                    <Table 
-                        columns={columns} 
-                        dataSource={accidentNotifications} 
-                        rowKey="id"
-                        pagination={{ pageSize: 10 }}
-                    />
-                </Card>
+            <div style={{ padding: isMobile ? "0" : "24px" }}>
+                {/* Header Title Section */}
+                <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }}>
+                    <Col xs={24} md={12}>
+                        <h2 style={{ 
+                            margin: 0, 
+                            fontWeight: 900, 
+                            fontSize: isMobile ? "22px" : "28px", 
+                            color: isDarkMode ? "#fff" : "#0f172a",
+                            letterSpacing: "-0.5px"
+                        }}>
+                            NOTIFIKASI KECELAKAAN
+                        </h2>
+                        <p style={{ margin: 0, color: "#64748b", fontSize: isMobile ? "13px" : "14px", fontWeight: 500 }}>
+                            Kelola dan pantau seluruh laporan insiden di area operasional.
+                        </p>
+                    </Col>
+                    <Col xs={24} md={12} style={{ textAlign: isMobile ? "left" : "right" }}>
+                        <Space>
+                            <Button 
+                                size="large"
+                                icon={<ReloadOutlined />} 
+                                onClick={() => fetchItems()}
+                                loading={loading}
+                                style={{ borderRadius: 10 }}
+                            />
+                        </Space>
+                    </Col>
+                </Row>
+
+                {/* Filter & Action Section */}
+                <AccidentNotificationHeader 
+                    searchText={searchText}
+                    onSearchChange={handleSearchChange}
+                    onAddClick={handleAdd}
+                    isDarkMode={isDarkMode}
+                    table={table}
+                />
+
+                {/* Table Section */}
+                <AccidentNotificationTable 
+                    table={table} 
+                    loading={loading}
+                    totalRows={totalRows}
+                    isDarkMode={isDarkMode}
+                />
             </div>
+
+            {/* Modal Form (Add/Edit) */}
+            <AccidentNotificationModal 
+                visible={isModalVisible}
+                onCancel={() => setIsModalVisible(false)}
+                onFinish={handleSave}
+                loading={loading}
+                initialValues={editingItem}
+                master={master}
+                hook={ {
+                    isHpri, setIsHpri,
+                    severity, setSeverity,
+                    incidentFacts, setIncidentFacts,
+                    correctiveActions, setCorrectiveActions,
+                    fileList, setFileList
+                } }
+            />
+
+            {/* Delete Confirmation */}
+            <DeleteConfirmModal
+                visible={isDeleteModalVisible}
+                onCancel={() => setIsDeleteModalVisible(false)}
+                onConfirm={handleConfirmDelete}
+                title="Hapus Notifikasi"
+                description={`Apakah Anda yakin ingin menghapus notifikasi "${itemToDelete?.notification_number}"?`}
+                loading={loading}
+            />
         </DashboardLayout>
     );
 }

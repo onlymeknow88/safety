@@ -41,12 +41,12 @@ export default function ReporterSection({ type = 'reporter' }) {
 
     return (
         <div>
-            <div style={{ marginBottom: 16, fontWeight: 800, fontSize: 11, color: '#64748b', letterSpacing: 0.5 }}>
+            <div style={{ marginBottom: 16, fontWeight: 800, fontSize: 13, color: '#64748b', letterSpacing: 0.5 }}>
                 {title}
             </div>
             <Form.Item
                 name={`${prefix}_name`}
-                label={<span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8' }}>{nameLabel}</span>}
+                label={<span style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8' }}>{nameLabel}</span>}
                 style={{ marginBottom: 12 }}
                 rules={[{ required: true, message: 'Wajib diisi' }]}
             >
@@ -65,7 +65,7 @@ export default function ReporterSection({ type = 'reporter' }) {
             </Form.Item>
             <Form.Item
                 name={`${prefix}_position`}
-                label={<span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8' }}>{posLabel}</span>}
+                label={<span style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8' }}>{posLabel}</span>}
                 style={{ marginBottom: 0 }}
             >
                 <Input placeholder="Jabatan akan terisi otomatis" style={{ borderRadius: 6, padding: '8px 12px' }} />

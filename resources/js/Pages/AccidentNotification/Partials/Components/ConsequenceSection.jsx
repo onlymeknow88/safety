@@ -2,7 +2,7 @@ import React from "react";
 import { Form, Input } from "antd";
 
 export default function ConsequenceSection() {
-    const labelStyle = { fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' };
+    const labelStyle = { fontSize: 12, fontWeight: 800, color: '#64748b', textTransform: 'uppercase' };
     const inputStyle = { 
         background: '#f8fafc', 
         borderRadius: 8, 

@@ -139,10 +139,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Accident Notification
     Route::prefix('accident-notification')->name('accident-notification.')->group(function () {
-        Route::get('/',          function () {
-            $data = \App\Models\AccidentNotification::with('photos')->latest()->get();
+        Route::get('/', function () {
+            $data = \App\Models\AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos'])->latest()->get();
             return Inertia::render('AccidentNotification/Index', [
-                'accidentNotifications' => $data
+                'accidentNotifications' => $data,
+                'master' => [
+                    'ccows'         => \App\Models\MasterData\Ccow::where('is_active', true)->get(),
+                    'companies'     => \App\Models\MasterData\Company::where('is_active', true)->get(),
+                    'locations'     => \App\Models\MasterData\Location::where('is_active', true)->get(),
+                    'incidentTypes' => \App\Models\MasterData\IncidentType::where('is_active', true)->get(),
+                    'statuses'      => \App\Models\MasterData\Status::where('is_active', true)->get(),
+                ]
             ]);
         })->name('index');
 
@@ -151,8 +158,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('create');
 
         Route::get('/{id}/edit', function ($id) {
-            // Ambil data dari model untuk di-pass sebagai prop Inertia
-            $record = \App\Models\AccidentNotification::with('photos')->findOrFail($id);
+            $record = \App\Models\AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos'])->findOrFail($id);
             return Inertia::render('AccidentNotification/Form', [
                 'accidentNotification' => $record,
             ]);

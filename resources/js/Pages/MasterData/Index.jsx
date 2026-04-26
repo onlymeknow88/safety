@@ -107,6 +107,10 @@ export default function MasterDataIndex() {
                         <Col xs={24} md={12} lg={8} key={idx}>
                             <Card 
                                 title={<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>{group.icon} <span>{group.title}</span></div>}
+                                styles={{ 
+                                    header: { borderBottom: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0", padding: "16px 24px" },
+                                    body: { padding: isMobile ? "16px" : "24px" }
+                                }}
                                 style={{ 
                                     borderRadius: 16, 
                                     background: isDarkMode ? "#1f1f1f" : "#fff",
@@ -114,8 +118,6 @@ export default function MasterDataIndex() {
                                     height: '100%',
                                     boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
                                 }}
-                                headStyle={{ borderBottom: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0", padding: "16px 24px" }}
-                                bodyStyle={{ padding: isMobile ? "16px" : "24px" }}
                             >
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                                     {group.items.map((item, i) => (
