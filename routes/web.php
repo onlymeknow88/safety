@@ -21,6 +21,10 @@ Route::get('/', function () {
 
 require __DIR__.'/auth.php';
 
+// Azure Auth Routes
+Route::get('/auth/azure', [\App\Http\Controllers\Auth\AzureAuthController::class, 'redirectToAzure'])->name('azure.login');
+Route::get('/auth/azure/callback', [\App\Http\Controllers\Auth\AzureAuthController::class, 'handleAzureCallback']);
+
 // ── Authenticated Routes ──────────────────────────────────────────────────────
 
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -25,6 +25,12 @@ export default function AccidentNotificationTable({
             key: column.id,
             align: meta.align || 'left',
             width: meta.width,
+            onCell: () => ({
+                style: { whiteSpace: meta.nowrap === false ? 'normal' : 'nowrap' }
+            }),
+            onHeaderCell: () => ({
+                style: { whiteSpace: 'nowrap' }
+            })
         };
 
         if (columnDef.columns && columnDef.columns.length > 0) {

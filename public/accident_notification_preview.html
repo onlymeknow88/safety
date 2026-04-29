@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview Accident Notification - 240928-NI-PD-HD 761</title>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11px;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #cbd5e1;
+            /* Background abu-abu untuk mode preview */
+            display: flex;
+            justify-content: center;
+            padding: 40px 0;
+        }
+
+        .container {
+            background-color: #fff;
+            width: 29.7cm;
+            /* A4 Landscape width */
+            min-height: 21cm;
+            /* A4 Landscape height */
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .header-bar {
+            background-color: #002d5d;
+            color: white;
+            display: flex;
+            align-items: stretch;
+            min-height: 60px;
+        }
+
+        .header-left h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+            font-style: italic;
+            letter-spacing: 0.5px;
+        }
+
+        .header-left h1 span {
+            text-decoration: underline;
+            margin-left: 10px;
+        }
+
+        .header-left {
+            padding: 12px 25px;
+            flex-grow: 1;
+        }
+
+        .header-left p {
+            margin: 5px 0 0 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .header-right {
+            background-color: #fff;
+            width: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 15px;
+        }
+
+        .header-right img {
+            height: 45px;
+            width: auto;
+        }
+
+        .main-title {
+            color: #f97316;
+            /* Orange */
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+            font-style: italic;
+            text-transform: uppercase;
+        }
+
+        .content-area {
+            padding: 0 25px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .col-left {
+            width: 56%;
+        }
+
+        .col-right {
+            width: 41%;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .info-table td {
+            border: 1px solid #000;
+            padding: 6px 10px;
+            vertical-align: top;
+            width: 50%;
+        }
+
+        .label {
+            font-weight: 800; /* Bolder label */
+            display: block;
+            font-size: 10px;
+            color: #1a1a1a;
+        }
+
+        .sub-label {
+            font-style: italic;
+            font-weight: normal;
+            font-size: 8.5px;
+            color: #777;
+            display: block;
+            margin-top: -2px;
+        }
+
+        .value {
+            font-size: 12px;
+            font-weight: 800; /* Extra bold for values */
+            margin-top: 2px;
+            display: block;
+        }
+
+        .section-title {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: block;
+            border-bottom: 1px solid #333;
+            padding-bottom: 2px;
+        }
+
+        .content-box {
+            margin-bottom: 15px;
+        }
+
+        .list-items {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .list-items li {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .photo-box {
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            width: 100%;
+            text-align: center;
+            min-height: 250px;
+            box-sizing: border-box;
+            background-color: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-box img {
+            max-width: 100%;
+            max-height: 350px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer {
+            margin-top: 30px;
+            width: 100%;
+            padding-bottom: 20px;
+        }
+
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .footer-table td {
+            padding: 4px 0;
+            font-size: 11px;
+        }
+
+        .doc-code {
+            text-align: right;
+            font-size: 9px;
+            font-weight: bold;
+            margin-top: 10px;
+            position: absolute;
+            bottom: 20px;
+            right: 25px;
+        }
+
+        p {
+            line-height: 1.5;
+            margin-top: 5px;
+            margin-bottom: 10px;
+        }
+
+        @media print {
+            body {
+                background-color: #fff;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header-bar">
+            <div class="header-left">
+                <h1>240928-NI-PD-HD 761 <span>Terguling ke Kiri di Disposal RL 360</span></h1>
+                <p>No. Notifikasi Insiden : 01/NI-LC/IV/2026</p>
+            </div>
+            <div class="header-right">
+                <img src="images/Alamtri Geo Logo - Full Color.png" alt="Alamtri Geo Logo"
+                    style="height: 45px; background: white; padding: 5px; border-radius: 4px;">
+            </div>
+        </div>
+
+        <div class="main-title">
+            Pemberitahuan Kecelakaan / Accident Notification
+        </div>
+
+        <div class="content-area">
+            <div class="row">
+                <div class="col-left">
+                    <table class="info-table">
+                        <tr>
+                            <td>
+                                <span class="label">Tanggal : <span class="value">28-09-2024</span></span>
+                                <span class="sub-label">Date (dd-mm-yyyy)</span>
+                            </td>
+                            <td>
+                                <span class="label">Lokasi : <span class="value">Jalan Cendana RL 360</span></span>
+                                <span class="sub-label">Location</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="label">Waktu : <span class="value">11:15 WIB</span></span>
+                                <span class="sub-label">Time (24hours)</span>
+                            </td>
+                            <td>
+                                <span class="label">Perusahaan : <span class="value">PT Saptaindra Sejati</span></span>
+                                <span class="sub-label">Company</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="label">Klasifikasi insiden / Incident classification :</span>
+                                <span class="value">First Aid Injury</span>
+                            </td>
+                            <td>
+                                <span class="label">Apakah termasuk HPRI / Related:</span>
+                                <div style="margin-top: 5px;">
+                                    <span style="font-size: 13px;">[ ] Ya &nbsp;&nbsp;&nbsp; [x] Tidak</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <span class="label">Tingkat keparahan/Severity:</span>
+                                <table style="width: 100%; border: none; margin-top: 5px;">
+                                    <tr>
+                                        <td style="border: none; padding: 0;"><strong>Aktual</strong> : K3 = 1; KK = 3;
+                                            LH = 1</td>
+                                        <td style="border: none; padding: 0;"><strong>Potensial</strong> : K3 = 5; KK =
+                                            4; LH = 2</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="content-box">
+                        <span class="section-title">Penjelasan Insiden :</span>
+
+                        <p><strong>Kronologi awal:</strong><br>
+                            Pada hari Sabtu, 28 September 2024, sekitar pukul 11.15 WIB, HD 785 - 761 yang dioperasikan
+                            oleh Sdr. T dalam kondisi muatan dari front melintasi Jalan Cendana memasuki RL360. Pada
+                            saat mendekati jalur Simpang OPD RL360 Cendana, unit melewati hamparan spoil licin, dan
+                            selepas jalan kering, bagian belakang unit terpelanting (drifting) ke arah kiri sehingga
+                            rebah ke kiri.</p>
+
+                        <p><strong>Fakta kejadian:</strong></p>
+                        <ol class="list-items">
+                            <li>Kondisi cuaca cerah</li>
+                            <li>Jalan terdapat spoil yg masih basah</li>
+                            <li>Terdapat bekas jejak pengereman HD</li>
+                        </ol>
+
+                        <p style="margin-top: 15px;"><strong>Akibat kecelakaan:</strong><br>
+                            <strong>Manusia :</strong> Lecet tangan kiri<br>
+                            <strong>Alat :</strong> Kaca bagian pintu kiri dan spion kiri pecah<br>
+                            <strong>Lingkungan :</strong> Tumpahan ceceran oli hidrolik, oli engine dan fuel
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-right">
+                    <div class="content-box">
+                        <span class="section-title">Tindakan perbaikan yang dilakukan:</span>
+                        <ol class="list-items">
+                            <li>Pelaporan insiden ke Channel Emergency</li>
+                            <li>Mengamankan TKK</li>
+                            <li>Pengambilan data fakta dilapangan.</li>
+                            <li>Membawa Operator HD ke klinik CHPP untuk pemeriksaan lebih lanjut</li>
+                            <li>Pemeriksaan unit HD oleh tim mekanik.</li>
+                            <li>Melakukan Recall Incident.</li>
+                        </ol>
+                    </div>
+
+                    <div class="content-box" style="margin-top: 20px;">
+                        <span class="section-title">Foto</span>
+                        <div class="photo-box">
+                            <!-- Placeholder image representative of the truck in the screenshot -->
+                            <img src="https://images.unsplash.com/photo-1622645636770-11fbf0611463?q=80&w=1173&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                                alt="Incident Photo">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <table class="footer-table">
+                    <tr>
+                        <td style="width: 120px; font-weight: bold;">Dilaporkan oleh</td>
+                        <td>: Roery Wully Andri (PJS PJO PT. SIS)</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">Disetujui oleh</td>
+                        <td>: M Safrudin Sulaiman (KTT PT Maruwai Coal)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="doc-code">
+            F-MAC-IMS-14-001<br>
+            Rev.: 4.0
+        </div>
+    </div>
+
+</body>
+
+</html>

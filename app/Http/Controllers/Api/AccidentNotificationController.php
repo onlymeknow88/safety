@@ -4,9 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
+use App\Mail\AccidentNotificationApprovalMail;
 use App\Models\AccidentNotification;
 use App\Models\AccidentNotificationPhoto;
+use App\Models\MasterData\Status;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -18,10 +24,10 @@ class AccidentNotificationController extends Controller
     public function index(Request $request)
     {
         $search = $request->search;
-        $load   = $request->load ?? 10;
+        $load = $request->load ?? 10;
 
         $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status'])
-            ->when($search, fn($q) => $q
+            ->when($search, fn ($q) => $q
                 ->where('accident_number', 'like', "%$search%")
                 ->orWhere('notification_number', 'like', "%$search%")
             );
@@ -36,41 +42,52 @@ class AccidentNotificationController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'incident_date'           => 'required|date',
-            'incident_time'           => 'required',
-            'ccow_id'                 => 'required|exists:m_ccows,id',
-            'location_id'             => 'required|exists:m_locations,id',
-            'company_id'              => 'required|exists:m_company,id',
-            'incident_type_id'        => 'nullable|exists:m_incident_types,id',
-            'actual_k3'               => 'nullable|integer|min:1|max:5',
-            'actual_kk'               => 'nullable|integer|min:1|max:5',
-            'actual_lh'               => 'nullable|integer|min:1|max:5',
-            'actual_ksl'              => 'nullable|integer|min:1|max:5',
-            'actual_pp'               => 'nullable|integer|min:1|max:5',
-            'potential_k3'            => 'nullable|integer|min:1|max:5',
-            'potential_kk'            => 'nullable|integer|min:1|max:5',
-            'potential_lh'            => 'nullable|integer|min:1|max:5',
-            'potential_ksl'           => 'nullable|integer|min:1|max:5',
-            'potential_pp'            => 'nullable|integer|min:1|max:5',
-            'chronology'              => 'nullable|string',
-            'reporter_name'           => 'nullable|string|max:255',
-            'reporter_position'       => 'nullable|string|max:255',
-            'approver_name'           => 'nullable|string|max:255',
-            'approver_position'       => 'nullable|string|max:255',
-            'status_id'               => 'required|exists:m_statuses,id',
-            'photos'                  => 'nullable|array|max:3',
-            'photos.*'                => 'file|mimes:jpg,jpeg,png|max:2048',
-        ]);
+        // Ambil status info untuk menentukan apakah ini draft atau submit
+        $status = Status::find($request->status_id);
+        $isDraft = $status && strtolower($status->name) === 'draft';
+
+        $rules = [
+            'incident_date' => $isDraft ? 'nullable|date' : 'required|date',
+            'incident_time' => $isDraft ? 'nullable' : 'required',
+            'ccow_id' => $isDraft ? 'nullable|exists:m_ccows,id' : 'required|exists:m_ccows,id',
+            'location_id' => $isDraft ? 'nullable|exists:m_locations,id' : 'required|exists:m_locations,id',
+            'company_id' => $isDraft ? 'nullable|exists:m_company,id' : 'required|exists:m_company,id',
+            'incident_type_id' => 'nullable|exists:m_incident_types,id',
+            'is_hpri' => 'nullable|boolean',
+            'actual_k3' => 'nullable|integer|max:5',
+            'actual_kk' => 'nullable|integer|max:5',
+            'actual_lh' => 'nullable|integer|max:5',
+            'actual_ksl' => 'nullable|integer|max:5',
+            'actual_pp' => 'nullable|integer|max:5',
+            'potential_k3' => 'nullable|integer|max:5',
+            'potential_kk' => 'nullable|integer|max:5',
+            'potential_lh' => 'nullable|integer|max:5',
+            'potential_ksl' => 'nullable|integer|max:5',
+            'potential_pp' => 'nullable|integer|max:5',
+            'chronology' => 'nullable|string',
+            'consequence_human' => 'nullable|string',
+            'consequence_tool' => 'nullable|string',
+            'consequence_environment' => 'nullable|string',
+            'reporter_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
+            'reporter_position' => 'nullable|string|max:255',
+            'approver_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
+            'approver_position' => 'nullable|string|max:255',
+            'status_id' => 'required|exists:m_statuses,id',
+            'photos' => 'nullable|array|max:3',
+            'photos.*' => 'file|mimes:jpg,jpeg,png|max:2048',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
         $data = $request->except(['photos', 'incident_facts', 'corrective_actions']);
-        $data['incident_facts']     = $request->input('incident_facts', []);
+        $data['incident_facts'] = $request->input('incident_facts', []);
         $data['corrective_actions'] = $request->input('corrective_actions', []);
-        $data['created_by']         = auth()->id();
+        $data['created_by'] = auth()->id();
+        $data['is_hpri'] = $request->boolean('is_hpri');
 
         $record = AccidentNotification::create($data);
 
@@ -79,9 +96,22 @@ class AccidentNotificationController extends Controller
             foreach ($request->file('photos') as $file) {
                 $path = $file->store('accident-notifications', 'public');
                 $record->photos()->create([
-                    'path'     => $path,
+                    'path' => $path,
                     'filename' => $file->getClientOriginalName(),
                 ]);
+            }
+        }
+
+        // Kirim email approval jika bukan draft
+        if (! $isDraft) {
+            try {
+                // Cari user yang namanya sesuai dengan approver_name
+                $approver = User::where('name', $record->approver_name)->first();
+                $recipient = $approver ? $approver->email : config('mail.from.address');
+
+                Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType'])));
+            } catch (\Exception $e) {
+                Log::error('Gagal mengirim email approval: '.$e->getMessage());
             }
         }
 
@@ -99,11 +129,32 @@ class AccidentNotificationController extends Controller
     {
         $record = AccidentNotification::with('photos')->find($id);
 
-        if (!$record) {
+        if (! $record) {
             return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
         }
 
         return ResponseFormatter::success($record, 'Berhasil mengambil detail data');
+    }
+
+    /**
+     * GET /api/accident-notification/{id}/export-pdf
+     */
+    public function exportPdf(string $id)
+    {
+        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos'])->find($id);
+
+        if (! $record) {
+            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+        }
+
+        $pdf = Pdf::loadView('pdf.accident_notification', compact('record'));
+
+        // Atur ukuran kertas A4 landscape
+        $pdf->setPaper('a4', 'landscape');
+
+        $fileName = str_replace(['/', '\\'], '_', $record->accident_number);
+
+        return $pdf->download('Accident_Notification_'.$fileName.'.pdf');
     }
 
     /**
@@ -113,36 +164,46 @@ class AccidentNotificationController extends Controller
     {
         $record = AccidentNotification::find($id);
 
-        if (!$record) {
+        if (! $record) {
             return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'incident_date'           => 'required|date',
-            'incident_time'           => 'required',
-            'ccow_id'                 => 'required|exists:m_ccows,id',
-            'location_id'             => 'required|exists:m_locations,id',
-            'company_id'              => 'required|exists:m_company,id',
-            'incident_type_id'        => 'nullable|exists:m_incident_types,id',
-            'actual_k3'               => 'nullable|integer|min:1|max:5',
-            'actual_kk'               => 'nullable|integer|min:1|max:5',
-            'actual_lh'               => 'nullable|integer|min:1|max:5',
-            'actual_ksl'              => 'nullable|integer|min:1|max:5',
-            'actual_pp'               => 'nullable|integer|min:1|max:5',
-            'potential_k3'            => 'nullable|integer|min:1|max:5',
-            'potential_kk'            => 'nullable|integer|min:1|max:5',
-            'potential_lh'            => 'nullable|integer|min:1|max:5',
-            'potential_ksl'           => 'nullable|integer|min:1|max:5',
-            'potential_pp'            => 'nullable|integer|min:1|max:5',
-            'chronology'              => 'nullable|string',
-            'reporter_name'           => 'nullable|string|max:255',
-            'reporter_position'       => 'nullable|string|max:255',
-            'approver_name'           => 'nullable|string|max:255',
-            'approver_position'       => 'nullable|string|max:255',
-            'status_id'               => 'required|exists:m_statuses,id',
-            'photos'                  => 'nullable|array|max:3',
-            'photos.*'                => 'file|mimes:jpg,jpeg,png|max:2048',
-        ]);
+        // Ambil status info untuk menentukan apakah ini draft atau submit
+        $status = Status::find($request->status_id);
+        $isDraft = $status && strtolower($status->name) === 'draft';
+
+        $rules = [
+            'incident_date' => $isDraft ? 'nullable|date' : 'required|date',
+            'incident_time' => $isDraft ? 'nullable' : 'required',
+            'ccow_id' => $isDraft ? 'nullable|exists:m_ccows,id' : 'required|exists:m_ccows,id',
+            'location_id' => $isDraft ? 'nullable|exists:m_locations,id' : 'required|exists:m_locations,id',
+            'company_id' => $isDraft ? 'nullable|exists:m_company,id' : 'required|exists:m_company,id',
+            'incident_type_id' => 'nullable|exists:m_incident_types,id',
+            'is_hpri' => 'nullable|boolean',
+            'actual_k3' => 'nullable|integer|max:5',
+            'actual_kk' => 'nullable|integer|max:5',
+            'actual_lh' => 'nullable|integer|max:5',
+            'actual_ksl' => 'nullable|integer|max:5',
+            'actual_pp' => 'nullable|integer|max:5',
+            'potential_k3' => 'nullable|integer|max:5',
+            'potential_kk' => 'nullable|integer|max:5',
+            'potential_lh' => 'nullable|integer|max:5',
+            'potential_ksl' => 'nullable|integer|max:5',
+            'potential_pp' => 'nullable|integer|max:5',
+            'chronology' => 'nullable|string',
+            'consequence_human' => 'nullable|string',
+            'consequence_tool' => 'nullable|string',
+            'consequence_environment' => 'nullable|string',
+            'reporter_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
+            'reporter_position' => 'nullable|string|max:255',
+            'approver_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
+            'approver_position' => 'nullable|string|max:255',
+            'status_id' => 'required|exists:m_statuses,id',
+            'photos' => 'nullable|array|max:3',
+            'photos.*' => 'file|mimes:jpg,jpeg,png|max:2048',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
@@ -155,6 +216,9 @@ class AccidentNotificationController extends Controller
         if ($request->has('corrective_actions')) {
             $data['corrective_actions'] = $request->input('corrective_actions', []);
         }
+        if ($request->has('is_hpri')) {
+            $data['is_hpri'] = $request->boolean('is_hpri');
+        }
 
         $record->update($data);
 
@@ -164,13 +228,27 @@ class AccidentNotificationController extends Controller
             $newFiles = $request->file('photos');
 
             foreach ($newFiles as $file) {
-                if ($existing >= 3) break;
+                if ($existing >= 3) {
+                    break;
+                }
                 $path = $file->store('accident-notifications', 'public');
                 $record->photos()->create([
-                    'path'     => $path,
+                    'path' => $path,
                     'filename' => $file->getClientOriginalName(),
                 ]);
                 $existing++;
+            }
+        }
+
+        // Kirim email approval jika bukan draft
+        if (! $isDraft) {
+            try {
+                $approver = User::where('name', $record->approver_name)->first();
+                $recipient = $approver ? $approver->email : config('mail.from.address');
+
+                Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType'])));
+            } catch (\Exception $e) {
+                Log::error('Gagal mengirim email approval (Update): '.$e->getMessage());
             }
         }
 
@@ -187,7 +265,7 @@ class AccidentNotificationController extends Controller
     {
         $record = AccidentNotification::find($id);
 
-        if (!$record) {
+        if (! $record) {
             return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
         }
 
@@ -208,9 +286,9 @@ class AccidentNotificationController extends Controller
     public function destroyPhoto(string $id, string $photoId)
     {
         $photo = AccidentNotificationPhoto::where('accident_notification_id', $id)
-                                          ->find($photoId);
+            ->find($photoId);
 
-        if (!$photo) {
+        if (! $photo) {
             return ResponseFormatter::error(null, 'Foto tidak ditemukan', 404);
         }
 

@@ -1,23 +1,24 @@
+import { Button, Card, Col, Form, Modal, Row, Space, Switch, Tag } from "antd";
 import React, { useEffect } from "react";
-import { Form, Button, Row, Col, Space, Switch, Tag, Card, Modal } from "antd";
-import { useTheme } from "@/Contexts/ThemeContext";
-// Force refresh after moving components to subfolder
-import IncidentOverviewSection from "@/Pages/AccidentNotification/Partials/Components/IncidentOverviewSection";
-import SeveritySection from "@/Pages/AccidentNotification/Partials/Components/SeveritySection";
+
 import ChronologySection from "@/Pages/AccidentNotification/Partials/Components/ChronologySection";
 import ConsequenceSection from "@/Pages/AccidentNotification/Partials/Components/ConsequenceSection";
+// Force refresh after moving components to subfolder
+import IncidentOverviewSection from "@/Pages/AccidentNotification/Partials/Components/IncidentOverviewSection";
 import MediaSection from "@/Pages/AccidentNotification/Partials/Components/MediaSection";
 import ReporterSection from "@/Pages/AccidentNotification/Partials/Components/ReporterSection";
+import SeveritySection from "@/Pages/AccidentNotification/Partials/Components/SeveritySection";
 import dayjs from "dayjs";
+import { useTheme } from "@/Contexts/ThemeContext";
 
-export default function AccidentNotificationModal({ 
-    visible, 
-    onCancel, 
-    onFinish, 
-    loading, 
+export default function AccidentNotificationModal({
+    visible,
+    onCancel,
+    onFinish,
+    loading,
     initialValues,
-    master = {}, 
-    hook = {} 
+    master = {},
+    hook = {}
 }) {
     const { isDarkMode } = useTheme();
     const [form] = Form.useForm();
@@ -43,7 +44,7 @@ export default function AccidentNotificationModal({
                         uid: p.id,
                         name: p.filename,
                         status: 'done',
-                        url: `/storage/${p.path}`,
+                        url: `${window.location.origin}/storage/${p.path.replace(/\\/g, '/')}`,
                     })));
                 }
             } else {
@@ -194,13 +195,13 @@ export default function AccidentNotificationModal({
                     </Row>
 
                     <div style={{ display: "flex", justifyContent: "flex-end", gap: 16, paddingTop: 24, marginBottom: 24 }}>
-                        <Button size="large" onClick={onCancel} style={{ borderRadius: 8, fontWeight: 600, padding: '0 32px', height: 42 }}>
+                        <Button onClick={onCancel} style={{ borderRadius: 8, fontWeight: 600, padding: '0 32px', height: 42 }}>
                             Cancel
                         </Button>
-                        <Button size="large" onClick={() => onFinish(form, 'draft')} loading={loading} style={{ borderRadius: 8, fontWeight: 600, padding: '0 32px', height: 42 }}>
+                        <Button onClick={() => onFinish(form, 'draft')} loading={loading} style={{ borderRadius: 8, fontWeight: 600, padding: '0 32px', height: 42 }}>
                             Save As Draft
                         </Button>
-                        <Button type="primary" size="large" onClick={() => onFinish(form, 'submitted')} loading={loading} style={{ background: "#2563eb", border: "none", fontWeight: 700, borderRadius: 8, padding: '0 48px', height: 42, boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" }}>
+                        <Button type="primary" onClick={() => onFinish(form, 'submitted')} loading={loading} style={{ background: "#2563eb", border: "none", fontWeight: 700, borderRadius: 8, padding: '0 48px', height: 42, boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" }}>
                             Submit
                         </Button>
                     </div>

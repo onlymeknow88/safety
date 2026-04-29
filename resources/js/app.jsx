@@ -7,7 +7,7 @@ import "@fontsource/inter/700.css";
 import { createRoot } from "react-dom/client";
 import { createInertiaApp } from "@inertiajs/react";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
-import { ConfigProvider, theme } from "antd";
+import { ConfigProvider, theme, App as AntdApp } from "antd";
 import { StyleProvider } from '@ant-design/cssinjs';
 import idID from "antd/locale/id_ID";
 import { ThemeProvider } from "./Contexts/ThemeContext";
@@ -33,14 +33,18 @@ createInertiaApp({
             import.meta.glob("./Pages/**/*.jsx")
         ),
 
-    setup({ el, App, props }) {
+    setup({ el, App: InertiaApp, props }) {
         const root = createRoot(el);
 
         root.render(
             <StyleProvider hashPriority="high">
-                <ThemeProvider>
-                    <App {...props} />
-                </ThemeProvider>
+                <ConfigProvider locale={idID}>
+                    <ThemeProvider>
+                        <AntdApp>
+                            <InertiaApp {...props} />
+                        </AntdApp>
+                    </ThemeProvider>
+                </ConfigProvider>
             </StyleProvider>
         );
     },

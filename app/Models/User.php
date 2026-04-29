@@ -21,6 +21,9 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+        'azure_id',
+        'azure_token',
+        'azure_refresh_token',
     ];
 
     /**

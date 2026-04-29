@@ -1,6 +1,6 @@
-import { Alert, Button, Checkbox, ConfigProvider, Form, Input, Typography, theme as antdTheme } from "antd";
-import { Head, useForm } from "@inertiajs/react";
-import { LockOutlined, LoginOutlined, MoonOutlined, SafetyCertificateOutlined, SunOutlined, UserOutlined } from "@ant-design/icons";
+import { Alert, Button, Checkbox, ConfigProvider, Divider, Form, Input, Typography, theme as antdTheme } from "antd";
+import { Head, useForm, Link as InertiaLink } from "@inertiajs/react";
+import { LockOutlined, LoginOutlined, MoonOutlined, SafetyCertificateOutlined, SunOutlined, UserOutlined, WindowsOutlined } from "@ant-design/icons";
 
 import TokenManager from "@/Utils/TokenManager";
 import axios from "axios";
@@ -234,13 +234,41 @@ export default function Login({ status, canResetPassword = true }) {
                                     style={{
                                         fontWeight: 600,
                                         boxShadow: isDarkMode ? "none" : "0 4px 12px rgba(37, 99, 235, 0.25)",
-                                        fontSize: "16px"
+                                        fontSize: "16px",
+                                        height: "45px",
+                                        borderRadius: "8px"
                                     }}
                                 >
                                     {processing ? "Memproses..." : "Masuk ke Sistem"}
                                 </Button>
                             </Form.Item>
                         </Form>
+
+                        <div style={{ marginTop: "24px" }}>
+                            <Divider plain style={{ margin: "16px 0", borderColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }}>
+                                <Text type="secondary" style={{ fontSize: "12px" }}>Atau masuk dengan</Text>
+                            </Divider>
+
+                            <Button
+                                block
+                                size="large"
+                                icon={<WindowsOutlined />}
+                                onClick={() => window.location.href = route('azure.login')}
+                                style={{
+                                    height: "45px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontWeight: 500,
+                                    borderRadius: "8px",
+                                    borderColor: isDarkMode ? "#303030" : "#d9d9d9",
+                                    backgroundColor: isDarkMode ? "transparent" : "#fff",
+                                    boxShadow: "none"
+                                }}
+                            >
+                                Sign in with Microsoft
+                            </Button>
+                        </div>
 
                         <div style={{ marginTop: "40px", textAlign: "center" }}>
                             <Text type="secondary" style={{ fontSize: "14px" }}>

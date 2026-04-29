@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             MenuSeeder::class,
             RoleMenuSeeder::class,
+            AppSettingSeeder::class,
         ]);
     }
 }
