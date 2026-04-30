@@ -6,6 +6,7 @@ import DashboardLayout from "@/Layouts/DashboardLayout";
 import { useTheme } from "@/Contexts/ThemeContext";
 import AccidentNotificationModal from "./Partials/AccidentNotificationModal";
 import DeleteConfirmModal from "@/Components/DeleteConfirmModal";
+import PdfPreviewModal from "./Partials/Components/PdfPreviewModal";
 
 // Consolidated Hook
 import useAccidentNotification from "./Hooks/useAccidentNotification";
@@ -26,6 +27,7 @@ export default function AccidentNotificationIndex({ master = {} }) {
         handleSearchChange,
         isModalVisible,
         setIsModalVisible,
+        modalMode,
         handleAdd,
         handleEdit,
         handleSave,
@@ -40,7 +42,9 @@ export default function AccidentNotificationIndex({ master = {} }) {
         severity, setSeverity,
         incidentFacts, setIncidentFacts,
         correctiveActions, setCorrectiveActions,
-        fileList, setFileList
+        fileList, setFileList,
+        isPreviewModalVisible, setIsPreviewModalVisible,
+        previewRecord, handleDownloadPdf
     } = useAccidentNotification(master);
 
     return (
@@ -103,6 +107,7 @@ export default function AccidentNotificationIndex({ master = {} }) {
                 loading={loading}
                 initialValues={editingItem}
                 master={master}
+                mode={modalMode}
                 hook={ {
                     isHpri, setIsHpri,
                     severity, setSeverity,
@@ -110,6 +115,15 @@ export default function AccidentNotificationIndex({ master = {} }) {
                     correctiveActions, setCorrectiveActions,
                     fileList, setFileList
                 } }
+            />
+
+            {/* PDF Preview Modal */}
+            <PdfPreviewModal
+                visible={isPreviewModalVisible}
+                onCancel={() => setIsPreviewModalVisible(false)}
+                record={previewRecord}
+                onDownload={handleDownloadPdf}
+                isDarkMode={isDarkMode}
             />
 
             {/* Delete Confirmation */}

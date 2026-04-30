@@ -13,6 +13,14 @@ export default function ReporterSection({ type = 'reporter' }) {
     const posLabel = "JABATAN";
     const prefix = isReporter ? "reporter" : "approver";
 
+    useEffect(() => {
+        const id = form.getFieldValue(`${prefix}_id`);
+        const name = form.getFieldValue(`${prefix}_name`);
+        if (id && name) {
+            setOptions([{ label: name, value: id, name: name }]);
+        }
+    }, []);
+
     const fetchEmployees = async (query) => {
         if (!query || query.length < 2) return;
         setLoading(true);
@@ -21,7 +29,8 @@ export default function ReporterSection({ type = 'reporter' }) {
             const response = await axios.get(url);
             const data = response.data.result.map(emp => ({
                 label: `${emp.name} (${emp.nik})`,
-                value: emp.name, // We store the name in the notification table as per current schema
+                value: emp.id,
+                name: emp.name,
                 position: emp.jabatan?.name || 'N/A'
             }));
             setOptions(data);
@@ -33,20 +42,21 @@ export default function ReporterSection({ type = 'reporter' }) {
     };
 
     const handleSelect = (value, option) => {
-        // Auto-fill the position field
+        // Auto-fill the position and name fields
         form.setFieldsValue({
+            [`${prefix}_name`]: option.name,
             [`${prefix}_position`]: option.position
         });
     };
 
     return (
         <div>
-            <div style={{ marginBottom: 16, fontWeight: 800, fontSize: 13, color: '#64748b', letterSpacing: 0.5 }}>
+            <div style={{ marginBottom: 16, fontWeight: 800, fontSize: 13, color: '#475569', letterSpacing: 0.5 }}>
                 {title}
             </div>
             <Form.Item
-                name={`${prefix}_name`}
-                label={<span style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8' }}>{nameLabel}</span>}
+                name={`${prefix}_id`}
+                label={<span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>{nameLabel}</span>}
                 style={{ marginBottom: 12 }}
                 rules={[{ required: true, message: 'Wajib diisi' }]}
             >
@@ -63,9 +73,13 @@ export default function ReporterSection({ type = 'reporter' }) {
                     style={{ borderRadius: 6 }}
                 />
             </Form.Item>
+
+            {/* Hidden field to store the name for backward compatibility/historical data */}
+            <Form.Item name={`${prefix}_name`} noStyle><Input type="hidden" /></Form.Item>
+
             <Form.Item
                 name={`${prefix}_position`}
-                label={<span style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8' }}>{posLabel}</span>}
+                label={<span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>{posLabel}</span>}
                 style={{ marginBottom: 0 }}
             >
                 <Input placeholder="Jabatan akan terisi otomatis" style={{ borderRadius: 6, padding: '8px 12px' }} />

@@ -33,10 +33,21 @@ export default function useAccidentNotification(master = {}) {
 
     // Modal & CRUD States
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [modalMode, setModalMode] = useState("add"); // 'add', 'edit', 'detail'
     const [editingItem, setEditingItem] = useState(null);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
+    const [previewRecord, setPreviewRecord] = useState(null);
+
+    // Detail View Handler
+    const handleDetail = (record) => {
+        setEditingItem(record);
+        setModalMode("detail");
+        syncFormWithData(record);
+        setIsModalVisible(true);
+    };
 
     // Form Specific States
     const [isHpri, setIsHpri] = useState(false);
@@ -113,12 +124,14 @@ export default function useAccidentNotification(master = {}) {
     // CRUD Actions
     const handleAdd = () => {
         setEditingItem(null);
+        setModalMode("add");
         resetForm();
         setIsModalVisible(true);
     };
 
     const handleEdit = (record) => {
         setEditingItem(record);
+        setModalMode("edit");
         syncFormWithData(record);
         setIsModalVisible(true);
     };
@@ -199,6 +212,11 @@ export default function useAccidentNotification(master = {}) {
         const token = TokenManager.getToken();
         const url = `/api/accident-notification/${record.id}/export-pdf?token=${token}`;
         window.open(url, "_blank");
+    };
+
+    const handlePreviewPdf = (record) => {
+        setPreviewRecord(record);
+        setIsPreviewModalVisible(true);
     };
 
     const buildFormData = (values, statusIntent) => {
@@ -386,6 +404,7 @@ export default function useAccidentNotification(master = {}) {
             {
                 header: "NO",
                 id: "rowNumber",
+                id: "row_number",
                 cell: ({ row }) =>
                     pagination.pageIndex * pagination.pageSize + row.index + 1,
                 meta: { align: "center", width: 60 },
@@ -404,11 +423,156 @@ export default function useAccidentNotification(master = {}) {
                 header: "NO. NOTIFIKASI (NI)",
                 accessorKey: "notification_number",
                 cell: ({ row }) => (
-                    <Text strong style={{ color: "#2563eb" }}>
+                    <Text 
+                        strong 
+                        style={{ color: "#2563eb", cursor: "pointer" }}
+                        onClick={() => handleDetail(row.original)}
+                    >
                         {row.original.notification_number || "-"}
                     </Text>
                 ),
                 meta: { width: 150 },
+            },
+            {
+                header: "NO HSE ALERT",
+                accessorKey: "hse_alert_no",
+                cell: ({ row }) => row.original.hse_alert_no || "-",
+                meta: { width: 150 },
+            },
+            {
+                header: "CCOW",
+                accessorKey: "ccow.name",
+                cell: ({ row }) => row.original.ccow?.name || "-",
+                meta: { width: 150 },
+            },
+            {
+                header: "TANGGAL KEJADIAN",
+                accessorKey: "incident_date",
+                cell: ({ row }) => row.original.incident_date ? dayjs(row.original.incident_date).format('DD/MM/YYYY') : "-",
+                meta: { width: 150, align: "center" },
+            },
+            {
+                header: "TANGGAL PELAPORAN KEPADA KaIT / Kadis a/n KaIT",
+                accessorKey: "kait_reporting_date",
+                cell: ({ row }) => row.original.kait_reporting_date ? dayjs(row.original.kait_reporting_date).format('DD/MM/YYYY') : "N/A",
+                meta: { width: 220, align: "center" },
+            },
+            {
+                header: "HARI",
+                id: "incident_day",
+                cell: ({ row }) => {
+                    if (!row.original.incident_date) return "-";
+                    const days = {
+                        'Sunday': 'Minggu', 'Monday': 'Senin', 'Tuesday': 'Selasa', 
+                        'Wednesday': 'Rabu', 'Thursday': 'Kamis', 'Friday': 'Jumat', 'Saturday': 'Sabtu'
+                    };
+                    return days[dayjs(row.original.incident_date).format('dddd')] || "-";
+                },
+                meta: { width: 100, align: "center" },
+            },
+            {
+                header: "JAM (hh:ss)",
+                accessorKey: "incident_time",
+                cell: ({ row }) =>
+                    row.original.incident_time
+                        ? row.original.incident_time.substring(0, 5)
+                        : "-",
+                meta: { width: 100, align: "center" },
+            },
+            {
+                header: "KRITERIA WAKTU KECELAKAAN",
+                id: "time_criteria",
+                cell: ({ row }) => {
+                    const time = row.original.incident_time;
+                    if (!time) return "-";
+                    const hour = parseInt(time.split(':')[0]);
+                    
+                    if (hour >= 0 && hour < 3) return "00.01 - 03.00";
+                    if (hour >= 3 && hour < 6) return "03.01 - 06.00";
+                    if (hour >= 6 && hour < 9) return "06.01 - 09.00";
+                    if (hour >= 9 && hour < 12) return "09.01 - 12.00";
+                    if (hour >= 12 && hour < 15) return "12.01 - 15.00";
+                    if (hour >= 15 && hour < 18) return "15.01 - 18.00";
+                    if (hour >= 18 && hour < 21) return "18.01 - 21.00";
+                    return "21.01 - 00.00";
+                },
+                meta: { width: 180, align: "center" },
+            },
+            {
+                header: "LOKASI",
+                accessorKey: "location.name",
+                cell: ({ row }) => row.original.location?.name || "-",
+                meta: { width: 150 },
+            },
+            {
+                header: "LOKASI DETAIL",
+                accessorKey: "location_detail",
+                cell: ({ row }) => (
+                    <div style={{ fontSize: 13, fontWeight: 500, color: '#475569' }}>
+                        {row.original.location_detail || "-"}
+                    </div>
+                ),
+                meta: { width: 200 },
+            },
+            {
+                header: "JUDUL INSIDEN (40 KARAKTER)",
+                accessorKey: "incident_title",
+                cell: ({ row }) => row.original.incident_title || "-",
+                meta: { width: 250 },
+            },
+            {
+                header: "AKIBAT INSIDEN",
+                accessorKey: "incident_consequence",
+                cell: ({ row }) => row.original.incident_consequence || "-",
+                meta: { width: 250 },
+            },
+            {
+                header: "NAMA KORBAN/ ORANG YANG TERLIBAT DALAM INSIDEN",
+                accessorKey: "victim_name",
+                cell: ({ row }) => row.original.victim_name || "-",
+                meta: { width: 250 },
+            },
+            {
+                header: "JENIS KELAMIN",
+                accessorKey: "victim_gender.name",
+                cell: ({ row }) => row.original.victim_gender?.name || "-",
+                meta: { width: 120, align: "center" },
+            },
+            {
+                header: "UMUR",
+                accessorKey: "victim_age",
+                cell: ({ row }) => row.original.victim_age || "-",
+                meta: { width: 80, align: "center" },
+            },
+            {
+                header: "INTERVAL UMUR",
+                accessorKey: "victim_age_interval.label",
+                cell: ({ row }) => row.original.victim_age_interval?.label || "-",
+                meta: { width: 150, align: "center" },
+            },
+            {
+                header: "POSISI / JABATAN",
+                accessorKey: "victim_position.name",
+                cell: ({ row }) => row.original.victim_position?.name || "-",
+                meta: { width: 150 },
+            },
+            {
+                header: "DETAIL POSISI / JABATAN",
+                accessorKey: "victim_position_detail",
+                cell: ({ row }) => row.original.victim_position_detail || "-",
+                meta: { width: 180 },
+            },
+            {
+                header: "PENGALAMAN BEKERJA",
+                accessorKey: "victim_experience.label",
+                cell: ({ row }) => row.original.victim_experience?.label || "-",
+                meta: { width: 180 },
+            },
+            {
+                header: "DEPARTEMEN / DEPARTEMEN USER",
+                accessorKey: "department.name",
+                cell: ({ row }) => row.original.department?.name || "-",
+                meta: { width: 180 },
             },
             {
                 header: "PERUSAHAAN",
@@ -417,217 +581,112 @@ export default function useAccidentNotification(master = {}) {
                 meta: { width: 180 },
             },
             {
-                header: "AREA",
-                accessorKey: "ccow.name",
-                cell: ({ row }) => row.original.ccow?.name || "-",
-                meta: { width: 150 },
-            },
-            {
-                header: "LOKASI / PIT",
-                accessorKey: "location.name",
-                cell: ({ row }) => row.original.location?.name || "-",
-                meta: { width: 120 },
-            },
-            {
-                header: "LOKASI DETAIL",
-                accessorKey: "location_detail",
-                cell: ({ row }) => row.original.location_detail || "-",
-                meta: { width: 180 },
-            },
-            {
-                header: "TIPE",
-                accessorKey: "incident_type.description",
-                cell: ({ row }) =>
-                    row.original.incident_type?.description || "-",
-                meta: { width: 120 },
-            },
-            {
-                header: "JAM",
-                accessorKey: "incident_time",
-                cell: ({ row }) =>
-                    row.original.incident_time
-                        ? row.original.incident_time.substring(0, 5)
-                        : "-",
-                meta: { width: 80, align: "center" },
-            },
-            {
-                header: "KEPARAHAN AKTUAL",
-                id: "actual_severity_group",
+                header: "JENIS INSIDEN / KECELAKAAN",
+                id: "incident_type_group",
                 columns: [
                     {
-                        header: "K3",
-                        accessorKey: "actual_k3",
-                        meta: { align: "center", width: 60 },
+                        header: "DETAIL TIPE INSIDEN / KECELAKAAN",
+                        accessorKey: "incident_type.description",
+                        cell: ({ row }) => row.original.incident_type?.description || "-",
+                        meta: { width: 200 },
                     },
                     {
-                        header: "KK",
-                        accessorKey: "actual_kk",
-                        meta: { align: "center", width: 60 },
-                    },
-                    {
-                        header: "LH",
-                        accessorKey: "actual_lh",
-                        meta: { align: "center", width: 60 },
-                    },
-                    {
-                        header: "KSL",
-                        accessorKey: "actual_ksl",
-                        meta: { align: "center", width: 60 },
-                    },
-                    {
-                        header: "PP",
-                        accessorKey: "actual_pp",
-                        meta: { align: "center", width: 60 },
+                        header: "HPRI",
+                        accessorKey: "is_hpri",
+                        cell: ({ row }) => (
+                            <Text strong color={row.original.is_hpri ? "red" : "default"}>
+                                {row.original.is_hpri ? "HPRI" : "NON HPRI"}
+                            </Text>
+                        ),
+                        meta: { align: "center", width: 120 },
                     },
                 ],
             },
             {
-                header: "KEPARAHAN POTENSIAL",
-                id: "potential_severity_group",
-                columns: [
-                    {
-                        header: "K3",
-                        accessorKey: "potential_k3",
-                        meta: { align: "center", width: 60 },
-                    },
-                    {
-                        header: "KK",
-                        accessorKey: "potential_kk",
-                        meta: { align: "center", width: 60 },
-                    },
-                    {
-                        header: "LH",
-                        accessorKey: "potential_lh",
-                        meta: { align: "center", width: 60 },
-                    },
-                    {
-                        header: "KSL",
-                        accessorKey: "potential_ksl",
-                        meta: { align: "center", width: 60 },
-                    },
-                    {
-                        header: "PP",
-                        accessorKey: "potential_pp",
-                        meta: { align: "center", width: 60 },
-                    },
-                ],
-            },
-            {
-                header: "HPRI",
-                accessorKey: "is_hpri",
-                cell: ({ row }) => (
-                    <Text
-                        strong
-                        color={row.original.is_hpri ? "red" : "default"}
-                    >
-                        {row.original.is_hpri ? "YA" : "TIDAK"}
-                    </Text>
-                ),
-                meta: { align: "center", width: 100 },
-            },
-            {
-                header: "KRONOLOGI",
-                accessorKey: "chronology",
-                cell: ({ row }) => (
-                    <div style={{ minWidth: 300, whiteSpace: "normal" }}>
-                        {row.original.chronology || "-"}
-                    </div>
-                ),
-                meta: { width: 400, nowrap: false },
-            },
-            {
-                header: "FAKTA KEJADIAN",
-                accessorKey: "incident_facts",
-                cell: ({ row }) => (
-                    <ul style={{ paddingLeft: 16, margin: 0 }}>
-                        {row.original.incident_facts?.map((f, i) => (
-                            <li key={i}>{f}</li>
-                        ))}
-                    </ul>
-                ),
-                meta: { width: 350, nowrap: false },
-            },
-            {
-                header: "AKIBAT KECELAKAAN",
+                header: "AKIBAT INSIDEN / KECELAKAAN",
                 id: "consequence_group",
+                columns: [
+                    {
+                        header: "HARI HILANG (HARI)",
+                        accessorKey: "lost_days",
+                        cell: ({ row }) => row.original.lost_days ?? "-",
+                        meta: { align: "center", width: 120 },
+                    },
+                    {
+                        header: "BIAYA KERUGIAN AKTUAL (IDR)",
+                        accessorKey: "actual_cost",
+                        cell: ({ row }) => row.original.actual_cost ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(row.original.actual_cost) : "-",
+                        meta: { align: "right", width: 180 },
+                    },
+                    {
+                        header: "BIAYA KERUGIAN POTENSIAL (IDR)",
+                        accessorKey: "potential_cost",
+                        cell: ({ row }) => row.original.potential_cost ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(row.original.potential_cost) : "-",
+                        meta: { align: "right", width: 180 },
+                    },
+                ],
+            },
+            {
+                header: "PELAPORAN",
+                id: "reporting_group",
+                columns: [
+                    {
+                        header: "LPKS / LPKL",
+                        accessorKey: "lpks_lpkl",
+                        cell: ({ row }) => row.original.lpks_lpkl || "-",
+                        meta: { width: 120, align: "center" },
+                    },
+                    {
+                        header: "DUE DATE",
+                        accessorKey: "due_date",
+                        cell: ({ row }) => row.original.due_date ? dayjs(row.original.due_date).format('DD/MM/YYYY') : "-",
+                        meta: { width: 120, align: "center" },
+                    },
+                    {
+                        header: "TANGGAL PRESENTASI",
+                        accessorKey: "presentation_date",
+                        cell: ({ row }) => row.original.presentation_date ? dayjs(row.original.presentation_date).format('DD/MM/YYYY') : "-",
+                        meta: { width: 160, align: "center" },
+                    },
+                    {
+                        header: "SUBMIT DATE",
+                        accessorKey: "submit_date",
+                        cell: ({ row }) => row.original.submit_date ? dayjs(row.original.submit_date).format('DD/MM/YYYY') : "-",
+                        meta: { width: 120, align: "center" },
+                    },
+                    {
+                        header: "STATUS",
+                        accessorKey: "report_status",
+                        cell: ({ row }) => {
+                            const status = row.original.report_status;
+                            if (!status) return "-";
+                            const isOverdue = status.toLowerCase().includes('overdue');
+                            return (
+                                <Tag color={isOverdue ? "orange" : "blue"} style={{ borderRadius: 4, fontWeight: 700 }}>
+                                    {status.toUpperCase()}
+                                </Tag>
+                            );
+                        },
+                        meta: { width: 150, align: "center" },
+                    },
+                ],
+            },
+            {
+                header: "UNDANGAN PRESENTASI",
+                accessorKey: "presentation_invitation",
                 cell: ({ row }) => {
-                    const {
-                        consequence_human,
-                        consequence_tool,
-                        consequence_environment,
-                    } = row.original;
+                    const val = row.original.presentation_invitation;
+                    if (!val) return "-";
                     return (
-                        <div style={{ minWidth: 250, fontSize: 12 }}>
-                            {consequence_human && (
-                                <div>
-                                    <strong>Manusia:</strong>{" "}
-                                    {consequence_human}
-                                </div>
-                            )}
-                            {consequence_tool && (
-                                <div>
-                                    <strong>Alat:</strong> {consequence_tool}
-                                </div>
-                            )}
-                            {consequence_environment && (
-                                <div>
-                                    <strong>Lingkungan:</strong>{" "}
-                                    {consequence_environment}
-                                </div>
-                            )}
-                            {!consequence_human &&
-                                !consequence_tool &&
-                                !consequence_environment &&
-                                "-"}
-                        </div>
+                        <Tag color={val === 'DONE' ? 'green' : 'default'} style={{ borderRadius: 4, fontWeight: 800 }}>
+                            {val}
+                        </Tag>
                     );
                 },
-                meta: { width: 300, nowrap: false },
+                meta: { width: 180, align: "center" },
             },
             {
-                header: "TINDAKAN PERBAIKAN",
-                accessorKey: "corrective_actions",
-                cell: ({ row }) => (
-                    <ul style={{ paddingLeft: 16, margin: 0 }}>
-                        {row.original.corrective_actions?.map((a, i) => (
-                            <li key={i}>{a}</li>
-                        ))}
-                    </ul>
-                ),
-                meta: { width: 350, nowrap: false },
-            },
-            {
-                header: "DILAPORKAN OLEH",
-                columns: [
-                    {
-                        header: "NAMA",
-                        accessorKey: "reporter_name",
-                        meta: { width: 130 },
-                    },
-                    {
-                        header: "JABATAN",
-                        accessorKey: "reporter_position",
-                        meta: { width: 130 },
-                    },
-                ],
-            },
-            {
-                header: "DISETUJUI OLEH",
-                columns: [
-                    {
-                        header: "NAMA",
-                        accessorKey: "approver_name",
-                        meta: { width: 130 },
-                    },
-                    {
-                        header: "JABATAN",
-                        accessorKey: "approver_position",
-                        meta: { width: 130 },
-                    },
-                ],
-            },
-            {
-                header: "STATUS",
+                header: "STATUS LAPORAN",
                 accessorKey: "status.name",
                 cell: ({ row }) => {
                     const statusName =
@@ -663,7 +722,7 @@ export default function useAccidentNotification(master = {}) {
                             size="small"
                             style={{ color: '#dc2626', borderColor: '#fee2e2', background: '#fef2f2' }}
                             icon={<FilePdfOutlined />}
-                            onClick={() => handleDownloadPdf(row.original)}
+                            onClick={() => handlePreviewPdf(row.original)}
                         />
                         <Button
                             size="small"
@@ -682,6 +741,7 @@ export default function useAccidentNotification(master = {}) {
             pagination.pageSize,
             master.statuses,
             handleEdit,
+            handleDetail,
         ],
     );
 
@@ -707,6 +767,8 @@ export default function useAccidentNotification(master = {}) {
         handleSearchChange,
         isModalVisible,
         setIsModalVisible,
+        modalMode,
+        handleDetail,
         handleAdd,
         handleEdit,
         handleSave,
@@ -729,5 +791,10 @@ export default function useAccidentNotification(master = {}) {
         setCorrectiveActions,
         fileList,
         setFileList,
+        isPreviewModalVisible,
+        setIsPreviewModalVisible,
+        previewRecord,
+        handlePreviewPdf,
+        handleDownloadPdf,
     };
 }

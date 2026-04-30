@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="utf-8">
     <title>Accident Notification - {{ $record->accident_number }}</title>
@@ -17,12 +18,14 @@
                 justify-content: center;
                 padding: 40px 0;
             }
+
             .container {
                 background-color: #fff;
-                width: 29.7cm; /* A4 Landscape */
+                width: 29.7cm;
+                /* A4 Landscape */
                 min-height: 21cm;
                 margin: 0 auto;
-                box-shadow: 0 0 20px rgba(0,0,0,0.2);
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             }
         }
 
@@ -50,7 +53,7 @@
 
         .header-left h1 {
             margin: 0;
-            font-size: 18px;
+            font-size: 22px;
             font-weight: bold;
             font-style: italic;
             letter-spacing: 0.5px;
@@ -63,7 +66,7 @@
 
         .header-left p {
             margin: 5px 0 0 0;
-            font-size: 12px;
+            font-size: 16px;
             opacity: 0.9;
         }
 
@@ -81,7 +84,8 @@
         }
 
         .main-title {
-            color: #f97316; /* Orange */
+            color: #f97316;
+            /* Orange */
             text-align: center;
             font-size: 24px;
             font-weight: bold;
@@ -110,14 +114,14 @@
         .label {
             font-weight: bold;
             display: block;
-            font-size: 10px;
+            font-size: 11px;
             color: #1a1a1a;
         }
 
         .sub-label {
             font-style: italic;
             font-weight: normal;
-            font-size: 8.5px;
+            font-size: 11px;
             color: #777;
             display: block;
             margin-top: -2px;
@@ -125,7 +129,8 @@
 
         .value {
             font-size: 12px;
-            font-weight: bold; /* Note: dompdf only supports normal/bold weights easily */
+            font-weight: bold;
+            /* Note: dompdf only supports normal/bold weights easily */
             margin-top: 2px;
             display: block;
         }
@@ -149,7 +154,7 @@
         }
 
         .list-items li {
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             line-height: 1.4;
         }
 
@@ -169,7 +174,7 @@
         }
 
         .footer {
-            margin-top: 30px;
+            margin-top: 10px;
             width: 100%;
             padding-bottom: 20px;
         }
@@ -205,6 +210,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="container">
@@ -212,11 +218,12 @@
         <table class="header-table">
             <tr>
                 <td class="header-left">
-                    <h1>{{ $record->accident_number }} <span>{{ $record->title ?? 'Terguling ke Kiri di Disposal RL 360' }}</span></h1>
+                    <h1>{{ $record->accident_number }} <span>{{ $record->incident_title ?? '-' }}</span></h1>
                     <p>No. Notifikasi Insiden : {{ $record->notification_number ?? '-' }}</p>
                 </td>
                 <td class="header-right">
-                    <img src="{{ isset($isHtml) ? asset('images/Alamtri Geo Logo - Full Color.png') : public_path('images/Alamtri Geo Logo - Full Color.png') }}" alt="Logo">
+                    <img src="{{ isset($isHtml) ? asset('images/Alamtri Geo Logo - Full Color.png') : public_path('images/Alamtri Geo Logo - Full Color.png') }}"
+                        alt="Logo">
                 </td>
             </tr>
         </table>
@@ -233,22 +240,40 @@
                         <table class="info-table">
                             <tr>
                                 <td>
-                                    <span class="label">Tanggal : <span class="value">{{ \Carbon\Carbon::parse($record->incident_date)->format('d-m-Y') }}</span></span>
+                                    <span class="label">Tanggal : <span
+                                            class="value">{{ \Carbon\Carbon::parse($record->incident_date)->format('d-m-Y') }}</span></span>
                                     <span class="sub-label">Date (dd-mm-yyyy)</span>
                                 </td>
                                 <td>
-                                    <span class="label">Lokasi : <span class="value">{{ $record->location->name ?? '-' }}</span></span>
+                                    <span class="label">Lokasi : <span
+                                            class="value">{{ $record->location->name ?? '-' }}
+                                            {{ $record->location_detail ? '(' . $record->location_detail . ')' : '' }}</span></span>
                                     <span class="sub-label">Location</span>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
-                                    <span class="label">Waktu : <span class="value">{{ $record->incident_time ? substr($record->incident_time, 0, 5) : '-' }} WIB</span></span>
+                                    <span class="label">Waktu : <span
+                                            class="value">{{ $record->incident_time ? substr($record->incident_time, 0, 5) : '-' }}
+                                            WIB</span></span>
                                     <span class="sub-label">Time (24hours)</span>
                                 </td>
                                 <td>
-                                    <span class="label">Perusahaan : <span class="value">{{ $record->company->name ?? '-' }}</span></span>
+                                    <span class="label">Perusahaan : <span
+                                            class="value">{{ $record->company->name ?? '-' }}</span></span>
                                     <span class="sub-label">Company</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="label">Departemen : <span
+                                            class="value">{{ $record->department->name ?? '-' }}</span></span>
+                                    <span class="sub-label">Department</span>
+                                </td>
+                                <td>
+                                    <span class="label">Kontraktor : <span
+                                            class="value">{{ $record->companyContractor->name ?? '-' }}</span></span>
+                                    <span class="sub-label">Contractor (if any)</span>
                                 </td>
                             </tr>
                             <tr>
@@ -259,7 +284,8 @@
                                 <td>
                                     <span class="label">Apakah termasuk HPRI / Related:</span>
                                     <div style="margin-top: 5px;">
-                                        <span style="font-size: 13px;">{{ $record->is_hpri ? '[x]' : '[ ]' }} Ya &nbsp;&nbsp;&nbsp; {{ !$record->is_hpri ? '[x]' : '[ ]' }} Tidak</span>
+                                        <span style="font-size: 13px;">{{ $record->is_hpri ? '[x]' : '[ ]' }} Ya
+                                            &nbsp;&nbsp;&nbsp; {{ !$record->is_hpri ? '[x]' : '[ ]' }} Tidak</span>
                                     </div>
                                 </td>
                             </tr>
@@ -268,8 +294,15 @@
                                     <span class="label">Tingkat keparahan/Severity:</span>
                                     <table style="width: 100%; border: none; margin-top: 5px;">
                                         <tr>
-                                            <td style="border: none; padding: 0;"><strong>Aktual</strong> : K3 = {{ $record->actual_k3 ?? '-' }}; KK = {{ $record->actual_kk ?? '-' }}; LH = {{ $record->actual_lh ?? '-' }}</td>
-                                            <td style="border: none; padding: 0;"><strong>Potensial</strong> : K3 = {{ $record->potential_k3 ?? '-' }}; KK = {{ $record->potential_kk ?? '-' }}; LH = {{ $record->potential_lh ?? '-' }}</td>
+                                            <td style="border: none; padding: 0;"><strong>Aktual</strong> : K3 =
+                                                {{ $record->actual_k3 ?? '-' }}; KK = {{ $record->actual_kk ?? '-' }};
+                                                LH = {{ $record->actual_lh ?? '-' }}
+                                            </td>
+                                            <td style="border: none; padding: 0;"><strong>Potensial</strong> : K3 =
+                                                {{ $record->potential_k3 ?? '-' }}; KK =
+                                                {{ $record->potential_kk ?? '-' }}; LH =
+                                                {{ $record->potential_lh ?? '-' }}
+                                            </td>
                                         </tr>
                                     </table>
                                 </td>
@@ -279,7 +312,7 @@
                         <div class="content-box">
                             <span class="section-title">Penjelasan Insiden :</span>
                             <p><strong>Kronologi awal:</strong><br>
-                            {{ $record->chronology }}</p>
+                                {{ $record->chronology }}</p>
 
                             <p><strong>Fakta kejadian:</strong></p>
                             <ol class="list-items">
@@ -291,9 +324,10 @@
                             </ol>
 
                             <p style="margin-top: 15px;"><strong>Akibat kecelakaan:</strong><br>
-                            <strong>Manusia :</strong> {{ $record->consequence_human ?? '-' }}<br>
-                            <strong>Alat :</strong> {{ $record->consequence_tool ?? '-' }}<br>
-                            <strong>Lingkungan :</strong> {{ $record->consequence_environment ?? '-' }}</p>
+                                <strong>Manusia :</strong> {{ $record->consequence_human ?? '-' }}<br>
+                                <strong>Alat :</strong> {{ $record->consequence_tool ?? '-' }}<br>
+                                <strong>Lingkungan :</strong> {{ $record->consequence_environment ?? '-' }}<br>
+                            </p>
                         </div>
                     </td>
 
@@ -314,7 +348,8 @@
                             <span class="section-title">Foto</span>
                             <div class="photo-box">
                                 @if($record->photos && $record->photos->count() > 0)
-                                    <img src="{{ isset($isHtml) ? asset('storage/' . $record->photos->first()->path) : public_path('storage/' . $record->photos->first()->path) }}" alt="Incident Photo">
+                                    <img src="{{ isset($isHtml) ? asset('storage/' . $record->photos->first()->path) : public_path('storage/' . $record->photos->first()->path) }}"
+                                        alt="Incident Photo">
                                 @else
                                     <div style="padding-top: 100px; color: #ccc;">No Photo Available</div>
                                 @endif
@@ -345,4 +380,5 @@
     </div>
 
 </body>
+
 </html>

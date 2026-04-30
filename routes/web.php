@@ -153,6 +153,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     'locations'     => \App\Models\MasterData\Location::where('is_active', true)->get(),
                     'incidentTypes' => \App\Models\MasterData\IncidentType::where('is_active', true)->get(),
                     'statuses'      => \App\Models\MasterData\Status::where('is_active', true)->get(),
+                    'departments'   => \App\Models\MasterData\Department::where('is_active', true)->get(),
+                    'genders'       => \App\Models\MasterData\Gender::where('is_active', true)->get(),
+                    'intervalAges'  => \App\Models\MasterData\IntervalAge::where('is_active', true)->get(),
+                    'intervalExperiences' => \App\Models\MasterData\IntervalExperience::where('is_active', true)->get(),
+                    'jabatans'      => \App\Models\MasterData\Jabatan::where('is_active', true)->get(),
                 ]
             ]);
         })->name('index');

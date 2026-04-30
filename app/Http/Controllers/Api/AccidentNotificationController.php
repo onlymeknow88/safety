@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\AccidentNotificationApprovalMail;
 use App\Models\AccidentNotification;
 use App\Models\AccidentNotificationPhoto;
+use App\Models\MasterData\Employee;
 use App\Models\MasterData\Status;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -26,7 +27,7 @@ class AccidentNotificationController extends Controller
         $search = $request->search;
         $load = $request->load ?? 10;
 
-        $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status'])
+        $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])
             ->when($search, fn ($q) => $q
                 ->where('accident_number', 'like', "%$search%")
                 ->orWhere('notification_number', 'like', "%$search%")
@@ -51,6 +52,7 @@ class AccidentNotificationController extends Controller
             'incident_time' => $isDraft ? 'nullable' : 'required',
             'ccow_id' => $isDraft ? 'nullable|exists:m_ccows,id' : 'required|exists:m_ccows,id',
             'location_id' => $isDraft ? 'nullable|exists:m_locations,id' : 'required|exists:m_locations,id',
+            'location_detail' => 'nullable|string',
             'company_id' => $isDraft ? 'nullable|exists:m_company,id' : 'required|exists:m_company,id',
             'incident_type_id' => 'nullable|exists:m_incident_types,id',
             'is_hpri' => 'nullable|boolean',
@@ -68,10 +70,18 @@ class AccidentNotificationController extends Controller
             'consequence_human' => 'nullable|string',
             'consequence_tool' => 'nullable|string',
             'consequence_environment' => 'nullable|string',
+            'department_id' => 'nullable|exists:m_department,id',
+            'victim_gender_id' => 'nullable|exists:m_genders,id',
+            'victim_age_interval_id' => 'nullable|exists:m_interval_ages,id',
+            'victim_position_id' => 'nullable|exists:m_jabatan,id',
+            'victim_experience_id' => 'nullable|exists:m_interval_experiences,id',
+            'company_contractor_id' => 'nullable|exists:m_company,id',
             'reporter_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'reporter_position' => 'nullable|string|max:255',
             'approver_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'approver_position' => 'nullable|string|max:255',
+            'reporter_id' => 'nullable|exists:m_employees,id',
+            'approver_id' => 'nullable|exists:m_employees,id',
             'status_id' => 'required|exists:m_statuses,id',
             'photos' => 'nullable|array|max:3',
             'photos.*' => 'file|mimes:jpg,jpeg,png|max:2048',
@@ -86,7 +96,8 @@ class AccidentNotificationController extends Controller
         $data = $request->except(['photos', 'incident_facts', 'corrective_actions']);
         $data['incident_facts'] = $request->input('incident_facts', []);
         $data['corrective_actions'] = $request->input('corrective_actions', []);
-        $data['created_by'] = auth()->id();
+        $data['created_by'] = auth('api')->user()->name ?? 'System';
+        $data['updated_by'] = auth('api')->user()->name ?? 'System';
         $data['is_hpri'] = $request->boolean('is_hpri');
 
         $record = AccidentNotification::create($data);
@@ -105,11 +116,11 @@ class AccidentNotificationController extends Controller
         // Kirim email approval jika bukan draft
         if (! $isDraft) {
             try {
-                // Cari user yang namanya sesuai dengan approver_name
-                $approver = User::where('name', $record->approver_name)->first();
+                // Cari Employee yang namanya sesuai dengan approver_name
+                $approver = Employee::where('id', $record->approver_id)->first();
                 $recipient = $approver ? $approver->email : config('mail.from.address');
 
-                Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType'])));
+                Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType', 'reporter', 'approver'])));
             } catch (\Exception $e) {
                 Log::error('Gagal mengirim email approval: '.$e->getMessage());
             }
@@ -127,34 +138,13 @@ class AccidentNotificationController extends Controller
      */
     public function show(string $id)
     {
-        $record = AccidentNotification::with('photos')->find($id);
+        $record = AccidentNotification::with(['photos', 'location', 'ccow', 'company', 'incidentType', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])->find($id);
 
         if (! $record) {
             return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
         }
 
         return ResponseFormatter::success($record, 'Berhasil mengambil detail data');
-    }
-
-    /**
-     * GET /api/accident-notification/{id}/export-pdf
-     */
-    public function exportPdf(string $id)
-    {
-        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos'])->find($id);
-
-        if (! $record) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
-        }
-
-        $pdf = Pdf::loadView('pdf.accident_notification', compact('record'));
-
-        // Atur ukuran kertas A4 landscape
-        $pdf->setPaper('a4', 'landscape');
-
-        $fileName = str_replace(['/', '\\'], '_', $record->accident_number);
-
-        return $pdf->download('Accident_Notification_'.$fileName.'.pdf');
     }
 
     /**
@@ -177,6 +167,7 @@ class AccidentNotificationController extends Controller
             'incident_time' => $isDraft ? 'nullable' : 'required',
             'ccow_id' => $isDraft ? 'nullable|exists:m_ccows,id' : 'required|exists:m_ccows,id',
             'location_id' => $isDraft ? 'nullable|exists:m_locations,id' : 'required|exists:m_locations,id',
+            'location_detail' => 'nullable|string',
             'company_id' => $isDraft ? 'nullable|exists:m_company,id' : 'required|exists:m_company,id',
             'incident_type_id' => 'nullable|exists:m_incident_types,id',
             'is_hpri' => 'nullable|boolean',
@@ -194,10 +185,18 @@ class AccidentNotificationController extends Controller
             'consequence_human' => 'nullable|string',
             'consequence_tool' => 'nullable|string',
             'consequence_environment' => 'nullable|string',
+            'department_id' => 'nullable|exists:m_department,id',
+            'victim_gender_id' => 'nullable|exists:m_genders,id',
+            'victim_age_interval_id' => 'nullable|exists:m_interval_ages,id',
+            'victim_position_id' => 'nullable|exists:m_jabatan,id',
+            'victim_experience_id' => 'nullable|exists:m_interval_experiences,id',
+            'company_contractor_id' => 'nullable|exists:m_company,id',
             'reporter_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'reporter_position' => 'nullable|string|max:255',
             'approver_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'approver_position' => 'nullable|string|max:255',
+            'reporter_id' => 'nullable|exists:m_employees,id',
+            'approver_id' => 'nullable|exists:m_employees,id',
             'status_id' => 'required|exists:m_statuses,id',
             'photos' => 'nullable|array|max:3',
             'photos.*' => 'file|mimes:jpg,jpeg,png|max:2048',
@@ -219,6 +218,8 @@ class AccidentNotificationController extends Controller
         if ($request->has('is_hpri')) {
             $data['is_hpri'] = $request->boolean('is_hpri');
         }
+
+        $data['updated_by'] = auth('api')->user()->name ?? 'System';
 
         $record->update($data);
 
@@ -243,10 +244,10 @@ class AccidentNotificationController extends Controller
         // Kirim email approval jika bukan draft
         if (! $isDraft) {
             try {
-                $approver = User::where('name', $record->approver_name)->first();
+                $approver = Employee::where('id', $record->approver_id)->first();
                 $recipient = $approver ? $approver->email : config('mail.from.address');
 
-                Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType'])));
+                Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType', 'reporter', 'approver'])));
             } catch (\Exception $e) {
                 Log::error('Gagal mengirim email approval (Update): '.$e->getMessage());
             }
@@ -296,5 +297,30 @@ class AccidentNotificationController extends Controller
         $photo->delete();
 
         return ResponseFormatter::success(null, 'Foto berhasil dihapus');
+    }
+
+    /**
+     * GET /api/accident-notification/{id}/export-pdf
+     */
+    public function exportPdf(Request $request, string $id)
+    {
+        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])->find($id);
+
+        if (! $record) {
+            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+        }
+
+        $pdf = Pdf::loadView('pdf.accident_notification', compact('record'));
+
+        // Atur ukuran kertas A4 landscape
+        $pdf->setPaper('a4', 'landscape');
+
+        $fileName = str_replace(['/', '\\'], '_', $record->accident_number);
+
+        if ($request->query('preview')) {
+            return $pdf->stream('Accident_Notification_'.$fileName.'.pdf');
+        }
+
+        return $pdf->download('Accident_Notification_'.$fileName.'.pdf');
     }
 }

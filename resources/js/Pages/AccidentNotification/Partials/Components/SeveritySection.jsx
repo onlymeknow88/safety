@@ -42,7 +42,7 @@ export default function SeveritySection({ prefix, severity, setSeverity, isDarkM
     const labelStyle = { 
         fontSize: 12, 
         fontWeight: 800, 
-        color: '#94a3b8', 
+        color: '#475569', 
         textTransform: 'uppercase', 
         display: 'block', 
         marginBottom: 8 

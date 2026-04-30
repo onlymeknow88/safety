@@ -28,7 +28,7 @@ export default function DashboardLayout({ children, title = "Dashboard" }) {
     }, []);
 
     return (
-        <Layout style={{ minHeight: "100vh" }}>
+        <Layout style={{ height: "100vh", overflow: "hidden" }}>
             {/* Component Sidebar */}
             <Sidebar 
                 collapsed={collapsed} 
@@ -42,6 +42,11 @@ export default function DashboardLayout({ children, title = "Dashboard" }) {
                     marginInlineStart: isMobile ? 0 : (collapsed ? 80 : 280),
                     transition: "all 0.2s",
                     minWidth: 0, // Prevent layout overflow
+                    height: "100vh",
+                    overflowY: "auto",
+                    overflowX: "hidden", // Prevent horizontal scroll during collapse transition
+                    display: "flex",
+                    flexDirection: "column",
                 }}
             >
                 {/* Component Navbar (Header) */}

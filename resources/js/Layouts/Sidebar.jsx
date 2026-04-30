@@ -223,6 +223,44 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
                     z-index: 1;
                 }
 
+                /* Sub-menu Popup Scrolling (when sidebar is collapsed) */
+                .ant-menu-submenu-popup {
+                    max-height: 100vh !important;
+                    overflow: visible !important;
+                    padding: 4px 0 !important;
+                    z-index: 1050 !important;
+                }
+                
+                .ant-menu-submenu-popup .ant-menu {
+                    max-height: 50vh !important; /* Shorter height to ensure scrollbar is always visible and reachable */
+                    overflow-y: auto !important;
+                    overscroll-behavior: contain !important;
+                    scrollbar-width: thin;
+                    border-radius: 12px !important;
+                    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+                    padding: 8px 4px 40px 4px !important; /* More bottom padding for better visibility of last items */
+                }
+
+                /* Compact items in popup to fit more */
+                .ant-menu-submenu-popup .ant-menu-item,
+                .ant-menu-submenu-popup .ant-menu-submenu-title {
+                    height: 40px !important;
+                    line-height: 40px !important;
+                    margin: 2px 0 !important;
+                }
+
+                /* Custom Scrollbar for the popup menu */
+                .ant-menu-submenu-popup .ant-menu::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .ant-menu-submenu-popup .ant-menu::-webkit-scrollbar-thumb {
+                    background: ${isDarkMode ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.15)"};
+                    border-radius: 10px;
+                }
+                .ant-menu-submenu-popup .ant-menu::-webkit-scrollbar-thumb:hover {
+                    background: ${isDarkMode ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.25)"};
+                }
+
                 /* Hide Ant Design default indicators */
                 .custom-tree-menu .ant-menu-item-selected::after,
                 .custom-tree-menu .ant-menu-item::after {

@@ -19,6 +19,10 @@ class AccidentNotification extends Model
         'corrective_actions' => 'array',
         'is_hpri' => 'boolean',
         'incident_date' => 'date',
+        'due_date' => 'date',
+        'presentation_date' => 'date',
+        'submit_date' => 'date',
+        'kait_reporting_date' => 'date',
     ];
 
     // Auto-generate notification_number sebelum create
@@ -83,8 +87,44 @@ class AccidentNotification extends Model
         return $this->belongsTo(\App\Models\MasterData\Status::class, 'status_id');
     }
 
-    public function creator()
+    public function department()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(\App\Models\MasterData\Department::class, 'department_id');
+    }
+
+    public function victimGender()
+    {
+        return $this->belongsTo(\App\Models\MasterData\Gender::class, 'victim_gender_id');
+    }
+
+    public function victimAgeInterval()
+    {
+        return $this->belongsTo(\App\Models\MasterData\IntervalAge::class, 'victim_age_interval_id');
+    }
+
+    public function victimPosition()
+    {
+        return $this->belongsTo(\App\Models\MasterData\Jabatan::class, 'victim_position_id');
+    }
+
+    public function victimExperience()
+    {
+        return $this->belongsTo(\App\Models\MasterData\IntervalExperience::class, 'victim_experience_id');
+    }
+
+    public function companyContractor()
+    {
+        return $this->belongsTo(\App\Models\MasterData\Company::class, 'company_contractor_id');
+    }
+
+
+    public function reporter()
+    {
+        return $this->belongsTo(\App\Models\MasterData\Employee::class, 'reporter_id');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(\App\Models\MasterData\Employee::class, 'approver_id');
     }
 }
