@@ -23,6 +23,7 @@ class AccidentNotification extends Model
         'presentation_date' => 'date',
         'submit_date' => 'date',
         'kait_reporting_date' => 'date',
+        'progress_status_id' => 'integer',
     ];
 
     // Auto-generate notification_number sebelum create
@@ -50,9 +51,12 @@ class AccidentNotification extends Model
                 $model->accident_number = "{$formattedCount}/IR-{$ccowCode}/{$romanMonth}/{$year}";
             }
 
-            // Set No Notifikasi Insident (NI)
             if (empty($model->notification_number)) {
                 $model->notification_number = "{$formattedCount}/NI-{$ccowCode}/{$romanMonth}/{$year}";
+            }
+
+            if (empty($model->uuid)) {
+                $model->uuid = (string) \Illuminate\Support\Str::uuid();
             }
         });
     }
@@ -126,5 +130,10 @@ class AccidentNotification extends Model
     public function approver()
     {
         return $this->belongsTo(\App\Models\MasterData\Employee::class, 'approver_id');
+    }
+
+    public function progressStatus()
+    {
+        return $this->belongsTo(\App\Models\MasterData\Status::class, 'progress_status_id');
     }
 }

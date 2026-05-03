@@ -28,6 +28,7 @@ export default function AccidentNotificationIndex({ master = {} }) {
         isModalVisible,
         setIsModalVisible,
         modalMode,
+        canCreate,
         handleAdd,
         handleEdit,
         handleSave,
@@ -38,13 +39,14 @@ export default function AccidentNotificationIndex({ master = {} }) {
         editingItem,
         totalRows,
         fetchItems,
+        refreshKey,
         isHpri, setIsHpri,
         severity, setSeverity,
         incidentFacts, setIncidentFacts,
         correctiveActions, setCorrectiveActions,
         fileList, setFileList,
         isPreviewModalVisible, setIsPreviewModalVisible,
-        previewRecord, handleDownloadPdf
+        previewRecord, handleApprove, handleReturn, handleDownloadPdf
     } = useAccidentNotification(master);
 
     return (
@@ -86,6 +88,7 @@ export default function AccidentNotificationIndex({ master = {} }) {
                     searchText={searchText}
                     onSearchChange={handleSearchChange}
                     onAddClick={handleAdd}
+                    canCreate={canCreate}
                     isDarkMode={isDarkMode}
                     table={table}
                 />
@@ -104,6 +107,8 @@ export default function AccidentNotificationIndex({ master = {} }) {
                 visible={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 onFinish={handleSave}
+                onApprove={handleApprove}
+                onReturn={handleReturn}
                 loading={loading}
                 initialValues={editingItem}
                 master={master}
@@ -124,6 +129,7 @@ export default function AccidentNotificationIndex({ master = {} }) {
                 record={previewRecord}
                 onDownload={handleDownloadPdf}
                 isDarkMode={isDarkMode}
+                refreshKey={refreshKey}
             />
 
             {/* Delete Confirmation */}

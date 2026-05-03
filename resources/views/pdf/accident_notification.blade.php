@@ -346,12 +346,33 @@
 
                         <div class="content-box" style="margin-top: 20px;">
                             <span class="section-title">Foto</span>
-                            <div class="photo-box">
+                            <div class="photo-box" style="padding: 0; background-color: transparent; border: none;">
                                 @if($record->photos && $record->photos->count() > 0)
-                                    <img src="{{ isset($isHtml) ? asset('storage/' . $record->photos->first()->path) : public_path('storage/' . $record->photos->first()->path) }}"
-                                        alt="Incident Photo">
+                                    @php
+                                        $count = $record->photos->count();
+                                        $cols = $count > 1 ? 2 : 1;
+                                    @endphp
+                                    <table style="width: 100%; border-collapse: collapse; table-layout: fixed; border: 1px solid #cbd5e1;">
+                                        @foreach($record->photos->chunk($cols) as $chunk)
+                                            <tr>
+                                                @foreach($chunk as $photo)
+                                                    <td style="padding: 5px; text-align: center; vertical-align: middle; border: 1px solid #cbd5e1; background-color: #f8fafc;">
+                                                        <img src="{{ isset($isHtml) ? asset('storage/' . $photo->path) : public_path('storage/' . $photo->path) }}"
+                                                            alt="Incident Photo" 
+                                                            style="max-width: 100%; max-height: {{ $count > 2 ? '150px' : '300px' }}; display: block; margin: 0 auto;">
+                                                    </td>
+                                                @endforeach
+                                                {{-- Add empty cell if odd number of photos in a 2-column grid --}}
+                                                @if($cols == 2 && $chunk->count() == 1)
+                                                    <td style="border: 1px solid #cbd5e1; background-color: #f8fafc;"></td>
+                                                @endif
+                                            </tr>
+                                        @endforeach
+                                    </table>
                                 @else
-                                    <div style="padding-top: 100px; color: #ccc;">No Photo Available</div>
+                                    <div class="photo-box">
+                                        <div style="padding-top: 100px; color: #ccc; text-align: center;">No Photo Available</div>
+                                    </div>
                                 @endif
                             </div>
                         </div>

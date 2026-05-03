@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Helpers\ResponseFormatter;
+use App\Helpers\SafetyResponse;
 use App\Http\Controllers\Controller;
 use App\Mail\AccidentNotificationApprovalMail;
 use App\Models\AccidentNotification;
 use App\Models\AccidentNotificationPhoto;
 use App\Models\MasterData\Employee;
 use App\Models\MasterData\Status;
-use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -27,7 +26,7 @@ class AccidentNotificationController extends Controller
         $search = $request->search;
         $load = $request->load ?? 10;
 
-        $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])
+        $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver', 'progressStatus'])
             ->when($search, fn ($q) => $q
                 ->where('accident_number', 'like', "%$search%")
                 ->orWhere('notification_number', 'like', "%$search%")
@@ -35,7 +34,7 @@ class AccidentNotificationController extends Controller
 
         $data = $query->latest()->paginate($load);
 
-        return ResponseFormatter::success($data, 'Berhasil mengambil data');
+        return SafetyResponse::success($data, 'Berhasil mengambil data');
     }
 
     /**
@@ -83,17 +82,24 @@ class AccidentNotificationController extends Controller
             'reporter_id' => 'nullable|exists:m_employees,id',
             'approver_id' => 'nullable|exists:m_employees,id',
             'status_id' => 'required|exists:m_statuses,id',
-            'photos' => 'nullable|array|max:3',
+            'photos' => 'nullable|array|max:4',
             'photos.*' => 'file|mimes:jpg,jpeg,png|max:2048',
+            // Reporting Fields
+            'lpks_lpkl' => 'nullable|string',
+            'due_date' => 'nullable|date',
+            'presentation_date' => 'nullable|date',
+            'submit_date' => 'nullable|date',
+            'progress_status_id' => 'nullable|exists:m_statuses,id',
+            'presentation_invitation' => 'nullable|string',
         ];
 
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
-        $data = $request->except(['photos', 'incident_facts', 'corrective_actions']);
+        $data = $request->except(['photos', 'incident_facts', 'corrective_actions', 'report_status']);
         $data['incident_facts'] = $request->input('incident_facts', []);
         $data['corrective_actions'] = $request->input('corrective_actions', []);
         $data['created_by'] = auth('api')->user()->name ?? 'System';
@@ -120,13 +126,13 @@ class AccidentNotificationController extends Controller
                 $approver = Employee::where('id', $record->approver_id)->first();
                 $recipient = $approver ? $approver->email : config('mail.from.address');
 
-                Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType', 'reporter', 'approver'])));
+                // Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType', 'reporter', 'approver'])));
             } catch (\Exception $e) {
                 Log::error('Gagal mengirim email approval: '.$e->getMessage());
             }
         }
 
-        return ResponseFormatter::success(
+        return SafetyResponse::success(
             $record->load('photos'),
             'Berhasil menyimpan data',
             201
@@ -141,10 +147,10 @@ class AccidentNotificationController extends Controller
         $record = AccidentNotification::with(['photos', 'location', 'ccow', 'company', 'incidentType', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])->find($id);
 
         if (! $record) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
-        return ResponseFormatter::success($record, 'Berhasil mengambil detail data');
+        return SafetyResponse::success($record, 'Berhasil mengambil detail data');
     }
 
     /**
@@ -155,7 +161,7 @@ class AccidentNotificationController extends Controller
         $record = AccidentNotification::find($id);
 
         if (! $record) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
         // Ambil status info untuk menentukan apakah ini draft atau submit
@@ -198,17 +204,24 @@ class AccidentNotificationController extends Controller
             'reporter_id' => 'nullable|exists:m_employees,id',
             'approver_id' => 'nullable|exists:m_employees,id',
             'status_id' => 'required|exists:m_statuses,id',
-            'photos' => 'nullable|array|max:3',
+            'photos' => 'nullable|array|max:4',
             'photos.*' => 'file|mimes:jpg,jpeg,png|max:2048',
+            // Reporting Fields
+            'lpks_lpkl' => 'nullable|string',
+            'due_date' => 'nullable|date',
+            'presentation_date' => 'nullable|date',
+            'submit_date' => 'nullable|date',
+            'progress_status_id' => 'nullable|exists:m_statuses,id',
+            'presentation_invitation' => 'nullable|string',
         ];
 
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
-        $data = $request->except(['photos', 'incident_facts', 'corrective_actions']);
+        $data = $request->except(['photos', 'existing_photos', 'incident_facts', 'corrective_actions', 'report_status']);
         if ($request->has('incident_facts')) {
             $data['incident_facts'] = $request->input('incident_facts', []);
         }
@@ -223,13 +236,22 @@ class AccidentNotificationController extends Controller
 
         $record->update($data);
 
-        // Tambah foto baru (tidak menghapus yang lama kecuali total > 3)
+        // Handle photo deletions
+        $existingPhotoIds = $request->input('existing_photos', []);
+        $photosToDelete = $record->photos()->whereNotIn('id', $existingPhotoIds)->get();
+
+        foreach ($photosToDelete as $photo) {
+            Storage::disk('public')->delete($photo->path);
+            $photo->delete();
+        }
+
+        // Tambah foto baru
         if ($request->hasFile('photos')) {
-            $existing = $record->photos()->count();
+            $currentCount = $record->photos()->count();
             $newFiles = $request->file('photos');
 
             foreach ($newFiles as $file) {
-                if ($existing >= 3) {
+                if ($currentCount >= 4) {
                     break;
                 }
                 $path = $file->store('accident-notifications', 'public');
@@ -237,7 +259,7 @@ class AccidentNotificationController extends Controller
                     'path' => $path,
                     'filename' => $file->getClientOriginalName(),
                 ]);
-                $existing++;
+                $currentCount++;
             }
         }
 
@@ -247,13 +269,13 @@ class AccidentNotificationController extends Controller
                 $approver = Employee::where('id', $record->approver_id)->first();
                 $recipient = $approver ? $approver->email : config('mail.from.address');
 
-                Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType', 'reporter', 'approver'])));
+                // Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType', 'reporter', 'approver'])));
             } catch (\Exception $e) {
                 Log::error('Gagal mengirim email approval (Update): '.$e->getMessage());
             }
         }
 
-        return ResponseFormatter::success(
+        return SafetyResponse::success(
             $record->load('photos'),
             'Berhasil memperbarui data'
         );
@@ -267,7 +289,7 @@ class AccidentNotificationController extends Controller
         $record = AccidentNotification::find($id);
 
         if (! $record) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
         // Hapus file foto dari storage
@@ -277,7 +299,7 @@ class AccidentNotificationController extends Controller
 
         $record->delete();
 
-        return ResponseFormatter::success(null, 'Berhasil menghapus data');
+        return SafetyResponse::success(null, 'Berhasil menghapus data');
     }
 
     /**
@@ -290,13 +312,13 @@ class AccidentNotificationController extends Controller
             ->find($photoId);
 
         if (! $photo) {
-            return ResponseFormatter::error(null, 'Foto tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Foto tidak ditemukan', 404);
         }
 
         Storage::disk('public')->delete($photo->path);
         $photo->delete();
 
-        return ResponseFormatter::success(null, 'Foto berhasil dihapus');
+        return SafetyResponse::success(null, 'Foto berhasil dihapus');
     }
 
     /**
@@ -307,7 +329,7 @@ class AccidentNotificationController extends Controller
         $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])->find($id);
 
         if (! $record) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
         $pdf = Pdf::loadView('pdf.accident_notification', compact('record'));
@@ -322,5 +344,50 @@ class AccidentNotificationController extends Controller
         }
 
         return $pdf->download('Accident_Notification_'.$fileName.'.pdf');
+    }
+
+    public function approve(string $id)
+    {
+        $record = AccidentNotification::find($id);
+
+        if (! $record) {
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
+        }
+
+        // Cari status 'Approved' (biasanya ID 7 sesuai request sebelumnya)
+        $status = Status::where('name', 'like', '%approved%')->first();
+        $statusId = $status ? $status->id : 7;
+
+        $record->update([
+            'status_id' => $statusId,
+            'approval_comment' => null, // Clear comment when approved
+            'updated_by' => auth('api')->user()->name ?? 'System',
+        ]);
+
+        return SafetyResponse::success($record->load('status'), 'Data berhasil disetujui');
+    }
+
+    /**
+     * POST /api/accident-notification/{id}/return
+     */
+    public function return(Request $request, string $id)
+    {
+        $record = AccidentNotification::find($id);
+
+        if (! $record) {
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
+        }
+
+        // Cari status 'Return' (biasanya ID 8)
+        $status = Status::where('name', 'like', '%return%')->first();
+        $statusId = $status ? $status->id : 8;
+
+        $record->update([
+            'status_id' => $statusId,
+            'approval_comment' => $request->input('comment'),
+            'updated_by' => auth('api')->user()->name ?? 'System',
+        ]);
+
+        return SafetyResponse::success($record->load('status'), 'Data dikembalikan untuk diperbaiki');
     }
 }

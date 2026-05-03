@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Helpers\ResponseFormatter;
+use App\Helpers\SafetyResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
 use Illuminate\Http\Request;
@@ -37,7 +37,7 @@ class MenuController extends Controller
             $paginatedData = $query->paginate($load);
         }
 
-        return ResponseFormatter::success($paginatedData, "Berhasil mengambil data");
+        return SafetyResponse::success($paginatedData, "Berhasil mengambil data");
     }
 
     /**
@@ -57,7 +57,7 @@ class MenuController extends Controller
 
         $menu = Menu::create($validated);
 
-        return ResponseFormatter::success($menu, "Menu berhasi ditambahkan");
+        return SafetyResponse::success($menu, "Menu berhasi ditambahkan");
     }
 
     /**
@@ -65,7 +65,7 @@ class MenuController extends Controller
      */
     public function show(Menu $menu)
     {
-        return ResponseFormatter::success($menu->load('parent'), "Data menu ditemukan");
+        return SafetyResponse::success($menu->load('parent'), "Data menu ditemukan");
     }
 
     /**
@@ -90,7 +90,7 @@ class MenuController extends Controller
 
         $menu->update($data);
 
-        return ResponseFormatter::success($menu, "Menu berhasil diperbarui");
+        return SafetyResponse::success($menu, "Menu berhasil diperbarui");
     }
 
     /**
@@ -100,12 +100,12 @@ class MenuController extends Controller
     {
         // Optional: Check if has children
         if ($menu->children()->count() > 0) {
-            return ResponseFormatter::error("Tidak dapat menghapus menu yang memiliki sub-menu", 422);
+            return SafetyResponse::error("Tidak dapat menghapus menu yang memiliki sub-menu", 422);
         }
 
         $menu->delete();
 
-        return ResponseFormatter::success(null, "Menu berhasil dihapus");
+        return SafetyResponse::success(null, "Menu berhasil dihapus");
     }
 
     public function reorder(Request $request)
@@ -122,10 +122,10 @@ class MenuController extends Controller
                 Menu::where('id', $item['id'])->update(['order' => $item['order']]);
             }
             \DB::commit();
-            return ResponseFormatter::success(null, "Urutan menu berhasil diperbarui");
+            return SafetyResponse::success(null, "Urutan menu berhasil diperbarui");
         } catch (\Exception $e) {
             \DB::rollBack();
-            return ResponseFormatter::error("Gagal memperbarui urutan menu: " . $e->getMessage(), 500);
+            return SafetyResponse::error("Gagal memperbarui urutan menu: " . $e->getMessage(), 500);
         }
     }
 }

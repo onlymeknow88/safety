@@ -8,6 +8,7 @@ export default function AccidentNotificationHeader({
     searchText,
     onSearchChange,
     onAddClick,
+    canCreate,
     isDarkMode,
     table,
 }) {
@@ -73,7 +74,10 @@ export default function AccidentNotificationHeader({
                         />
 
                         <Dropdown
-                            menu={{ items: columnItems }}
+                            menu={{ 
+                                items: columnItems,
+                                style: { maxHeight: '500px', overflowY: 'auto' }
+                            }}
                             trigger={['click']}
                             placement="bottomRight"
                             open={columnsVisible}
@@ -94,22 +98,24 @@ export default function AccidentNotificationHeader({
                     </div>
                 </Space>
 
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={onAddClick}
-                    style={{
-                        height: 40,
-                        borderRadius: 10,
-                        padding: "0 24px",
-                        fontWeight: 600,
-                        background: "#1677ff",
-                        boxShadow: "0 4px 12px rgba(22, 119, 255, 0.2)",
-                        width: isMobile ? '100%' : 'auto',
-                    }}
-                >
-                    Buat Notifikasi
-                </Button>
+                {canCreate && (
+                    <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={onAddClick}
+                        style={{
+                            height: 40,
+                            borderRadius: 10,
+                            padding: "0 24px",
+                            fontWeight: 600,
+                            background: "#1677ff",
+                            boxShadow: "0 4px 12px rgba(22, 119, 255, 0.2)",
+                            width: isMobile ? '100%' : 'auto',
+                        }}
+                    >
+                        Buat Notifikasi
+                    </Button>
+                )}
             </div>
         </div>
     );

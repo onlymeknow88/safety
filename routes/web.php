@@ -1,15 +1,32 @@
 <?php
 
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Auth\AzureAuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MasterData\Api\EmployeeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
+use App\Models\AccidentNotification;
+use App\Models\MasterData\Ccow;
+use App\Models\MasterData\Company;
+use App\Models\MasterData\Department;
+use App\Models\MasterData\Gender;
+use App\Models\MasterData\IncidentType;
+use App\Models\MasterData\IntervalAge;
+use App\Models\MasterData\IntervalExperience;
+use App\Models\MasterData\Jabatan;
+use App\Models\MasterData\Location;
+use App\Models\MasterData\Status;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // ── Public Routes ─────────────────────────────────────────────────────────────
 
-Route::get('/', function () {
-    return redirect()->route('dashboard');
+// Accident Notification Public Approval
+Route::prefix('public')->name('public.')->group(function () {
+    Route::get('/approve/{uuid}', [\App\Http\Controllers\PublicApprovalController::class, 'show'])->name('accident.show');
+    Route::post('/approve/{uuid}', [\App\Http\Controllers\PublicApprovalController::class, 'approve'])->name('accident.approve');
+    Route::post('/return/{uuid}', [\App\Http\Controllers\PublicApprovalController::class, 'return'])->name('accident.return');
 });
 
 // ── Auth Routes (via Laravel Breeze) ─────────────────────────────────────────
@@ -22,8 +39,8 @@ Route::get('/', function () {
 require __DIR__.'/auth.php';
 
 // Azure Auth Routes
-Route::get('/auth/azure', [\App\Http\Controllers\Auth\AzureAuthController::class, 'redirectToAzure'])->name('azure.login');
-Route::get('/auth/azure/callback', [\App\Http\Controllers\Auth\AzureAuthController::class, 'handleAzureCallback']);
+Route::get('/auth/azure', [AzureAuthController::class, 'redirectToAzure'])->name('azure.login');
+Route::get('/auth/azure/callback', [AzureAuthController::class, 'handleAzureCallback']);
 
 // ── Authenticated Routes ──────────────────────────────────────────────────────
 
@@ -41,7 +58,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-
     // Admin Group
     Route::prefix('admin')->name('admin.')->group(function () {
         // User Admin
@@ -50,93 +66,93 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('user.index');
 
         // Role & Permission Management
-        Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
+        Route::resource('roles', RoleController::class);
 
         // Menu
-         Route::get('/menu', function () {
+        Route::get('/menu', function () {
             return Inertia::render('Admin/Menu/Index');
         })->name('admin.menu.index');
 
     });
 
     // Master Data Group
-    Route::prefix('master-data')->name('master-data.')->group(function (){
-        Route::get('/', function(){
+    Route::prefix('master-data')->name('master-data.')->group(function () {
+        Route::get('/', function () {
             return Inertia::render('MasterData/Index');
         })->name('index');
-        Route::get('/ccow', function(){
+        Route::get('/ccow', function () {
             return Inertia::render('MasterData/Ccow/Index');
         });
-        Route::get('/company', function(){
+        Route::get('/company', function () {
             return Inertia::render('MasterData/Company/Index');
         });
-        Route::get('/department', function(){
+        Route::get('/department', function () {
             return Inertia::render('MasterData/Department/Index');
         });
-        Route::get('/jabatan', function(){
+        Route::get('/jabatan', function () {
             return Inertia::render('MasterData/Jabatan/Index');
         })->name('jabatan.index');
-        Route::get('/shift', function(){
+        Route::get('/shift', function () {
             return Inertia::render('MasterData/Shift/Index');
         })->name('shift.index');
-        Route::get('/interval-time', function(){
+        Route::get('/interval-time', function () {
             return Inertia::render('MasterData/IntervalTime/Index');
         })->name('interval-time.index');
-        Route::get('/day', function(){
+        Route::get('/day', function () {
             return Inertia::render('MasterData/Day/Index');
         })->name('day.index');
-        Route::get('/roster', function(){
+        Route::get('/roster', function () {
             return Inertia::render('MasterData/Roster/Index');
         })->name('roster.index');
-        Route::get('/gender', function(){
+        Route::get('/gender', function () {
             return Inertia::render('MasterData/Gender/Index');
         })->name('gender.index');
-        Route::get('/interval-age', function(){
+        Route::get('/interval-age', function () {
             return Inertia::render('MasterData/IntervalAge/Index');
         })->name('interval-age.index');
-        Route::get('/interval-experience', function(){
+        Route::get('/interval-experience', function () {
             return Inertia::render('MasterData/IntervalExperience/Index');
         })->name('interval-experience.index');
-        Route::get('/incident-type', function(){
+        Route::get('/incident-type', function () {
             return Inertia::render('MasterData/IncidentType/Index');
         })->name('incident-type.index');
-        Route::get('/kriteria', function(){
+        Route::get('/kriteria', function () {
             return Inertia::render('MasterData/Kriteria/Index');
         })->name('kriteria.index');
-        Route::get('/report-type', function(){
+        Route::get('/report-type', function () {
             return Inertia::render('MasterData/ReportType/Index');
         })->name('report-type.index');
-        Route::get('/status', function(){
+        Route::get('/status', function () {
             return Inertia::render('MasterData/Status/Index');
         })->name('status.index');
-        Route::get('/injury-condition', function(){
+        Route::get('/injury-condition', function () {
             return Inertia::render('MasterData/InjuryCondition/Index');
         })->name('injury-condition.index');
-        Route::get('/body-part', function(){
+        Route::get('/body-part', function () {
             return Inertia::render('MasterData/BodyPart/Index');
         })->name('body-part.index');
-        Route::get('/recommendation', function(){
+        Route::get('/recommendation', function () {
             return Inertia::render('MasterData/Recommendation/Index');
         })->name('recommendation.index');
-        Route::get('/source', function(){
+        Route::get('/source', function () {
             return Inertia::render('MasterData/Source/Index');
         })->name('source.index');
-        Route::get('/unsafe-act', function(){
+        Route::get('/unsafe-act', function () {
             return Inertia::render('MasterData/UnsafeAct/Index');
         })->name('unsafe-act.index');
-        Route::get('/unsafe-condition', function(){
+        Route::get('/unsafe-condition', function () {
             return Inertia::render('MasterData/UnsafeCondition/Index');
         })->name('unsafe-condition.index');
-        Route::get('/personal-factor', function(){
+        Route::get('/personal-factor', function () {
             return Inertia::render('MasterData/PersonalFactor/Index');
         })->name('personal-factor.index');
-        Route::get('/job-factor', function(){
+        Route::get('/job-factor', function () {
             return Inertia::render('MasterData/JobFactor/Index');
         })->name('job-factor.index');
-        Route::get('/location', function(){
+        Route::get('/location', function () {
             return Inertia::render('MasterData/Location/Index');
         })->name('location.index');
-        Route::get('/employee', function(){
+        Route::get('/employee', function () {
             return Inertia::render('MasterData/Employee/Index');
         })->name('employee.index');
     });
@@ -144,30 +160,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Accident Notification
     Route::prefix('accident-notification')->name('accident-notification.')->group(function () {
         Route::get('/', function () {
-            $data = \App\Models\AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos'])->latest()->get();
+            $data = AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos'])->latest()->get();
+
             return Inertia::render('AccidentNotification/Index', [
                 'accidentNotifications' => $data,
                 'master' => [
-                    'ccows'         => \App\Models\MasterData\Ccow::where('is_active', true)->get(),
-                    'companies'     => \App\Models\MasterData\Company::where('is_active', true)->get(),
-                    'locations'     => \App\Models\MasterData\Location::where('is_active', true)->get(),
-                    'incidentTypes' => \App\Models\MasterData\IncidentType::where('is_active', true)->get(),
-                    'statuses'      => \App\Models\MasterData\Status::where('is_active', true)->get(),
-                    'departments'   => \App\Models\MasterData\Department::where('is_active', true)->get(),
-                    'genders'       => \App\Models\MasterData\Gender::where('is_active', true)->get(),
-                    'intervalAges'  => \App\Models\MasterData\IntervalAge::where('is_active', true)->get(),
-                    'intervalExperiences' => \App\Models\MasterData\IntervalExperience::where('is_active', true)->get(),
-                    'jabatans'      => \App\Models\MasterData\Jabatan::where('is_active', true)->get(),
-                ]
+                    'ccows' => Ccow::where('is_active', true)->get(),
+                    'companies' => Company::where('is_active', true)->get(),
+                    'locations' => Location::where('is_active', true)->get(),
+                    'incidentTypes' => IncidentType::where('is_active', true)->get(),
+                    'statuses' => Status::where('is_active', true)->get(),
+                    'departments' => Department::where('is_active', true)->get(),
+                    'genders' => Gender::where('is_active', true)->get(),
+                    'intervalAges' => IntervalAge::where('is_active', true)->get(),
+                    'intervalExperiences' => IntervalExperience::where('is_active', true)->get(),
+                    'jabatans' => Jabatan::where('is_active', true)->get(),
+                ],
             ]);
         })->name('index');
 
-        Route::get('/create',    function () {
+        Route::get('/create', function () {
             return Inertia::render('AccidentNotification/Form');
         })->name('create');
 
         Route::get('/{id}/edit', function ($id) {
-            $record = \App\Models\AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos'])->findOrFail($id);
+            $record = AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos'])->findOrFail($id);
+
             return Inertia::render('AccidentNotification/Form', [
                 'accidentNotification' => $record,
             ]);
@@ -175,5 +193,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Master Data Employee (API for Select2/Autocomplete)
-    Route::get('/employees/search', [\App\Http\Controllers\MasterData\Api\EmployeeController::class, 'search'])->name('employees.search');
+    Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');
 });

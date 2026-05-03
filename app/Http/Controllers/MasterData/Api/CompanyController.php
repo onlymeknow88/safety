@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\MasterData\Api;
 
-use App\Helpers\ResponseFormatter;
+use App\Helpers\SafetyResponse;
 use App\Http\Controllers\Controller;
 use App\Models\MasterData\Company;
 use Illuminate\Http\Request;
@@ -29,7 +29,7 @@ class CompanyController extends Controller
 
         $paginateData = $query->orderBy('name', 'asc')->paginate($load);
 
-        return ResponseFormatter::success($paginateData, "Berhasil mengambil data");
+        return SafetyResponse::success($paginateData, "Berhasil mengambil data");
     }
 
     /**
@@ -44,12 +44,12 @@ class CompanyController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
         $data = Company::create($request->all());
 
-        return ResponseFormatter::success($data, 'Berhasil menambahkan data');
+        return SafetyResponse::success($data, 'Berhasil menambahkan data');
     }
 
     /**
@@ -59,9 +59,9 @@ class CompanyController extends Controller
     {
          $data = Company::find($id);
         if (!$data) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
-        return ResponseFormatter::success($data, 'Berhasil mengambil detail data');
+        return SafetyResponse::success($data, 'Berhasil mengambil detail data');
     }
 
     /**
@@ -71,7 +71,7 @@ class CompanyController extends Controller
     {
          $data = Company::find($id);
         if (!$data) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -81,12 +81,12 @@ class CompanyController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
         $data->update($request->all());
 
-        return ResponseFormatter::success($data, 'Berhasil memperbarui data');
+        return SafetyResponse::success($data, 'Berhasil memperbarui data');
     }
 
     /**
@@ -96,11 +96,11 @@ class CompanyController extends Controller
     {
          $data = Company::find($id);
         if (!$data) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
         $data->delete();
 
-        return ResponseFormatter::success(null, 'Berhasil menghapus data');
+        return SafetyResponse::success(null, 'Berhasil menghapus data');
     }
 }

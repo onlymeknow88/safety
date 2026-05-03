@@ -1,4 +1,4 @@
-import { Button, Card, Col, DatePicker, Form, Modal, Row, Select, Space, Switch, Tag } from "antd";
+import { Alert, Button, Card, Col, DatePicker, Form, Modal, Row, Select, Space, Switch, Tag } from "antd";
 import React, { useEffect } from "react";
 import { usePage } from "@inertiajs/react";
 
@@ -17,6 +17,8 @@ export default function AccidentNotificationModal({
     visible,
     onCancel,
     onFinish,
+    onApprove,
+    onReturn,
     loading,
     initialValues,
     master = {},
@@ -26,6 +28,37 @@ export default function AccidentNotificationModal({
     const { isDarkMode } = useTheme();
     const [form] = Form.useForm();
     const isDetail = mode === 'detail';
+    const authUser = usePage().props.auth.user;
+    
+    // Debugging (bisa dihapus setelah ok)
+    // console.log('Auth User:', authUser);
+    // console.log('Initial Values Status ID:', initialValues?.status_id);
+
+    const canApprove = authUser?.can_approve;
+    const showApproveButton = isDetail && 
+        (initialValues?.status_id == 3 || initialValues?.status_id == 6 || initialValues?.status?.name?.toLowerCase() === 'submitted') && 
+        canApprove;
+
+    const getStatusColor = () => {
+        const name = initialValues?.status?.name?.toLowerCase() || "";
+        const id = initialValues?.status_id;
+        
+        if (name.includes("approved") || name.includes("closed") || id == 7) return { color: "#059669", bg: "#ecfdf5" };
+        if (name.includes("submitted") || id == 6) return { color: "#2563eb", bg: "#eff6ff" };
+        if (name.includes("open") || id == 3) return { color: "#0891b2", bg: "#ecfeff" };
+        if (name.includes("return") || id == 8) return { color: "#d97706", bg: "#fffbeb" }; // Amber
+        if (name.includes("overdue")) return { color: "#dc2626", bg: "#fef2f2" };
+        return { color: "#64748b", bg: "#f8fafc" }; // Draft/Default
+    };
+
+    const statusStyle = getStatusColor();
+
+    const userRoles = (authUser?.roles || []).map(r => r.toLowerCase());
+    const isCrs = userRoles.includes('crs');
+    const isApproved = initialValues?.status_id == 7;
+    
+    // Administrator can edit anytime, CRS only after full approval
+    const canEditReporting = authUser?.is_administrator || (isCrs && isApproved);
 
     const {
         isHpri, setIsHpri,
@@ -131,13 +164,35 @@ export default function AccidentNotificationModal({
                     </Col>
                 </Row>
 
+                {initialValues?.approval_comment && (
+                    <Alert
+                        message={<span style={{ fontWeight: 800 }}>CATATAN PERBAIKAN DARI APPROVER:</span>}
+                        description={<div style={{ fontWeight: 600 }}>{initialValues.approval_comment}</div>}
+                        type="warning"
+                        showIcon
+                        style={{ marginBottom: 24, borderRadius: 12, border: '1px solid #faad14', background: '#fffbe6' }}
+                    />
+                )}
+
                 <Form form={form} layout="vertical" disabled={isDetail} className={isDetail ? 'readonly-form' : ''}>
                     <Row gutter={24}>
                         <Col xs={24} lg={17}>
                             <Card
                                 title={<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                                     <span style={{ fontSize: 13, color: isDarkMode ? '#fff' : '#000000', fontWeight: 800, letterSpacing: 0.5 }}>RINGKASAN INSIDEN</span>
-                                    <Tag color="blue" style={{ borderRadius: 4, fontSize: 11, fontWeight: 800, background: '#eff6ff', color: '#1d4ed8', border: 'none', padding: '2px 8px' }}>DRAFT UTAMA</Tag>
+                                    {initialValues?.status && (
+                                        <Tag style={{ 
+                                            borderRadius: 4, 
+                                            fontSize: 11, 
+                                            fontWeight: 800, 
+                                            background: statusStyle.bg, 
+                                            color: statusStyle.color, 
+                                            border: `1px solid ${statusStyle.color}20`, 
+                                            padding: '2px 8px' 
+                                        }}>
+                                            {initialValues.status.name.toUpperCase()}
+                                        </Tag>
+                                    )}
                                 </div>}
                                 styles={{ header: { borderBottom: '1px solid #f1f5f9' } }} style={cardStyle}
                             >
@@ -204,7 +259,7 @@ export default function AccidentNotificationModal({
                         <Row gutter={24}>
                             <Col xs={24} md={4}>
                                 <Form.Item name="lpks_lpkl" label={<span style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>LPKS / LPKL</span>}>
-                                    <Select placeholder="Pilih Tipe" style={{ width: '100%' }}>
+                                    <Select placeholder="Pilih Tipe" style={{ width: '100%' }} disabled={!canEditReporting}>
                                         <Select.Option value="LPKS">LPKS</Select.Option>
                                         <Select.Option value="LPKL">LPKL</Select.Option>
                                     </Select>
@@ -212,31 +267,32 @@ export default function AccidentNotificationModal({
                             </Col>
                             <Col xs={24} md={5}>
                                 <Form.Item name="due_date" label={<span style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>DUE DATE</span>}>
-                                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
+                                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" disabled={!canEditReporting} />
                                 </Form.Item>
                             </Col>
                             <Col xs={24} md={5}>
                                 <Form.Item name="presentation_date" label={<span style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>TANGGAL PRESENTASI</span>}>
-                                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
+                                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" disabled={!canEditReporting} />
                                 </Form.Item>
                             </Col>
                             <Col xs={24} md={5}>
                                 <Form.Item name="submit_date" label={<span style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>SUBMIT DATE</span>}>
-                                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
+                                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" disabled={!canEditReporting} />
                                 </Form.Item>
                             </Col>
                             <Col xs={24} md={5}>
-                                <Form.Item name="report_status" label={<span style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>STATUS PELAPORAN</span>}>
-                                    <Select placeholder="Pilih Status" style={{ width: '100%' }}>
-                                        <Select.Option value="Closed Overdue">Closed Overdue</Select.Option>
-                                        <Select.Option value="Done">Done</Select.Option>
-                                        <Select.Option value="Pending">Pending</Select.Option>
+                                <Form.Item name="progress_status_id" label={<span style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>STATUS LAPORAN</span>}>
+                                    <Select placeholder="Pilih Status" style={{ width: '100%' }} disabled={!canEditReporting}>
+                                        <Select.Option value={1}>Closed</Select.Option>
+                                        <Select.Option value={2}>Closed Overdue</Select.Option>
+                                        <Select.Option value={3}>Open</Select.Option>
+                                        <Select.Option value={4}>Overdue</Select.Option>
                                     </Select>
                                 </Form.Item>
                             </Col>
                             <Col xs={24} md={24}>
                                 <Form.Item name="presentation_invitation" label={<span style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>UNDANGAN PRESENTASI</span>}>
-                                    <Select placeholder="Pilih Status" style={{ width: '100%' }}>
+                                    <Select placeholder="Pilih Status" style={{ width: '100%' }} disabled={!canEditReporting}>
                                         <Select.Option value="DONE">DONE</Select.Option>
                                         <Select.Option value="PENDING">PENDING</Select.Option>
                                     </Select>
@@ -304,6 +360,41 @@ export default function AccidentNotificationModal({
                     <Button onClick={onCancel} style={{ borderRadius: 8, fontWeight: 600, padding: '0 32px', height: 42 }}>
                         {isDetail ? 'Close' : 'Cancel'}
                     </Button>
+                    {isDetail && canEditReporting && (
+                        <Button 
+                            type="primary" 
+                            onClick={() => onFinish(form, 'edit')} 
+                            loading={loading} 
+                            style={{ background: "#8b5cf6", border: "none", fontWeight: 700, borderRadius: 8, padding: '0 48px', height: 42, boxShadow: "0 4px 6px -1px rgba(139, 92, 246, 0.2)" }}
+                        >
+                            Update Reporting
+                        </Button>
+                    )}
+                    {showApproveButton && (
+                        <>
+                            <Button 
+                                onClick={() => {
+                                    onReturn(initialValues);
+                                    onCancel();
+                                }} 
+                                loading={loading} 
+                                style={{ color: "#faad14", borderColor: "#faad14", fontWeight: 600, borderRadius: 8, padding: '0 32px', height: 42 }}
+                            >
+                                Return for Correction
+                            </Button>
+                            <Button 
+                                type="primary" 
+                                onClick={() => {
+                                    onApprove(initialValues);
+                                    onCancel(); // Close modal after approval
+                                }} 
+                                loading={loading} 
+                                style={{ background: "#059669", border: "none", fontWeight: 700, borderRadius: 8, padding: '0 48px', height: 42, boxShadow: "0 4px 6px -1px rgba(5, 150, 105, 0.2)" }}
+                            >
+                                Approve Now
+                            </Button>
+                        </>
+                    )}
                     {!isDetail && (
                         <>
                             <Button onClick={() => onFinish(form, 'draft')} loading={loading} style={{ borderRadius: 8, fontWeight: 600, padding: '0 32px', height: 42 }}>

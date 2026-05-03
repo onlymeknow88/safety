@@ -4,13 +4,20 @@ import React, { useState } from 'react';
 
 import TokenManager from '@/Utils/TokenManager';
 
-export default function PdfPreviewModal({ visible, onCancel, record, onDownload, isDarkMode }) {
+export default function PdfPreviewModal({ visible, onCancel, record, onDownload, isDarkMode, refreshKey }) {
     const [loading, setLoading] = useState(true);
+
+    // Reset loading state when record or refreshKey changes
+    React.useEffect(() => {
+        if (visible) {
+            setLoading(true);
+        }
+    }, [record?.id, refreshKey, visible]);
 
     if (!record) return null;
 
     const token = TokenManager.getToken();
-    const previewUrl = `/api/accident-notification/${record.id}/export-pdf?preview=true&token=${token}`;
+    const previewUrl = `/api/accident-notification/${record.id}/export-pdf?preview=true&token=${token}&v=${refreshKey}`;
 
     return (
         <Modal

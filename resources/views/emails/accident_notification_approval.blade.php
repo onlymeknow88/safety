@@ -63,8 +63,8 @@
                 </tr>
             </table>
 
-            <p>Silakan klik tombol di bawah ini untuk melihat detail lengkap dan memproses laporan ini di dashboard.</p>
-            
+            <p><strong>Approval Cepat:</strong> Anda juga dapat menyetujui laporan ini dengan membalas email ini dengan huruf <strong>Y</strong> (untuk Approve) atau <strong>N</strong> (untuk Reject) di baris pertama balasan Anda.</p>
+
             <a href="{{ url('/accident-notification') }}" class="btn">Buka Dashboard</a>
         </div>
         <div class="footer">

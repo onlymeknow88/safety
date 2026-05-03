@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Helpers\ResponseFormatter;
+use App\Helpers\SafetyResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -26,7 +26,7 @@ class UserController extends Controller
 
         $paginatedData = $data->paginate($load);
 
-        return ResponseFormatter::success($paginatedData, "Berhasil mengambil data");
+        return SafetyResponse::success($paginatedData, "Berhasil mengambil data");
     }
 
     public function store(Request $request)

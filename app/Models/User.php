@@ -21,10 +21,16 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+        'employee_id',
         'azure_id',
         'azure_token',
         'azure_refresh_token',
     ];
+
+    public function employee()
+    {
+        return $this->belongsTo(\App\Models\MasterData\Employee::class, 'employee_id');
+    }
 
     /**
      * The attributes that should be hidden for serialization.

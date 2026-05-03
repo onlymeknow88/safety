@@ -76,6 +76,8 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('employee', EmployeeController::class);
 
     // Accident Notification
+    Route::post('accident-notification/{id}/approve', [AccidentNotificationController::class, 'approve']);
+    Route::post('accident-notification/{id}/return', [AccidentNotificationController::class, 'return']);
     Route::get('accident-notification/{id}/export-pdf', [AccidentNotificationController::class, 'exportPdf']);
     Route::delete('accident-notification/{id}/photos/{photoId}', [AccidentNotificationController::class, 'destroyPhoto']);
     Route::apiResource('accident-notification', AccidentNotificationController::class);

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\MasterData\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\MasterData\Employee;
-use App\Helpers\ResponseFormatter;
+use App\Helpers\SafetyResponse;
 use Illuminate\Http\Request;
 use Exception;
 
@@ -31,10 +31,10 @@ class EmployeeController extends Controller
                 ->limit(10)
                 ->get();
 
-            return ResponseFormatter::success($employees, 'Data karyawan berhasil diambil');
+            return SafetyResponse::success($employees, 'Data karyawan berhasil diambil');
         } catch (Exception $e) {
             \Log::error("Employee Search Error: " . $e->getMessage());
-            return ResponseFormatter::error($e->getMessage(), 500);
+            return SafetyResponse::error($e->getMessage(), 500);
         }
     }
 
@@ -59,9 +59,9 @@ class EmployeeController extends Controller
 
             $employees = $query->latest()->paginate($limit);
                 
-            return ResponseFormatter::success($employees, 'Daftar karyawan berhasil diambil');
+            return SafetyResponse::success($employees, 'Daftar karyawan berhasil diambil');
         } catch (Exception $e) {
-            return ResponseFormatter::error(null, $e->getMessage(), 500);
+            return SafetyResponse::error(null, $e->getMessage(), 500);
         }
     }
 
@@ -83,14 +83,14 @@ class EmployeeController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
         try {
             $employee = Employee::create($request->all());
-            return ResponseFormatter::success($employee, 'Karyawan berhasil ditambahkan');
+            return SafetyResponse::success($employee, 'Karyawan berhasil ditambahkan');
         } catch (Exception $e) {
-            return ResponseFormatter::error($e->getMessage(), 500);
+            return SafetyResponse::error($e->getMessage(), 500);
         }
     }
 
@@ -102,11 +102,11 @@ class EmployeeController extends Controller
         try {
             $employee = Employee::with(['ccow', 'company', 'department', 'jabatan'])->find($id);
             if (!$employee) {
-                return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+                return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
             }
-            return ResponseFormatter::success($employee, 'Berhasil mengambil detail data');
+            return SafetyResponse::success($employee, 'Berhasil mengambil detail data');
         } catch (Exception $e) {
-            return ResponseFormatter::error(null, $e->getMessage(), 500);
+            return SafetyResponse::error(null, $e->getMessage(), 500);
         }
     }
 
@@ -117,7 +117,7 @@ class EmployeeController extends Controller
     {
         $employee = Employee::find($id);
         if (!$employee) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
         $validator = \Validator::make($request->all(), [
@@ -133,14 +133,14 @@ class EmployeeController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
         try {
             $employee->update($request->all());
-            return ResponseFormatter::success($employee, 'Berhasil memperbarui data karyawan');
+            return SafetyResponse::success($employee, 'Berhasil memperbarui data karyawan');
         } catch (Exception $e) {
-            return ResponseFormatter::error($e->getMessage(), 500);
+            return SafetyResponse::error($e->getMessage(), 500);
         }
     }
 
@@ -152,13 +152,13 @@ class EmployeeController extends Controller
         try {
             $employee = Employee::find($id);
             if (!$employee) {
-                return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+                return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
             }
 
             $employee->delete();
-            return ResponseFormatter::success(null, 'Berhasil menghapus data karyawan');
+            return SafetyResponse::success(null, 'Berhasil menghapus data karyawan');
         } catch (Exception $e) {
-            return ResponseFormatter::error(null, $e->getMessage(), 500);
+            return SafetyResponse::error(null, $e->getMessage(), 500);
         }
     }
 }

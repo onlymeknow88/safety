@@ -127,10 +127,10 @@ export default function AccidentNotificationTable({
                     background: transparent !important;
                 }
                 .custom-antd-table .ant-table-thead > tr > th {
-                    background: ${isDarkMode ? "#1d1d1d" : "#fafafa"} !important;
-                    color: ${isDarkMode ? "#d9d9d9" : "#475569"} !important;
+                    background: ${isDarkMode ? "#172554" : "#1e3a8a"} !important;
+                    color: #ffffff !important;
                     font-weight: 700 !important;
-                    border-bottom: 2px solid ${isDarkMode ? "#303030" : "#f1f5f9"} !important;
+                    border-bottom: 1px solid ${isDarkMode ? "#0f172a" : "#1e40af"} !important;
                     padding: 16px !important;
                 }
                 .custom-antd-table .ant-table-tbody > tr > td {
@@ -140,6 +140,12 @@ export default function AccidentNotificationTable({
                 }
                 .custom-antd-table .ant-table-tbody > tr:hover > td {
                     background: ${isDarkMode ? "#1f1f1f" : "#f8fafc"} !important;
+                }
+                .custom-antd-table .ant-table-thead > tr > th .ant-table-column-sorter {
+                    color: #ffffff !important;
+                }
+                .custom-antd-table .ant-table-thead > tr > th .ant-table-filter-trigger {
+                    color: #ffffff !important;
                 }
             `}</style>
         </div>

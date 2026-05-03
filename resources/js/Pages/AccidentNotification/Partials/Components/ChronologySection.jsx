@@ -2,9 +2,11 @@ import React from "react";
 import { Form, Input, Button, List, Space } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 
-const DynamicList = ({ title, items, setItems, placeholder, isDarkMode }) => {
+const DynamicList = ({ title, items, setItems, placeholder, isDarkMode, disabled }) => {
     const addItem = () => {
-        setItems([...items, ""]);
+        if (items.length < 5) {
+            setItems([...items, ""]);
+        }
     };
 
     const updateItem = (index, value) => {
@@ -14,7 +16,9 @@ const DynamicList = ({ title, items, setItems, placeholder, isDarkMode }) => {
     };
 
     const removeItem = (index) => {
-        setItems(items.filter((_, i) => i !== index));
+        if (items.length > 1) {
+            setItems(items.filter((_, i) => i !== index));
+        }
     };
 
     const sectionTitleStyle = { 
@@ -28,7 +32,12 @@ const DynamicList = ({ title, items, setItems, placeholder, isDarkMode }) => {
 
     return (
         <div style={{ marginBottom: 32 }}>
-            <span style={sectionTitleStyle}>{title}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={sectionTitleStyle}>{title}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: items.length >= 5 ? '#ef4444' : '#94a3b8' }}>
+                    {items.length}/5 LANGKAH
+                </span>
+            </div>
             <List
                 dataSource={items}
                 renderItem={(item, index) => (
@@ -48,31 +57,36 @@ const DynamicList = ({ title, items, setItems, placeholder, isDarkMode }) => {
                                 placeholder={placeholder}
                                 onChange={(e) => updateItem(index, e.target.value)}
                                 style={{ padding: 0 }}
+                                disabled={disabled}
                             />
                         </div>
-                        <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => removeItem(index)}
-                        />
+                        {!disabled && items.length > 1 && (
+                            <Button
+                                type="text"
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={() => removeItem(index)}
+                            />
+                        )}
                     </div>
                 )}
             />
-            <Button
-                type="dashed"
-                onClick={addItem}
-                block
-                icon={<PlusOutlined />}
-                style={{ borderRadius: 8 }}
-            >
-                Tambah Baris
-            </Button>
+            {!disabled && items.length < 5 && (
+                <Button
+                    type="dashed"
+                    onClick={addItem}
+                    block
+                    icon={<PlusOutlined />}
+                    style={{ borderRadius: 8 }}
+                >
+                    Tambah Langkah
+                </Button>
+            )}
         </div>
     );
 };
 
-export default function ChronologySection({ incidentFacts, setIncidentFacts, correctiveActions, setCorrectiveActions, isDarkMode }) {
+export default function ChronologySection({ incidentFacts, setIncidentFacts, correctiveActions, setCorrectiveActions, isDarkMode, disabled }) {
     const labelStyle = { 
         fontSize: 12, 
         fontWeight: 800, 
@@ -90,6 +104,8 @@ export default function ChronologySection({ incidentFacts, setIncidentFacts, cor
                     <Input.TextArea
                         placeholder="Uraikan kronologi singkat..."
                         autoSize={{ minRows: 4, maxRows: 8 }}
+                        showCount
+                        maxLength={255}
                         style={{ 
                             background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc',
                             borderRadius: 12,
@@ -106,6 +122,7 @@ export default function ChronologySection({ incidentFacts, setIncidentFacts, cor
                 setItems={setIncidentFacts}
                 placeholder="Contoh: Ditemukan ceceran oli transmisi di area TKR"
                 isDarkMode={isDarkMode}
+                disabled={disabled}
             />
 
             <DynamicList
@@ -114,6 +131,7 @@ export default function ChronologySection({ incidentFacts, setIncidentFacts, cor
                 setItems={setCorrectiveActions}
                 placeholder="Contoh: Melaporkan insiden ke Channel Emergency"
                 isDarkMode={isDarkMode}
+                disabled={disabled}
             />
         </div>
     );

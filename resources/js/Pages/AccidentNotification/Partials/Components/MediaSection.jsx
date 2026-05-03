@@ -56,9 +56,12 @@ export default function MediaSection({ fileList, setFileList }) {
     );
 
     return (
-        <div className="custom-upload-section">
+        <div className={`custom-upload-section ${fileList.length >= 4 ? 'hide-upload' : ''}`}>
             <style dangerouslySetInnerHTML={{
                 __html: `
+                .hide-upload .ant-upload.ant-upload-select {
+                    display: none !important;
+                }
                 .custom-upload-section .ant-upload-list-picture-card {
                     display: flex !important;
                     flex-wrap: wrap !important;
@@ -160,13 +163,13 @@ export default function MediaSection({ fileList, setFileList }) {
                 onPreview={handlePreview}
                 onChange={handleChange}
                 beforeUpload={() => false}
-                maxCount={2}
+                maxCount={4}
             >
-                {fileList.length >= 2 ? null : uploadButton}
+                {fileList.length >= 4 ? null : uploadButton}
             </Upload>
 
             <div style={{ marginTop: 12, fontSize: 12, color: '#475569', fontWeight: 600 }}>
-                * Maksimal 2 foto (Format: JPG, PNG)
+                * Maksimal 4 foto (Format: JPG, PNG)
             </div>
 
             <Modal

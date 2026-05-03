@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\MasterData\Api;
 
-use App\Helpers\ResponseFormatter;
+use App\Helpers\SafetyResponse;
 use App\Http\Controllers\Controller;
 use App\Models\MasterData\Location;
 use Illuminate\Http\Request;
@@ -25,7 +25,7 @@ class LocationController extends Controller
         }
 
         $data = $query->paginate($load);
-        return ResponseFormatter::success($data, 'Data Lokasi berhasil diambil');
+        return SafetyResponse::success($data, 'Data Lokasi berhasil diambil');
     }
 
     public function store(Request $request)
@@ -36,11 +36,11 @@ class LocationController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
         $data = Location::create($request->all());
-        return ResponseFormatter::success($data, 'Data Lokasi berhasil ditambahkan');
+        return SafetyResponse::success($data, 'Data Lokasi berhasil ditambahkan');
     }
 
     public function update(Request $request, $id)
@@ -51,18 +51,18 @@ class LocationController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
         $item = Location::findOrFail($id);
         $item->update($request->all());
-        return ResponseFormatter::success($item, 'Data Lokasi berhasil diperbarui');
+        return SafetyResponse::success($item, 'Data Lokasi berhasil diperbarui');
     }
 
     public function destroy($id)
     {
         $item = Location::findOrFail($id);
         $item->delete();
-        return ResponseFormatter::success(null, 'Data Lokasi berhasil dihapus');
+        return SafetyResponse::success(null, 'Data Lokasi berhasil dihapus');
     }
 }

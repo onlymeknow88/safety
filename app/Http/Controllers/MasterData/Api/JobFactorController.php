@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\MasterData\Api;
 
-use App\Helpers\ResponseFormatter;
+use App\Helpers\SafetyResponse;
 use App\Http\Controllers\Controller;
 use App\Models\MasterData\JobFactor;
 use Illuminate\Http\Request;
@@ -22,7 +22,7 @@ class JobFactorController extends Controller
             });
         }
         $paginateData = $query->orderBy('code', 'asc')->paginate($load);
-        return ResponseFormatter::success($paginateData, "Berhasil mengambil data");
+        return SafetyResponse::success($paginateData, "Berhasil mengambil data");
     }
 
     public function store(Request $request)
@@ -32,37 +32,37 @@ class JobFactorController extends Controller
             'description' => 'required|string',
             'is_active' => 'boolean'
         ]);
-        if ($validator->fails()) return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+        if ($validator->fails()) return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         $data = JobFactor::create($request->all());
-        return ResponseFormatter::success($data, 'Berhasil menambahkan data');
+        return SafetyResponse::success($data, 'Berhasil menambahkan data');
     }
 
     public function show($id)
     {
         $data = JobFactor::find($id);
-        if (!$data) return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
-        return ResponseFormatter::success($data, 'Berhasil mengambil detail data');
+        if (!$data) return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
+        return SafetyResponse::success($data, 'Berhasil mengambil detail data');
     }
 
     public function update(Request $request, $id)
     {
         $data = JobFactor::find($id);
-        if (!$data) return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+        if (!$data) return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         $validator = Validator::make($request->all(), [
             'code' => 'required|string|max:255',
             'description' => 'required|string',
             'is_active' => 'boolean'
         ]);
-        if ($validator->fails()) return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+        if ($validator->fails()) return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         $data->update($request->all());
-        return ResponseFormatter::success($data, 'Berhasil memperbarui data');
+        return SafetyResponse::success($data, 'Berhasil memperbarui data');
     }
 
     public function destroy($id)
     {
         $data = JobFactor::find($id);
-        if (!$data) return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+        if (!$data) return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         $data->delete();
-        return ResponseFormatter::success(null, 'Berhasil menghapus data');
+        return SafetyResponse::success(null, 'Berhasil menghapus data');
     }
 }

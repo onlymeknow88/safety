@@ -26,7 +26,7 @@ class AccidentNotificationApprovalMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Approval Diperlukan: Notifikasi Kecelakaan #' . $this->notification->accident_number)
+        return $this->subject('[#' . $this->notification->id . '] Approval Diperlukan: Notifikasi Kecelakaan #' . $this->notification->accident_number)
                     ->view('emails.accident_notification_approval');
     }
 }

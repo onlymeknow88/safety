@@ -10,7 +10,7 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 /**
  * Format response.
  */
-class ResponseFormatter
+class SafetyResponse
 {
     /**
      * API Response

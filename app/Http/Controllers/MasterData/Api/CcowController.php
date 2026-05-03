@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\MasterData\Api;
 
-use App\Helpers\ResponseFormatter;
+use App\Helpers\SafetyResponse;
 use App\Http\Controllers\Controller;
 use App\Models\MasterData\Ccow;
 use Illuminate\Http\Request;
@@ -29,7 +29,7 @@ class CcowController extends Controller
 
         $paginateData = $query->orderBy('name', 'asc')->paginate($load);
 
-        return ResponseFormatter::success($paginateData, "Berhasil mengambil data");
+        return SafetyResponse::success($paginateData, "Berhasil mengambil data");
     }
 
     /**
@@ -44,12 +44,12 @@ class CcowController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
         $ccow = Ccow::create($request->all());
 
-        return ResponseFormatter::success($ccow, 'Berhasil menambahkan data CCOW');
+        return SafetyResponse::success($ccow, 'Berhasil menambahkan data CCOW');
     }
 
     /**
@@ -59,9 +59,9 @@ class CcowController extends Controller
     {
         $ccow = Ccow::find($id);
         if (!$ccow) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
-        return ResponseFormatter::success($ccow, 'Berhasil mengambil detail data');
+        return SafetyResponse::success($ccow, 'Berhasil mengambil detail data');
     }
 
     /**
@@ -71,7 +71,7 @@ class CcowController extends Controller
     {
         $ccow = Ccow::find($id);
         if (!$ccow) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -81,12 +81,12 @@ class CcowController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
         $ccow->update($request->all());
 
-        return ResponseFormatter::success($ccow, 'Berhasil memperbarui data CCOW');
+        return SafetyResponse::success($ccow, 'Berhasil memperbarui data CCOW');
     }
 
     /**
@@ -96,11 +96,11 @@ class CcowController extends Controller
     {
         $ccow = Ccow::find($id);
         if (!$ccow) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
         $ccow->delete();
 
-        return ResponseFormatter::success(null, 'Berhasil menghapus data CCOW');
+        return SafetyResponse::success(null, 'Berhasil menghapus data CCOW');
     }
 }

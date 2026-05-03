@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\MasterData\Api;
 
-use App\Helpers\ResponseFormatter;
+use App\Helpers\SafetyResponse;
 use App\Http\Controllers\Controller;
 use App\Models\MasterData\Shift;
 use Illuminate\Http\Request;
@@ -26,7 +26,7 @@ class ShiftController extends Controller
 
         $paginateData = $query->orderBy('name', 'asc')->paginate($load);
 
-        return ResponseFormatter::success($paginateData, "Berhasil mengambil data");
+        return SafetyResponse::success($paginateData, "Berhasil mengambil data");
     }
 
     /**
@@ -40,12 +40,12 @@ class ShiftController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
         $data = Shift::create($request->all());
 
-        return ResponseFormatter::success($data, 'Berhasil menambahkan data');
+        return SafetyResponse::success($data, 'Berhasil menambahkan data');
     }
 
     /**
@@ -55,9 +55,9 @@ class ShiftController extends Controller
     {
         $data = Shift::find($id);
         if (!$data) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
-        return ResponseFormatter::success($data, 'Berhasil mengambil detail data');
+        return SafetyResponse::success($data, 'Berhasil mengambil detail data');
     }
 
     /**
@@ -67,7 +67,7 @@ class ShiftController extends Controller
     {
         $data = Shift::find($id);
         if (!$data) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -76,12 +76,12 @@ class ShiftController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return ResponseFormatter::error($validator->errors(), 'Validasi Gagal', 422);
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
         $data->update($request->all());
 
-        return ResponseFormatter::success($data, 'Berhasil memperbarui data');
+        return SafetyResponse::success($data, 'Berhasil memperbarui data');
     }
 
     /**
@@ -91,11 +91,11 @@ class ShiftController extends Controller
     {
         $data = Shift::find($id);
         if (!$data) {
-            return ResponseFormatter::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
         $data->delete();
 
-        return ResponseFormatter::success(null, 'Berhasil menghapus data');
+        return SafetyResponse::success(null, 'Berhasil menghapus data');
     }
 }

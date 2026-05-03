@@ -1,11 +1,12 @@
-import { App, Button, Space, Tag, Typography } from "antd";
-import { SaveOutlined, SendOutlined, DeleteOutlined, EditOutlined, FilePdfOutlined } from "@ant-design/icons";
+import { App, Button, Input, Space, Tag, Typography } from "antd";
+import { SaveOutlined, SendOutlined, DeleteOutlined, EditOutlined, EyeOutlined, FilePdfOutlined, CheckCircleOutlined, ExclamationCircleOutlined, RollbackOutlined } from "@ant-design/icons";
 import {
     getCoreRowModel,
     getPaginationRowModel,
     useReactTable,
 } from "@tanstack/react-table";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePage } from "@inertiajs/react";
 import { useDelete, useGet } from "@/Helpers/useRequest";
 
 import TokenManager from "@/Utils/TokenManager";
@@ -15,6 +16,14 @@ import dayjs from "dayjs";
 const { Text } = Typography;
 
 export default function useAccidentNotification(master = {}) {
+    const { auth } = usePage().props;
+    const permissions = auth?.user?.permissions || [];
+    const isAdministrator = auth?.user?.is_administrator || false;
+    
+    const canCreate = isAdministrator || permissions.includes("accident-notification.create");
+    const canEdit = isAdministrator || permissions.includes("accident-notification.edit");
+    const canDelete = isAdministrator || permissions.includes("accident-notification.delete");
+
     const { notification, modal } = App.useApp();
 
     // API Hooks
@@ -40,6 +49,7 @@ export default function useAccidentNotification(master = {}) {
     const [loading, setLoading] = useState(false);
     const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
     const [previewRecord, setPreviewRecord] = useState(null);
+    const [refreshKey, setRefreshKey] = useState(Date.now());
 
     // Detail View Handler
     const handleDetail = (record) => {
@@ -70,6 +80,8 @@ export default function useAccidentNotification(master = {}) {
     // Fetching Data
     const fetchItems = useCallback(
         async (params = {}) => {
+            setLoading(true);
+            setRefreshKey(Date.now());
             try {
                 const res = await getRequest(
                     {
@@ -98,6 +110,8 @@ export default function useAccidentNotification(master = {}) {
                 notification.error({
                     message: "Gagal mengambil data notifikasi kecelakaan",
                 });
+            } finally {
+                setLoading(false);
             }
         },
         [
@@ -219,6 +233,100 @@ export default function useAccidentNotification(master = {}) {
         setIsPreviewModalVisible(true);
     };
 
+    const handleApprove = async (record) => {
+        modal.confirm({
+            title: "Setujui Notifikasi?",
+            icon: <ExclamationCircleOutlined />,
+            content: "Apakah Anda yakin ingin menyetujui notifikasi kecelakaan ini?",
+            okText: "Ya, Setujui",
+            cancelText: "Batal",
+            okButtonProps: { style: { borderRadius: 8, background: '#059669', border: 'none' } },
+            cancelButtonProps: { style: { borderRadius: 8 } },
+            centered: true,
+            onOk: async () => {
+                setLoading(true);
+                try {
+                    const response = await axios({
+                        method: "POST",
+                        url: `/api/accident-notification/${record.id}/approve`,
+                        headers: {
+                            Authorization: "Bearer " + TokenManager.getToken(),
+                            Accept: "application/json",
+                        },
+                    });
+
+                    if (response.data?.meta?.status === "success") {
+                        notification.success({
+                            message: "Berhasil",
+                            description: "Notifikasi kecelakaan telah disetujui",
+                        });
+                        fetchItems();
+                        setRefreshKey(prev => prev + 1);
+                    }
+                } catch (error) {
+                    notification.error({
+                        message: "Gagal Menyetujui",
+                        description: error.response?.data?.message || "Terjadi kesalahan pada server.",
+                    });
+                } finally {
+                    setLoading(false);
+                }
+            }
+        });
+    };
+
+    const handleReturn = async (record) => {
+        let comment = "";
+        modal.confirm({
+            title: "Kembalikan Notifikasi?",
+            icon: <RollbackOutlined style={{ color: '#faad14' }} />,
+            content: (
+                <div style={{ marginTop: 16 }}>
+                    <p style={{ marginBottom: 8, fontWeight: 600 }}>Alasan Pengembalian / Catatan Perbaikan:</p>
+                    <Input.TextArea 
+                        rows={4} 
+                        placeholder="Contoh: Foto kurang jelas, data kronologi perlu diperinci..." 
+                        onChange={(e) => comment = e.target.value}
+                    />
+                </div>
+            ),
+            okText: "Ya, Kembalikan",
+            cancelText: "Batal",
+            okButtonProps: { danger: true, style: { borderRadius: 8 } },
+            cancelButtonProps: { style: { borderRadius: 8 } },
+            centered: true,
+            onOk: async () => {
+                setLoading(true);
+                try {
+                    const response = await axios({
+                        method: "POST",
+                        url: `/api/accident-notification/${record.id}/return`,
+                        data: { comment },
+                        headers: {
+                            Authorization: "Bearer " + TokenManager.getToken(),
+                            Accept: "application/json",
+                        },
+                    });
+
+                    if (response.data?.meta?.status === "success") {
+                        notification.success({
+                            message: "Berhasil",
+                            description: "Laporan telah dikembalikan untuk diperbaiki",
+                        });
+                        fetchItems();
+                    }
+                } catch (error) {
+                    notification.error({
+                        message: "Gagal Mengembalikan",
+                        description: error.response?.data?.message || "Terjadi kesalahan pada server.",
+                    });
+                } finally {
+                    setLoading(false);
+                }
+            }
+        });
+    };
+
     const buildFormData = (values, statusIntent) => {
         const fd = new FormData();
 
@@ -240,7 +348,12 @@ export default function useAccidentNotification(master = {}) {
             .filter((a) => a.trim() !== "")
             .forEach((a, i) => fd.append(`corrective_actions[${i}]`, a));
         fileList.forEach((file) => {
-            if (file.originFileObj) fd.append("photos[]", file.originFileObj);
+            if (file.originFileObj) {
+                fd.append("photos[]", file.originFileObj);
+            } else {
+                // This is an existing photo from the server, send its ID
+                fd.append("existing_photos[]", file.uid);
+            }
         });
 
         Object.entries(values).forEach(([k, v]) => {
@@ -687,18 +800,46 @@ export default function useAccidentNotification(master = {}) {
             },
             {
                 header: "STATUS LAPORAN",
+                accessorKey: "progressStatus.name",
+                cell: ({ row }) => {
+                    const status = row.original.progress_status;
+                    const statusId = row.original.progress_status_id;
+                    
+                    if (!status && !statusId) return "-";
+                    
+                    let color = "#64748b"; // Default Slate
+                    if (statusId == 1) color = "#059669"; // Closed (Emerald)
+                    if (statusId == 3) color = "#0ea5e9"; // Open (Sky Blue)
+                    if (statusId == 2) color = "#f97316"; // Closed Overdue (Orange)
+                    if (statusId == 4) color = "#dc2626"; // Overdue (Red)
+                    
+                    return (
+                        <Tag color={color} style={{ borderRadius: 6, fontWeight: 800, padding: '2px 12px' }}>
+                            {status?.name?.toUpperCase() || "UNKNOWN"}
+                        </Tag>
+                    );
+                },
+                meta: { width: 140, align: "center" },
+            },
+            {
+                header: "STATUS APPROVAL",
                 accessorKey: "status.name",
                 cell: ({ row }) => {
-                    const statusName =
-                        row.original.status?.name?.toLowerCase() || "";
-                    let color = "default";
-                    if (statusName === "draft") color = "orange";
-                    else if (statusName === "submitted") color = "blue";
-                    else if (statusName === "approved") color = "green";
+                    const statusName = row.original.status?.name?.toLowerCase() || "";
+                    const statusId = row.original.status_id;
+                    
+                    let color = "#64748b"; // Default Slate (Draft)
+                    
+                    if (statusId == 7 || statusName.includes("approved")) color = "#10b981"; // Emerald
+                    else if (statusId == 6 || statusName.includes("submitted")) color = "#3b82f6"; // Blue
+                    else if (statusId == 3 || statusName.includes("open")) color = "#06b6d4"; // Cyan
+                    else if (statusId == 8 || statusName.includes("return")) color = "#f59e0b"; // Amber (Return)
+                    else if (statusName.includes("overdue") || statusId == 4) color = "#ef4444"; // Red
+                    
                     return (
                         <Tag
                             color={color}
-                            style={{ borderRadius: 6, fontWeight: 800 }}
+                            style={{ borderRadius: 6, fontWeight: 800, padding: '2px 12px' }}
                         >
                             {row.original.status?.name?.toUpperCase() || "-"}
                         </Tag>
@@ -713,24 +854,35 @@ export default function useAccidentNotification(master = {}) {
                     <Space>
                         <Button
                             size="small"
-                            type="primary"
-                            ghost
-                            icon={<EditOutlined />}
-                            onClick={() => handleEdit(row.original)}
+                            icon={<EyeOutlined />}
+                            onClick={() => handleDetail(row.original)}
                         />
-                        <Button
-                            size="small"
-                            style={{ color: '#dc2626', borderColor: '#fee2e2', background: '#fef2f2' }}
-                            icon={<FilePdfOutlined />}
-                            onClick={() => handlePreviewPdf(row.original)}
-                        />
-                        <Button
-                            size="small"
-                            danger
-                            ghost
-                            icon={<DeleteOutlined />}
-                            onClick={() => showDeleteModal(row.original)}
-                        />
+                        {canEdit && (
+                            <Button
+                                size="small"
+                                type="primary"
+                                ghost
+                                icon={<EditOutlined />}
+                                onClick={() => handleEdit(row.original)}
+                            />
+                        )}
+                        {row.original.status_id === 7 && (
+                            <Button
+                                size="small"
+                                style={{ color: '#dc2626', borderColor: '#fee2e2', background: '#fef2f2' }}
+                                icon={<FilePdfOutlined />}
+                                onClick={() => handlePreviewPdf(row.original)}
+                            />
+                        )}
+                        {canDelete && (
+                            <Button
+                                size="small"
+                                danger
+                                ghost
+                                icon={<DeleteOutlined />}
+                                onClick={() => showDeleteModal(row.original)}
+                            />
+                        )}
                     </Space>
                 ),
                 meta: { align: "center" },
@@ -741,6 +893,7 @@ export default function useAccidentNotification(master = {}) {
             pagination.pageSize,
             master.statuses,
             handleEdit,
+            handleApprove,
             handleDetail,
         ],
     );
@@ -770,7 +923,11 @@ export default function useAccidentNotification(master = {}) {
         modalMode,
         handleDetail,
         handleAdd,
+        canCreate,
         handleEdit,
+        canEdit,
+        handleApprove,
+        handleReturn,
         handleSave,
         isDeleteModalVisible,
         setIsDeleteModalVisible,
@@ -781,6 +938,7 @@ export default function useAccidentNotification(master = {}) {
         totalRows,
         fetchItems,
         loading,
+        refreshKey,
         isHpri,
         setIsHpri,
         severity,
