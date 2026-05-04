@@ -7,8 +7,9 @@ export default function MainContent({ children, isMobile }) {
         <Content
             style={{
                 margin: isMobile ? "12px" : "24px",
-                minHeight: "calc(100vh - 64px - 70px)",
-                overflow: "initial",
+                display: "flex",
+                flexDirection: "column",
+                flex: "1 0 auto",
             }}
         >
             {children}

@@ -121,8 +121,8 @@ class ProcessEmailApprovals extends Command
                             $statusUpdate = Status::firstOrCreate(['name' => 'Approved'], ['is_active' => true]);
                             $this->info('>>> APPROVED');
                         } elseif ($firstChar === 'n') {
-                            $statusUpdate = Status::firstOrCreate(['name' => 'Rejected'], ['is_active' => true]);
-                            $this->info('>>> REJECTED');
+                            $statusUpdate = Status::firstOrCreate(['name' => 'Return'], ['is_active' => true]);
+                            $this->info('>>> Return');
                         }
 
                         if ($statusUpdate) {

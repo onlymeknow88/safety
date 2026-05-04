@@ -306,7 +306,7 @@ export default function MenuTableAntd({
 
             <style>{`
                 .custom-antd-table .ant-table {
-                    background: transparent !important;
+                    /* Background transparent dihapus agar footer tidak tembus pandang */
                 }
                 .custom-antd-table .ant-table-thead > tr > th {
                     background: ${isDarkMode ? "#1d1d1d" : "#fafafa"} !important;

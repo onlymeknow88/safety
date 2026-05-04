@@ -1,7 +1,7 @@
 import React from "react";
 import { Head } from "@inertiajs/react";
 import { Button, Space, Modal, App, Grid, Row, Col } from "antd";
-import { ReloadOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { ReloadOutlined, ExclamationCircleOutlined, DeleteOutlined } from "@ant-design/icons";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { useTheme } from "@/Contexts/ThemeContext";
 import AccidentNotificationModal from "./Partials/AccidentNotificationModal";
@@ -46,7 +46,8 @@ export default function AccidentNotificationIndex({ master = {} }) {
         correctiveActions, setCorrectiveActions,
         fileList, setFileList,
         isPreviewModalVisible, setIsPreviewModalVisible,
-        previewRecord, handleApprove, handleReturn, handleDownloadPdf
+        previewRecord, handleApprove, handleReturn, handleDownloadPdf,
+        rowSelection, handleBulkDelete
     } = useAccidentNotification(master);
 
     return (
@@ -82,6 +83,38 @@ export default function AccidentNotificationIndex({ master = {} }) {
                         </Space>
                     </Col>
                 </Row>
+                
+                {/* Bulk Actions Section */}
+                {Object.keys(rowSelection).length > 0 && (
+                    <Row style={{ marginBottom: 16 }}>
+                        <Col span={24}>
+                            <div style={{ 
+                                background: isDarkMode ? "#1e293b" : "#eff6ff", 
+                                padding: "12px 20px", 
+                                borderRadius: 12, 
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'center',
+                                border: isDarkMode ? "1px solid #334155" : "1px solid #dbeafe"
+                            }}>
+                                <Space>
+                                    <span style={{ fontWeight: 700, color: isDarkMode ? "#38bdf8" : "#1e40af" }}>
+                                        {Object.keys(rowSelection).length} data terpilih
+                                    </span>
+                                </Space>
+                                <Button 
+                                    danger 
+                                    type="primary" 
+                                    icon={<DeleteOutlined />} 
+                                    onClick={handleBulkDelete}
+                                    style={{ borderRadius: 8, fontWeight: 700 }}
+                                >
+                                    Hapus Terpilih
+                                </Button>
+                            </div>
+                        </Col>
+                    </Row>
+                )}
 
                 {/* Filter & Action Section */}
                 <AccidentNotificationHeader 

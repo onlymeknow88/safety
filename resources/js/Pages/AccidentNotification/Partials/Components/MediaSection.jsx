@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Upload, Modal, Image } from "antd";
 import { PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 
-export default function MediaSection({ fileList, setFileList }) {
+export default function MediaSection({ fileList, setFileList, disabled = false }) {
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState('');
     const [previewTitle, setPreviewTitle] = useState('');
@@ -164,8 +164,12 @@ export default function MediaSection({ fileList, setFileList }) {
                 onChange={handleChange}
                 beforeUpload={() => false}
                 maxCount={4}
+                disabled={disabled}
+                showUploadList={{
+                    showRemoveIcon: !disabled
+                }}
             >
-                {fileList.length >= 4 ? null : uploadButton}
+                {fileList.length >= 4 || disabled ? null : uploadButton}
             </Upload>
 
             <div style={{ marginTop: 12, fontSize: 12, color: '#475569', fontWeight: 600 }}>

@@ -67,10 +67,10 @@ export default function AccidentNotificationTable({
 
     return (
         <div style={{ 
-            background: isDarkMode ? "#141414" : "#fff",
-            borderRadius: "16px",
-            padding: "1px",
-            boxShadow: isDarkMode ? "none" : "0 4px 24px rgba(0,0,0,0.04)",
+            background: isDarkMode ? "#0f172a" : "#ffffff",
+            borderRadius: "20px",
+            border: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
+            boxShadow: isDarkMode ? "0 10px 15px -3px rgba(0, 0, 0, 0.2)" : "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
             overflow: "hidden"
         }}>
             <Table
@@ -79,37 +79,54 @@ export default function AccidentNotificationTable({
                 dataSource={dataSource}
                 loading={loading}
                 pagination={false}
-                scroll={{ x: 3500 }}
-                className={`custom-antd-table ${isDarkMode ? 'dark-mode' : ''}`}
-                style={{ borderRadius: "16px" }}
+                scroll={{ x: 'max-content' }}
+                rowSelection={{
+                    selectedRowKeys: Object.keys(table.getState().rowSelection).map(id => isNaN(id) ? id : Number(id)),
+                    onChange: (selectedRowKeys) => {
+                        const newSelection = {};
+                        selectedRowKeys.forEach(id => {
+                            newSelection[id] = true;
+                        });
+                        table.setRowSelection(newSelection);
+                    }
+                }}
+                className={`premium-table ${isDarkMode ? 'dark' : ''}`}
             />
 
             {/* Pagination Bar */}
             <div style={{
-                padding: isMobile ? "16px" : "16px 24px",
-                borderTop: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
+                padding: isMobile ? "20px" : "16px 32px",
+                background: isDarkMode ? "#1e293b" : "#f8fafc",
+                borderTop: isDarkMode ? "1px solid #334155" : "1px solid #e2e8f0",
                 display: 'flex',
                 flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: isMobile ? 16 : 0,
+                gap: isMobile ? 20 : 0,
             }}>
-                <Space size="middle" direction={isMobile ? "vertical" : "horizontal"} style={{ alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
-                    <span style={{ color: isDarkMode ? "#8c8c8c" : "#64748b", fontSize: '13px' }}>
-                        Menampilkan {totalRows > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1) : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, totalRows || 0)} dari {totalRows || 0} data
+                <Space size="large" direction={isMobile ? "vertical" : "horizontal"} style={{ alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{ color: isDarkMode ? "#94a3b8" : "#64748b", fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Show
+                        </span>
+                        <Select
+                            size="small"
+                            variant="filled"
+                            value={table.getState().pagination.pageSize}
+                            onChange={(value) => table.setPageSize(value)}
+                            style={{ width: 80 }}
+                            className="premium-select"
+                            options={[
+                                { value: 10, label: '10' },
+                                { value: 20, label: '20' },
+                                { value: 50, label: '50' },
+                                { value: 100, label: '100' },
+                            ]}
+                        />
+                    </div>
+                    <span style={{ color: isDarkMode ? "#64748b" : "#94a3b8", fontSize: '13px', fontWeight: 600 }}>
+                        Showing <span style={{ color: isDarkMode ? "#3b82f6" : "#2563eb" }}>{totalRows > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1) : 0}</span> to <span style={{ color: isDarkMode ? "#3b82f6" : "#2563eb" }}>{Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, totalRows || 0)}</span> of <span style={{ color: isDarkMode ? "#3b82f6" : "#2563eb" }}>{totalRows || 0}</span> entries
                     </span>
-                    <Select
-                        size="small"
-                        value={table.getState().pagination.pageSize}
-                        onChange={(value) => table.setPageSize(value)}
-                        style={{ width: 70 }}
-                        options={[
-                            { value: 10, label: '10' },
-                            { value: 20, label: '20' },
-                            { value: 50, label: '50' },
-                            { value: 100, label: '100' },
-                        ]}
-                    />
                 </Space>
 
                 <Pagination
@@ -118,34 +135,85 @@ export default function AccidentNotificationTable({
                     total={totalRows}
                     onChange={(page) => table.setPageIndex(page - 1)}
                     showSizeChanger={false}
-                    size="small"
+                    size={isMobile ? "default" : "small"}
+                    className="premium-pagination"
                 />
             </div>
 
             <style>{`
-                .custom-antd-table .ant-table {
+                .premium-table .ant-table {
                     background: transparent !important;
                 }
-                .custom-antd-table .ant-table-thead > tr > th {
-                    background: ${isDarkMode ? "#172554" : "#1e3a8a"} !important;
+                .premium-table .ant-table-thead > tr > th {
+                    background: ${isDarkMode ? "#0f172a" : "#1e40af"} !important;
                     color: #ffffff !important;
+                    font-size: 11px !important;
+                    font-weight: 800 !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.1em !important;
+                    border-bottom: 2px solid ${isDarkMode ? "#334155" : "#e2e8f0"} !important;
+                    padding: 18px 16px !important;
+                    transition: all 0.3s ease;
+                }
+                .premium-table .ant-table-tbody > tr > td {
+                    padding: 16px !important;
+                    border-bottom: 1px solid ${isDarkMode ? "#1e293b" : "#f1f5f9"} !important;
+                    color: ${isDarkMode ? "#f8fafc" : "#1e293b"} !important;
+                    font-size: 13px !important;
+                    font-weight: 500 !important;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .premium-table .ant-table-tbody > tr:hover > td {
+                    background: ${isDarkMode ? "rgba(59, 130, 246, 0.08)" : "#f0f9ff"} !important;
+                    color: ${isDarkMode ? "#60a5fa" : "#0284c7"} !important;
+                }
+                .premium-table .ant-table-column-sorter {
+                    color: rgba(255, 255, 255, 0.45) !important;
+                }
+                .premium-table .ant-table-column-sorter-up.active, 
+                .premium-table .ant-table-column-sorter-down.active {
+                    color: #ffffff !important;
+                }
+                .premium-table .ant-table-thead th.ant-table-column-has-sorters:hover {
+                    background: ${isDarkMode ? "#1e293b" : "#1e3a8a"} !important;
+                }
+                .premium-table .ant-checkbox-inner {
+                    border-radius: 4px !important;
+                    border-color: ${isDarkMode ? "#475569" : "#cbd5e1"} !important;
+                }
+                .premium-table .ant-table-thead .ant-checkbox-inner {
+                    border-color: rgba(255, 255, 255, 0.5) !important;
+                    background: transparent !important;
+                }
+                .premium-table .ant-table-thead .ant-checkbox-checked .ant-checkbox-inner {
+                    background-color: #ffffff !important;
+                    border-color: #ffffff !important;
+                }
+                .premium-table .ant-table-thead .ant-checkbox-checked .ant-checkbox-inner::after {
+                    border-color: #2563eb !important;
+                }
+                .premium-table .ant-checkbox-checked .ant-checkbox-inner {
+                    background-color: #3b82f6 !important;
+                    border-color: #3b82f6 !important;
+                }
+                .premium-pagination .ant-pagination-item {
+                    border-radius: 8px !important;
+                    border: none !important;
+                    background: transparent !important;
                     font-weight: 700 !important;
-                    border-bottom: 1px solid ${isDarkMode ? "#0f172a" : "#1e40af"} !important;
-                    padding: 16px !important;
                 }
-                .custom-antd-table .ant-table-tbody > tr > td {
-                    padding: 16px !important;
-                    border-bottom: 1px solid ${isDarkMode ? "#303030" : "#f1f5f9"} !important;
-                    transition: all 0.2s;
+                .premium-pagination .ant-pagination-item-active {
+                    background: #3b82f6 !important;
+                    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
                 }
-                .custom-antd-table .ant-table-tbody > tr:hover > td {
-                    background: ${isDarkMode ? "#1f1f1f" : "#f8fafc"} !important;
-                }
-                .custom-antd-table .ant-table-thead > tr > th .ant-table-column-sorter {
+                .premium-pagination .ant-pagination-item-active a {
                     color: #ffffff !important;
                 }
-                .custom-antd-table .ant-table-thead > tr > th .ant-table-filter-trigger {
-                    color: #ffffff !important;
+                .premium-pagination .ant-pagination-prev .ant-pagination-item-link,
+                .premium-pagination .ant-pagination-next .ant-pagination-item-link {
+                    border-radius: 8px !important;
+                    border: none !important;
+                    background: ${isDarkMode ? "#1e293b" : "#ffffff"} !important;
                 }
             `}</style>
         </div>

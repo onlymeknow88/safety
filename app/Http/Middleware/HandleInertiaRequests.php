@@ -56,17 +56,14 @@ class HandleInertiaRequests extends Middleware
                     'email' => $user->email,
                     'employee_id' => $user->employee_id,
                     'roles' => method_exists($user, 'getRoleNames') ? $user->getRoleNames()->toArray() : [],
-                    'permissions' => method_exists($user, 'getAllPermissions') ? $user->getAllPermissions()->pluck('name')->toArray() : [],
+                    'permissions' => method_exists($user, 'getAllPermissions') ? $user->getAllPermissions()->values()->toArray() : [],
                     'can_approve' => $canApprove,
                     'is_administrator' => $isAdministrator,
                     // Structured menus for dynamic sidebar
                     'menus' => $user->roles->flatMap->menus
                         ->filter(function($m) use ($canApprove, $isAdministrator) {
                             // Menu harus aktif dan bisa dilihat
-                            if (!$m->is_active || (!$m->pivot->can_view && !$isAdministrator)) return false;
-
-                            // Jika menu ini membutuhkan akses approval, user harus memiliki can_approve aktif (Administrator bypass)
-                            if ($m->pivot->can_approval && !$canApprove && !$isAdministrator) return false;
+                            if (!$m->is_active || !$m->pivot->can_view) return false;
                             
                             // Jika punya parent, parent tersebut juga harus aktif
                             if ($m->parent_id && $m->parent && !$m->parent->is_active) return false;
@@ -82,6 +79,13 @@ class HandleInertiaRequests extends Middleware
                             'url' => $m->url,
                             'parent_id' => $m->parent_id,
                             'order' => $m->order,
+                            'permissions' => [
+                                'view' => (bool)$m->pivot->can_view,
+                                'create' => (bool)$m->pivot->can_create,
+                                'edit' => (bool)$m->pivot->can_edit,
+                                'delete' => (bool)$m->pivot->can_delete,
+                                'approval' => (bool)$m->pivot->can_approval,
+                            ]
                         ])->values(),
                 ] : null,
             ],

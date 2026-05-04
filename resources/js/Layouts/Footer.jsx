@@ -10,6 +10,7 @@ export default function Footer() {
                 color: "#8c8c8c",
                 padding: "16px 24px",
                 fontSize: 12,
+                flexShrink: 0,
             }}
         >
             ©{new Date().getFullYear()} — ALamtri Minerals Indonesia

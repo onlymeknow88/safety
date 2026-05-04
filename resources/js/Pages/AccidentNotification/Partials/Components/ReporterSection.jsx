@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Input, Select, Spin } from "antd";
 import axios from "axios";
 
-export default function ReporterSection({ type = 'reporter' }) {
+export default function ReporterSection({ type = 'reporter', disabled = false }) {
     const [loading, setLoading] = useState(false);
     const [options, setOptions] = useState([]);
     const form = Form.useFormInstance();
@@ -49,15 +49,28 @@ export default function ReporterSection({ type = 'reporter' }) {
         });
     };
 
+    const labelStyle = { 
+        fontSize: 11, 
+        fontWeight: 800, 
+        color: '#64748b', 
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em'
+    };
+
+    const inputStyle = {
+        height: 40,
+        borderRadius: 8
+    };
+
     return (
         <div>
-            <div style={{ marginBottom: 16, fontWeight: 800, fontSize: 13, color: '#475569', letterSpacing: 0.5 }}>
+            <div style={{ ...labelStyle, color: '#3b82f6', marginBottom: 20, fontSize: 12, borderBottom: '1px solid #e2e8f0', paddingBottom: 8 }}>
                 {title}
             </div>
             <Form.Item
                 name={`${prefix}_id`}
-                label={<span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>{nameLabel}</span>}
-                style={{ marginBottom: 12 }}
+                label={<span style={labelStyle}>{nameLabel}</span>}
+                style={{ marginBottom: 24 }}
                 rules={[{ required: true, message: 'Wajib diisi' }]}
             >
                 <Select
@@ -70,7 +83,8 @@ export default function ReporterSection({ type = 'reporter' }) {
                     onSelect={handleSelect}
                     notFoundContent={loading ? <Spin size="small" /> : null}
                     options={options}
-                    style={{ borderRadius: 6 }}
+                    style={inputStyle}
+                    disabled={disabled}
                 />
             </Form.Item>
 
@@ -79,10 +93,10 @@ export default function ReporterSection({ type = 'reporter' }) {
 
             <Form.Item
                 name={`${prefix}_position`}
-                label={<span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>{posLabel}</span>}
+                label={<span style={labelStyle}>{posLabel}</span>}
                 style={{ marginBottom: 0 }}
             >
-                <Input placeholder="Jabatan akan terisi otomatis" style={{ borderRadius: 6, padding: '8px 12px' }} />
+                <Input placeholder="Jabatan akan terisi otomatis" style={{ ...inputStyle, background: '#f8fafc', fontWeight: 600 }} disabled={disabled} />
             </Form.Item>
         </div>
     );

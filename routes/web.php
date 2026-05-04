@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AzureAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MasterData\Api\EmployeeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicApprovalController;
 use App\Http\Controllers\UserController;
 use App\Models\AccidentNotification;
 use App\Models\MasterData\Ccow;
@@ -21,12 +22,15 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // ── Public Routes ─────────────────────────────────────────────────────────────
+Route::get('/', function () {
+    return redirect()->route('login');
+});
 
 // Accident Notification Public Approval
 Route::prefix('public')->name('public.')->group(function () {
-    Route::get('/approve/{uuid}', [\App\Http\Controllers\PublicApprovalController::class, 'show'])->name('accident.show');
-    Route::post('/approve/{uuid}', [\App\Http\Controllers\PublicApprovalController::class, 'approve'])->name('accident.approve');
-    Route::post('/return/{uuid}', [\App\Http\Controllers\PublicApprovalController::class, 'return'])->name('accident.return');
+    Route::get('/approve/{uuid}', [PublicApprovalController::class, 'show'])->name('accident.show');
+    Route::post('/approve/{uuid}', [PublicApprovalController::class, 'approve'])->name('accident.approve');
+    Route::post('/return/{uuid}', [PublicApprovalController::class, 'return'])->name('accident.return');
 });
 
 // ── Auth Routes (via Laravel Breeze) ─────────────────────────────────────────
@@ -157,10 +161,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('employee.index');
     });
 
-    // Accident Notification
     Route::prefix('accident-notification')->name('accident-notification.')->group(function () {
         Route::get('/', function () {
-            $data = AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos'])->latest()->get();
+            $user = auth()->user();
+            $isCrs = $user && (
+                $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') || 
+                ($user->employee && $user->employee->can_approve)
+            );
+
+            $query = AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos']);
+            
+            // Filter data berdasarkan company_id jika bukan CRS/Approver
+            if (!$isCrs && $user && $user->employee_id) {
+                $query->where('company_id', $user->employee->company_id);
+            }
+
+            $data = $query->latest()->get();
 
             return Inertia::render('AccidentNotification/Index', [
                 'accidentNotifications' => $data,
@@ -178,18 +194,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ],
             ]);
         })->name('index');
-
-        Route::get('/create', function () {
-            return Inertia::render('AccidentNotification/Form');
-        })->name('create');
-
-        Route::get('/{id}/edit', function ($id) {
-            $record = AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos'])->findOrFail($id);
-
-            return Inertia::render('AccidentNotification/Form', [
-                'accidentNotification' => $record,
-            ]);
-        })->name('edit');
     });
 
     // Master Data Employee (API for Select2/Autocomplete)

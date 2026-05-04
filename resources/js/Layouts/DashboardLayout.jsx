@@ -44,7 +44,7 @@ export default function DashboardLayout({ children, title = "Dashboard" }) {
                     minWidth: 0, // Prevent layout overflow
                     height: "100vh",
                     overflowY: "auto",
-                    overflowX: "hidden", // Prevent horizontal scroll during collapse transition
+                    overflowX: "hidden",
                     display: "flex",
                     flexDirection: "column",
                 }}

@@ -25,11 +25,24 @@ class AccidentNotificationController extends Controller
     {
         $search = $request->search;
         $load = $request->load ?? 10;
+        $user = auth('api')->user();
+        
+        // Cek apakah user memiliki role CRS, superadmin, atau memiliki hak akses approval
+        $isCrs = $user && (
+            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') || 
+            ($user->employee && $user->employee->can_approve)
+        );
 
         $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver', 'progressStatus'])
+            // Filter berdasarkan company_id jika bukan CRS/Approver
+            ->when(!$isCrs && $user && $user->employee_id, function($q) use ($user) {
+                return $q->where('company_id', $user->employee->company_id);
+            })
             ->when($search, fn ($q) => $q
-                ->where('accident_number', 'like', "%$search%")
-                ->orWhere('notification_number', 'like', "%$search%")
+                ->where(function($sq) use ($search) {
+                    $sq->where('accident_number', 'like', "%$search%")
+                       ->orWhere('notification_number', 'like', "%$search%");
+                })
             );
 
         $data = $query->latest()->paginate($load);
@@ -144,10 +157,23 @@ class AccidentNotificationController extends Controller
      */
     public function show(string $id)
     {
-        $record = AccidentNotification::with(['photos', 'location', 'ccow', 'company', 'incidentType', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])->find($id);
+        $user = auth('api')->user();
+        $isCrs = $user && (
+            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') || 
+            ($user->employee && $user->employee->can_approve)
+        );
+
+        $query = AccidentNotification::with(['photos', 'location', 'ccow', 'company', 'incidentType', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver']);
+        
+        // Filter detail jika bukan CRS/Approver
+        if (!$isCrs && $user && $user->employee_id) {
+            $query->where('company_id', $user->employee->company_id);
+        }
+
+        $record = $query->find($id);
 
         if (! $record) {
-            return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
+            return SafetyResponse::error(null, 'Data tidak ditemukan atau Anda tidak memiliki akses', 404);
         }
 
         return SafetyResponse::success($record, 'Berhasil mengambil detail data');
@@ -348,6 +374,11 @@ class AccidentNotificationController extends Controller
 
     public function approve(string $id)
     {
+        $user = auth('api')->user();
+        if (!$user->hasPermission('accident-notification.approval')) {
+            return SafetyResponse::error(null, 'Anda tidak memiliki hak akses untuk menyetujui laporan ini.', 403);
+        }
+
         $record = AccidentNotification::find($id);
 
         if (! $record) {
@@ -361,7 +392,7 @@ class AccidentNotificationController extends Controller
         $record->update([
             'status_id' => $statusId,
             'approval_comment' => null, // Clear comment when approved
-            'updated_by' => auth('api')->user()->name ?? 'System',
+            'updated_by' => $user->name ?? 'System',
         ]);
 
         return SafetyResponse::success($record->load('status'), 'Data berhasil disetujui');
@@ -372,6 +403,11 @@ class AccidentNotificationController extends Controller
      */
     public function return(Request $request, string $id)
     {
+        $user = auth('api')->user();
+        if (!$user->hasPermission('accident-notification.approval')) {
+            return SafetyResponse::error(null, 'Anda tidak memiliki hak akses untuk mengembalikan laporan ini.', 403);
+        }
+
         $record = AccidentNotification::find($id);
 
         if (! $record) {
@@ -385,7 +421,7 @@ class AccidentNotificationController extends Controller
         $record->update([
             'status_id' => $statusId,
             'approval_comment' => $request->input('comment'),
-            'updated_by' => auth('api')->user()->name ?? 'System',
+            'updated_by' => $user->name ?? 'System',
         ]);
 
         return SafetyResponse::success($record->load('status'), 'Data dikembalikan untuk diperbaiki');

@@ -32,7 +32,7 @@ export default function EmployeeModal({
             open={visible}
             onCancel={onCancel}
             footer={null}
-            destroyOnClose
+            destroyOnHidden
             width={700}
         >
             <Form

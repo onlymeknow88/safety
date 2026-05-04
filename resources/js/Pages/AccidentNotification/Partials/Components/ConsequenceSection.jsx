@@ -1,12 +1,21 @@
 import { Form, Input, Row, Col, InputNumber } from "antd";
 
-export default function ConsequenceSection() {
-    const labelStyle = { fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase' };
+export default function ConsequenceSection({ disabled = false }) {
+    const labelStyle = { 
+        fontSize: 11, 
+        fontWeight: 800, 
+        color: '#64748b', 
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em'
+    };
+    
     const inputStyle = { 
         background: '#f8fafc', 
-        borderRadius: 8, 
-        padding: '12px',
-        border: '1px solid #f1f5f9'
+        borderRadius: 10, 
+        padding: '12px 16px',
+        border: '1px solid #e2e8f0',
+        fontSize: 14,
+        fontWeight: 600
     };
 
     const currencyFormatter = (value) => {
@@ -20,35 +29,51 @@ export default function ConsequenceSection() {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             <Form.Item
                 name="incident_consequence"
                 label={<span style={labelStyle}>Akibat Insiden (Umum)</span>}
+                style={{ marginBottom: 0 }}
             >
                 <Input.TextArea placeholder="Deskripsi singkat akibat insiden" style={inputStyle} autoSize={{ minRows: 2 }} />
             </Form.Item>
 
-            <div style={{ padding: '16px', background: '#f1f5f9', borderRadius: 12 }}>
-                <span style={{ ...labelStyle, color: '#475569', display: 'block', marginBottom: 16, borderBottom: '1px solid #cbd5e1', paddingBottom: 8 }}>DAMPAK TAMBAHAN (HARI & BIAYA)</span>
+            <div style={{ 
+                padding: '24px', 
+                background: '#f1f5f9', 
+                borderRadius: 16,
+                border: '1px solid #e2e8f0'
+            }}>
+                <span style={{ 
+                    ...labelStyle, 
+                    color: '#1e293b', 
+                    display: 'block', 
+                    marginBottom: 20, 
+                    borderBottom: '2px solid #cbd5e1', 
+                    paddingBottom: 10,
+                    fontSize: 12
+                }}>DAMPAK TAMBAHAN (HARI & BIAYA)</span>
                 
-                <Row gutter={16}>
+                <Row gutter={[16, 16]}>
                     <Col span={24}>
                         <Form.Item
                             name="lost_days"
-                            label={<span style={{ ...labelStyle, fontSize: 11 }}>Hari Hilang (Hari)</span>}
+                            label={<span style={{ ...labelStyle, fontSize: 11, color: '#475569' }}>Hari Hilang (Hari)</span>}
+                            style={{ marginBottom: 12 }}
                         >
-                            <InputNumber placeholder="0" style={{ ...inputStyle, width: '100%' }} />
+                            <InputNumber placeholder="0" style={{ ...inputStyle, width: '100%', height: 42 }} />
                         </Form.Item>
                     </Col>
                     <Col span={12}>
                         <Form.Item
                             name="actual_cost"
-                            label={<span style={{ ...labelStyle, fontSize: 11 }}>Biaya Aktual (IDR)</span>}
+                            label={<span style={{ ...labelStyle, fontSize: 11, color: '#475569' }}>Biaya Aktual (IDR)</span>}
+                            style={{ marginBottom: 0 }}
                         >
                             <InputNumber 
                                 placeholder="0" 
-                                style={{ ...inputStyle, width: '100%' }} 
-                                prefix="Rp"
+                                style={{ ...inputStyle, width: '100%', height: 42 }} 
+                                prefix={<span style={{ color: '#94a3b8', fontWeight: 800, marginRight: 4 }}>Rp</span>}
                                 formatter={currencyFormatter}
                                 parser={currencyParser}
                             />
@@ -57,12 +82,13 @@ export default function ConsequenceSection() {
                     <Col span={12}>
                         <Form.Item
                             name="potential_cost"
-                            label={<span style={{ ...labelStyle, fontSize: 11 }}>Biaya Potensial (IDR)</span>}
+                            label={<span style={{ ...labelStyle, fontSize: 11, color: '#475569' }}>Biaya Potensial (IDR)</span>}
+                            style={{ marginBottom: 0 }}
                         >
                             <InputNumber 
                                 placeholder="0" 
-                                style={{ ...inputStyle, width: '100%' }} 
-                                prefix="Rp"
+                                style={{ ...inputStyle, width: '100%', height: 42 }} 
+                                prefix={<span style={{ color: '#94a3b8', fontWeight: 800, marginRight: 4 }}>Rp</span>}
                                 formatter={currencyFormatter}
                                 parser={currencyParser}
                             />
@@ -71,25 +97,44 @@ export default function ConsequenceSection() {
                 </Row>
             </div>
 
-            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 16 }}>
-                <span style={{ ...labelStyle, color: '#94a3b8', display: 'block', marginBottom: 12 }}>KLASIFIKASI DAMPAK (IMS-14-001)</span>
+            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 8 }}>
+                <span style={{ 
+                    ...labelStyle, 
+                    color: '#94a3b8', 
+                    display: 'block', 
+                    marginBottom: 20,
+                    letterSpacing: '0.1em'
+                }}>KLASIFIKASI DAMPAK (IMS-14-001)</span>
+                
                 <Form.Item
                     name="consequence_human"
-                    label={<span style={{ ...labelStyle, fontWeight: 700 }}>A. Manusia</span>}
+                    label={<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#3b82f6' }}></div>
+                        <span style={{ ...labelStyle, color: '#334155', fontWeight: 900 }}>A. Manusia</span>
+                    </div>}
+                    style={{ marginBottom: 16 }}
                 >
                     <Input.TextArea placeholder="Contoh: Cedera Ringan (First Aid)" style={inputStyle} autoSize={{ minRows: 2 }} />
                 </Form.Item>
 
                 <Form.Item
                     name="consequence_tool"
-                    label={<span style={{ ...labelStyle, fontWeight: 700 }}>B. Alat</span>}
+                    label={<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#3b82f6' }}></div>
+                        <span style={{ ...labelStyle, color: '#334155', fontWeight: 900 }}>B. Alat</span>
+                    </div>}
+                    style={{ marginBottom: 16 }}
                 >
                     <Input.TextArea placeholder="Contoh: Kerusakan Front Bumper" style={inputStyle} autoSize={{ minRows: 2 }} />
                 </Form.Item>
 
                 <Form.Item
                     name="consequence_environment"
-                    label={<span style={{ ...labelStyle, fontWeight: 700 }}>C. Lingkungan</span>}
+                    label={<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#3b82f6' }}></div>
+                        <span style={{ ...labelStyle, color: '#334155', fontWeight: 900 }}>C. Lingkungan</span>
+                    </div>}
+                    style={{ marginBottom: 0 }}
                 >
                     <Input.TextArea placeholder="Contoh: Ceceran Oli (Minor Spillage)" style={inputStyle} autoSize={{ minRows: 2 }} />
                 </Form.Item>

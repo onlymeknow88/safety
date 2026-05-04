@@ -23,6 +23,7 @@ export default function useAccidentNotification(master = {}) {
     const canCreate = isAdministrator || permissions.includes("accident-notification.create");
     const canEdit = isAdministrator || permissions.includes("accident-notification.edit");
     const canDelete = isAdministrator || permissions.includes("accident-notification.delete");
+    const canApprove = isAdministrator || auth?.user?.can_approve || permissions.includes("accident-notification.approval");
 
     const { notification, modal } = App.useApp();
 
@@ -39,6 +40,7 @@ export default function useAccidentNotification(master = {}) {
     });
     const [totalRows, setTotalRows] = useState(0);
     const debounceRef = useRef(null);
+    const [rowSelection, setRowSelection] = useState({});
 
     // Modal & CRUD States
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -172,6 +174,44 @@ export default function useAccidentNotification(master = {}) {
         }
     };
 
+    const handleBulkDelete = async () => {
+        const selectedIds = Object.keys(rowSelection);
+        if (selectedIds.length === 0) return;
+
+        modal.confirm({
+            title: "Hapus Banyak Data?",
+            icon: <ExclamationCircleOutlined />,
+            content: `Apakah Anda yakin ingin menghapus ${selectedIds.length} data terpilih? Tindakan ini tidak dapat dibatalkan.`,
+            okText: "Ya, Hapus",
+            cancelText: "Batal",
+            okButtonProps: { danger: true, style: { borderRadius: 8 } },
+            cancelButtonProps: { style: { borderRadius: 8 } },
+            centered: true,
+            onOk: async () => {
+                setLoading(true);
+                try {
+                    // Assuming the API supports bulk delete or we loop it (bulk is better if available)
+                    // For now, let's use a Promise.all if the API doesn't have bulk endpoint
+                    await Promise.all(selectedIds.map(id => deleteRequest(id)));
+                    
+                    notification.success({
+                        message: "Berhasil",
+                        description: `${selectedIds.length} data telah dihapus.`,
+                    });
+                    setRowSelection({});
+                    fetchItems();
+                } catch (error) {
+                    notification.error({
+                        message: "Gagal Menghapus",
+                        description: "Terjadi kesalahan saat menghapus beberapa data.",
+                    });
+                } finally {
+                    setLoading(false);
+                }
+            }
+        });
+    };
+
     const resetForm = () => {
         setIsHpri(false);
         setSeverity({
@@ -262,6 +302,7 @@ export default function useAccidentNotification(master = {}) {
                         });
                         fetchItems();
                         setRefreshKey(prev => prev + 1);
+                        setIsModalVisible(false);
                     }
                 } catch (error) {
                     notification.error({
@@ -314,6 +355,7 @@ export default function useAccidentNotification(master = {}) {
                             description: "Laporan telah dikembalikan untuk diperbaiki",
                         });
                         fetchItems();
+                        setIsModalVisible(false);
                     }
                 } catch (error) {
                     notification.error({
@@ -901,12 +943,14 @@ export default function useAccidentNotification(master = {}) {
     const table = useReactTable({
         data,
         columns,
-        state: { pagination },
+        state: { pagination, rowSelection },
         onPaginationChange: setPagination,
+        onRowSelectionChange: setRowSelection,
         manualPagination: true,
         rowCount: totalRows,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
+        getRowId: (row) => row.id, // Important for selection
     });
 
     useEffect(() => {
@@ -927,6 +971,7 @@ export default function useAccidentNotification(master = {}) {
         handleEdit,
         canEdit,
         handleApprove,
+        canApprove,
         handleReturn,
         handleSave,
         isDeleteModalVisible,
@@ -954,5 +999,8 @@ export default function useAccidentNotification(master = {}) {
         previewRecord,
         handlePreviewPdf,
         handleDownloadPdf,
+        rowSelection,
+        setRowSelection,
+        handleBulkDelete,
     };
 }
