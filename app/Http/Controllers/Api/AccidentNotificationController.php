@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use App\Mail\GenericAccidentNotificationMail;
 use Illuminate\Support\Facades\Validator;
 
 class AccidentNotificationController extends Controller
@@ -33,7 +34,7 @@ class AccidentNotificationController extends Controller
             ($user->employee && $user->employee->can_approve)
         );
 
-        $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver', 'progressStatus'])
+        $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])
             // Filter berdasarkan company_id jika bukan CRS/Approver
             ->when(!$isCrs && $user && $user->employee_id, function($q) use ($user) {
                 return $q->where('company_id', $user->employee->company_id);
@@ -97,13 +98,8 @@ class AccidentNotificationController extends Controller
             'status_id' => 'required|exists:m_statuses,id',
             'photos' => 'nullable|array|max:4',
             'photos.*' => 'file|mimes:jpg,jpeg,png|max:2048',
-            // Reporting Fields
+            'kait_reporting_date' => 'nullable|date',
             'lpks_lpkl' => 'nullable|string',
-            'due_date' => 'nullable|date',
-            'presentation_date' => 'nullable|date',
-            'submit_date' => 'nullable|date',
-            'progress_status_id' => 'nullable|exists:m_statuses,id',
-            'presentation_invitation' => 'nullable|string',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -112,7 +108,7 @@ class AccidentNotificationController extends Controller
             return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
-        $data = $request->except(['photos', 'incident_facts', 'corrective_actions', 'report_status']);
+        $data = $request->except(['photos', 'incident_facts', 'corrective_actions']);
         $data['incident_facts'] = $request->input('incident_facts', []);
         $data['corrective_actions'] = $request->input('corrective_actions', []);
         $data['created_by'] = auth('api')->user()->name ?? 'System';
@@ -232,13 +228,8 @@ class AccidentNotificationController extends Controller
             'status_id' => 'required|exists:m_statuses,id',
             'photos' => 'nullable|array|max:4',
             'photos.*' => 'file|mimes:jpg,jpeg,png|max:2048',
-            // Reporting Fields
+            'kait_reporting_date' => 'nullable|date',
             'lpks_lpkl' => 'nullable|string',
-            'due_date' => 'nullable|date',
-            'presentation_date' => 'nullable|date',
-            'submit_date' => 'nullable|date',
-            'progress_status_id' => 'nullable|exists:m_statuses,id',
-            'presentation_invitation' => 'nullable|string',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -247,7 +238,7 @@ class AccidentNotificationController extends Controller
             return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
-        $data = $request->except(['photos', 'existing_photos', 'incident_facts', 'corrective_actions', 'report_status']);
+        $data = $request->except(['photos', 'existing_photos', 'incident_facts', 'corrective_actions']);
         if ($request->has('incident_facts')) {
             $data['incident_facts'] = $request->input('incident_facts', []);
         }
@@ -425,5 +416,67 @@ class AccidentNotificationController extends Controller
         ]);
 
         return SafetyResponse::success($record->load('status'), 'Data dikembalikan untuk diperbaiki');
+    }
+
+    /**
+     * POST /api/accident-notification/send-email
+     */
+    public function sendEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'accident_id' => 'required|exists:accident_notifications,id',
+            'to' => 'required|string',
+            'subject' => 'required|string',
+            'body' => 'required|string',
+            'attachments.*' => 'file|max:5120', // Max 5MB per file
+        ]);
+
+        if ($validator->fails()) {
+            return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
+        }
+
+        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])->find($request->accident_id);
+
+        // 1. Generate PDF
+        $pdf = Pdf::loadView('pdf.accident_notification', compact('record'));
+        $pdf->setPaper('a4', 'landscape');
+        $pdfData = $pdf->output();
+        $pdfName = 'Accident_Notification_' . str_replace(['/', '\\'], '_', $record->accident_number) . '.pdf';
+
+        // 2. Prepare Attachments
+        $attachmentsData = [
+            [
+                'data' => $pdfData,
+                'name' => $pdfName,
+                'mime' => 'application/pdf',
+            ]
+        ];
+
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $attachmentsData[] = [
+                    'path' => $file->getRealPath(),
+                    'name' => $file->getClientOriginalName(),
+                ];
+            }
+        }
+
+        // 3. Send Email
+        try {
+            $recipients = explode(',', $request->to);
+            $cc = $request->cc ? explode(',', $request->cc) : [];
+            $bcc = $request->bcc ? explode(',', $request->bcc) : [];
+
+            $mail = Mail::to($recipients);
+            if (!empty($cc)) $mail->cc($cc);
+            if (!empty($bcc)) $mail->bcc($bcc);
+
+            $mail->send(new GenericAccidentNotificationMail($request->subject, $request->body, $attachmentsData));
+
+            return SafetyResponse::success(null, 'Email berhasil dikirim');
+        } catch (\Exception $e) {
+            Log::error('Email Send Error: ' . $e->getMessage());
+            return SafetyResponse::error(null, 'Gagal mengirim email: ' . $e->getMessage(), 500);
+        }
     }
 }

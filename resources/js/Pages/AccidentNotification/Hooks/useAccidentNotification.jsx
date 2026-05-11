@@ -19,7 +19,7 @@ export default function useAccidentNotification(master = {}) {
     const { auth } = usePage().props;
     const permissions = auth?.user?.permissions || [];
     const isAdministrator = auth?.user?.is_administrator || false;
-    
+
     const canCreate = isAdministrator || permissions.includes("accident-notification.create");
     const canEdit = isAdministrator || permissions.includes("accident-notification.edit");
     const canDelete = isAdministrator || permissions.includes("accident-notification.delete");
@@ -52,6 +52,8 @@ export default function useAccidentNotification(master = {}) {
     const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
     const [previewRecord, setPreviewRecord] = useState(null);
     const [refreshKey, setRefreshKey] = useState(Date.now());
+    const [isSendModalVisible, setIsSendModalVisible] = useState(false);
+    const [sendRecord, setSendRecord] = useState(null);
 
     // Detail View Handler
     const handleDetail = (record) => {
@@ -193,7 +195,7 @@ export default function useAccidentNotification(master = {}) {
                     // Assuming the API supports bulk delete or we loop it (bulk is better if available)
                     // For now, let's use a Promise.all if the API doesn't have bulk endpoint
                     await Promise.all(selectedIds.map(id => deleteRequest(id)));
-                    
+
                     notification.success({
                         message: "Berhasil",
                         description: `${selectedIds.length} data telah dihapus.`,
@@ -324,9 +326,9 @@ export default function useAccidentNotification(master = {}) {
             content: (
                 <div style={{ marginTop: 16 }}>
                     <p style={{ marginBottom: 8, fontWeight: 600 }}>Alasan Pengembalian / Catatan Perbaikan:</p>
-                    <Input.TextArea 
-                        rows={4} 
-                        placeholder="Contoh: Foto kurang jelas, data kronologi perlu diperinci..." 
+                    <Input.TextArea
+                        rows={4}
+                        placeholder="Contoh: Foto kurang jelas, data kronologi perlu diperinci..."
                         onChange={(e) => comment = e.target.value}
                     />
                 </div>
@@ -369,6 +371,56 @@ export default function useAccidentNotification(master = {}) {
         });
     };
 
+    const handleSendNotification = (record) => {
+        setSendRecord(record);
+        setIsSendModalVisible(true);
+    };
+
+    const executeSendEmail = async (values) => {
+        setLoading(true);
+        try {
+            const fd = new FormData();
+            fd.append('accident_id', sendRecord.id);
+            fd.append('to', values.to.join(','));
+            if (values.cc && values.cc.length > 0) fd.append('cc', values.cc.join(','));
+            if (values.bcc && values.bcc.length > 0) fd.append('bcc', values.bcc.join(','));
+            fd.append('subject', values.subject);
+            fd.append('body', values.body);
+            
+            if (values.attachments) {
+                values.attachments.forEach(file => {
+                    if (file.originFileObj) {
+                        fd.append('attachments[]', file.originFileObj);
+                    }
+                });
+            }
+
+            const response = await axios({
+                method: "POST",
+                url: `/api/accident-notification/send-email`,
+                data: fd,
+                headers: {
+                    Authorization: "Bearer " + TokenManager.getToken(),
+                    Accept: "application/json",
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+
+            if (response.data?.meta?.status === "success") {
+                notification.success({ message: "Email berhasil dikirim" });
+                setIsSendModalVisible(false);
+                return true;
+            }
+        } catch (error) {
+            notification.error({ 
+                message: "Gagal mengirim email", 
+                description: error.response?.data?.message || "Terjadi kesalahan pada server." 
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const buildFormData = (values, statusIntent) => {
         const fd = new FormData();
 
@@ -409,6 +461,14 @@ export default function useAccidentNotification(master = {}) {
                             ? v.format("HH:mm:ss")
                             : v.format("YYYY-MM-DD"),
                     );
+                } else if (Array.isArray(v)) {
+                    // Handle array values (tags from Select)
+                    if (k === 'to' || k === 'cc' || k === 'bcc') {
+                        fd.append(k, v.join(','));
+                    } else {
+                        // For other fields like reporter_name, take the first one if maxCount=1 was used
+                        fd.append(k, v.length > 0 ? v[0] : '');
+                    }
                 } else fd.append(k, v);
             }
         });
@@ -424,7 +484,7 @@ export default function useAccidentNotification(master = {}) {
             const url = isEditing
                 ? `/api/accident-notification/${editingItem.id}`
                 : `/api/accident-notification`;
-            
+
             if (isEditing) fd.append("_method", "PUT");
 
             const response = await axios({
@@ -457,7 +517,7 @@ export default function useAccidentNotification(master = {}) {
             return false;
         } catch (error) {
             console.error("Save Error:", error);
-            
+
             if (error.code === 'ECONNABORTED') {
                 notification.error({
                     message: 'Request Timeout',
@@ -466,7 +526,7 @@ export default function useAccidentNotification(master = {}) {
             } else if (error.response?.status === 422) {
                 const validationErrors = error.response.data.errors;
                 const errorList = Object.values(validationErrors).flat();
-                
+
                 notification.error({
                     message: 'Validasi Gagal',
                     description: (
@@ -477,8 +537,8 @@ export default function useAccidentNotification(master = {}) {
                     duration: 5,
                 });
             } else {
-                notification.error({ 
-                    message: 'Gagal Menyimpan', 
+                notification.error({
+                    message: 'Gagal Menyimpan',
                     description: error.response?.data?.message || 'Terjadi kesalahan pada server atau koneksi terputus.',
                     duration: 4,
                 });
@@ -578,8 +638,8 @@ export default function useAccidentNotification(master = {}) {
                 header: "NO. NOTIFIKASI (NI)",
                 accessorKey: "notification_number",
                 cell: ({ row }) => (
-                    <Text 
-                        strong 
+                    <Text
+                        strong
                         style={{ color: "#2563eb", cursor: "pointer" }}
                         onClick={() => handleDetail(row.original)}
                     >
@@ -588,12 +648,12 @@ export default function useAccidentNotification(master = {}) {
                 ),
                 meta: { width: 150 },
             },
-            {
-                header: "NO HSE ALERT",
-                accessorKey: "hse_alert_no",
-                cell: ({ row }) => row.original.hse_alert_no || "-",
-                meta: { width: 150 },
-            },
+            // {
+            //     header: "NO HSE ALERT",
+            //     accessorKey: "hse_alert_no",
+            //     cell: ({ row }) => row.original.hse_alert_no || "-",
+            //     meta: { width: 150 },
+            // },
             {
                 header: "CCOW",
                 accessorKey: "ccow.name",
@@ -613,12 +673,26 @@ export default function useAccidentNotification(master = {}) {
                 meta: { width: 220, align: "center" },
             },
             {
+                header: "TIPE",
+                accessorKey: "lpks_lpkl",
+                cell: ({ row }) => {
+                    const type = row.original.lpks_lpkl;
+                    if (!type) return "-";
+                    return (
+                        <Tag color={type === 'LPKL' ? 'red' : 'blue'} style={{ borderRadius: 4, fontWeight: 800 }}>
+                            {type}
+                        </Tag>
+                    );
+                },
+                meta: { width: 100, align: "center" },
+            },
+            {
                 header: "HARI",
                 id: "incident_day",
                 cell: ({ row }) => {
                     if (!row.original.incident_date) return "-";
                     const days = {
-                        'Sunday': 'Minggu', 'Monday': 'Senin', 'Tuesday': 'Selasa', 
+                        'Sunday': 'Minggu', 'Monday': 'Senin', 'Tuesday': 'Selasa',
                         'Wednesday': 'Rabu', 'Thursday': 'Kamis', 'Friday': 'Jumat', 'Saturday': 'Sabtu'
                     };
                     return days[dayjs(row.original.incident_date).format('dddd')] || "-";
@@ -641,7 +715,7 @@ export default function useAccidentNotification(master = {}) {
                     const time = row.original.incident_time;
                     if (!time) return "-";
                     const hour = parseInt(time.split(':')[0]);
-                    
+
                     if (hour >= 0 && hour < 3) return "00.01 - 03.00";
                     if (hour >= 3 && hour < 6) return "03.01 - 06.00";
                     if (hour >= 6 && hour < 9) return "06.01 - 09.00";
@@ -782,102 +856,20 @@ export default function useAccidentNotification(master = {}) {
                 ],
             },
             {
-                header: "PELAPORAN",
-                id: "reporting_group",
-                columns: [
-                    {
-                        header: "LPKS / LPKL",
-                        accessorKey: "lpks_lpkl",
-                        cell: ({ row }) => row.original.lpks_lpkl || "-",
-                        meta: { width: 120, align: "center" },
-                    },
-                    {
-                        header: "DUE DATE",
-                        accessorKey: "due_date",
-                        cell: ({ row }) => row.original.due_date ? dayjs(row.original.due_date).format('DD/MM/YYYY') : "-",
-                        meta: { width: 120, align: "center" },
-                    },
-                    {
-                        header: "TANGGAL PRESENTASI",
-                        accessorKey: "presentation_date",
-                        cell: ({ row }) => row.original.presentation_date ? dayjs(row.original.presentation_date).format('DD/MM/YYYY') : "-",
-                        meta: { width: 160, align: "center" },
-                    },
-                    {
-                        header: "SUBMIT DATE",
-                        accessorKey: "submit_date",
-                        cell: ({ row }) => row.original.submit_date ? dayjs(row.original.submit_date).format('DD/MM/YYYY') : "-",
-                        meta: { width: 120, align: "center" },
-                    },
-                    {
-                        header: "STATUS",
-                        accessorKey: "report_status",
-                        cell: ({ row }) => {
-                            const status = row.original.report_status;
-                            if (!status) return "-";
-                            const isOverdue = status.toLowerCase().includes('overdue');
-                            return (
-                                <Tag color={isOverdue ? "orange" : "blue"} style={{ borderRadius: 4, fontWeight: 700 }}>
-                                    {status.toUpperCase()}
-                                </Tag>
-                            );
-                        },
-                        meta: { width: 150, align: "center" },
-                    },
-                ],
-            },
-            {
-                header: "UNDANGAN PRESENTASI",
-                accessorKey: "presentation_invitation",
-                cell: ({ row }) => {
-                    const val = row.original.presentation_invitation;
-                    if (!val) return "-";
-                    return (
-                        <Tag color={val === 'DONE' ? 'green' : 'default'} style={{ borderRadius: 4, fontWeight: 800 }}>
-                            {val}
-                        </Tag>
-                    );
-                },
-                meta: { width: 180, align: "center" },
-            },
-            {
-                header: "STATUS LAPORAN",
-                accessorKey: "progressStatus.name",
-                cell: ({ row }) => {
-                    const status = row.original.progress_status;
-                    const statusId = row.original.progress_status_id;
-                    
-                    if (!status && !statusId) return "-";
-                    
-                    let color = "#64748b"; // Default Slate
-                    if (statusId == 1) color = "#059669"; // Closed (Emerald)
-                    if (statusId == 3) color = "#0ea5e9"; // Open (Sky Blue)
-                    if (statusId == 2) color = "#f97316"; // Closed Overdue (Orange)
-                    if (statusId == 4) color = "#dc2626"; // Overdue (Red)
-                    
-                    return (
-                        <Tag color={color} style={{ borderRadius: 6, fontWeight: 800, padding: '2px 12px' }}>
-                            {status?.name?.toUpperCase() || "UNKNOWN"}
-                        </Tag>
-                    );
-                },
-                meta: { width: 140, align: "center" },
-            },
-            {
                 header: "STATUS APPROVAL",
                 accessorKey: "status.name",
                 cell: ({ row }) => {
                     const statusName = row.original.status?.name?.toLowerCase() || "";
                     const statusId = row.original.status_id;
-                    
+
                     let color = "#64748b"; // Default Slate (Draft)
-                    
+
                     if (statusId == 7 || statusName.includes("approved")) color = "#10b981"; // Emerald
                     else if (statusId == 6 || statusName.includes("submitted")) color = "#3b82f6"; // Blue
                     else if (statusId == 3 || statusName.includes("open")) color = "#06b6d4"; // Cyan
                     else if (statusId == 8 || statusName.includes("return")) color = "#f59e0b"; // Amber (Return)
                     else if (statusName.includes("overdue") || statusId == 4) color = "#ef4444"; // Red
-                    
+
                     return (
                         <Tag
                             color={color}
@@ -909,12 +901,21 @@ export default function useAccidentNotification(master = {}) {
                             />
                         )}
                         {row.original.status_id === 7 && (
-                            <Button
-                                size="small"
-                                style={{ color: '#dc2626', borderColor: '#fee2e2', background: '#fef2f2' }}
-                                icon={<FilePdfOutlined />}
-                                onClick={() => handlePreviewPdf(row.original)}
-                            />
+                            <>
+                                <Button
+                                    size="small"
+                                    style={{ color: '#059669', borderColor: '#d1fae5', background: '#ecfdf5' }}
+                                    icon={<SendOutlined />}
+                                    onClick={() => handleSendNotification(row.original)}
+                                    title="Send Notification"
+                                />
+                                <Button
+                                    size="small"
+                                    style={{ color: '#dc2626', borderColor: '#fee2e2', background: '#fef2f2' }}
+                                    icon={<FilePdfOutlined />}
+                                    onClick={() => handlePreviewPdf(row.original)}
+                                />
+                            </>
                         )}
                         {canDelete && (
                             <Button
@@ -1002,5 +1003,10 @@ export default function useAccidentNotification(master = {}) {
         rowSelection,
         setRowSelection,
         handleBulkDelete,
+        isSendModalVisible,
+        setIsSendModalVisible,
+        sendRecord,
+        handleSendNotification,
+        executeSendEmail,
     };
 }

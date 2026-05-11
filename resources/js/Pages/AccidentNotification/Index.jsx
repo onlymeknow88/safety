@@ -7,6 +7,7 @@ import { useTheme } from "@/Contexts/ThemeContext";
 import AccidentNotificationModal from "./Partials/AccidentNotificationModal";
 import DeleteConfirmModal from "@/Components/DeleteConfirmModal";
 import PdfPreviewModal from "./Partials/Components/PdfPreviewModal";
+import SendNotificationModal from "./Partials/Components/SendNotificationModal";
 
 // Consolidated Hook
 import useAccidentNotification from "./Hooks/useAccidentNotification";
@@ -47,7 +48,8 @@ export default function AccidentNotificationIndex({ master = {} }) {
         fileList, setFileList,
         isPreviewModalVisible, setIsPreviewModalVisible,
         previewRecord, handleApprove, handleReturn, handleDownloadPdf,
-        rowSelection, handleBulkDelete
+        rowSelection, handleBulkDelete,
+        isSendModalVisible, setIsSendModalVisible, sendRecord, executeSendEmail
     } = useAccidentNotification(master);
 
     return (
@@ -173,6 +175,16 @@ export default function AccidentNotificationIndex({ master = {} }) {
                 title="Hapus Notifikasi"
                 description={`Apakah Anda yakin ingin menghapus notifikasi "${itemToDelete?.notification_number}"?`}
                 loading={loading}
+            />
+
+            {/* Email Notification Modal */}
+            <SendNotificationModal
+                visible={isSendModalVisible}
+                onCancel={() => setIsSendModalVisible(false)}
+                onSend={executeSendEmail}
+                loading={loading}
+                record={sendRecord}
+                isDarkMode={isDarkMode}
             />
         </DashboardLayout>
     );

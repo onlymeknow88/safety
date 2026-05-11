@@ -19,11 +19,7 @@ class AccidentNotification extends Model
         'corrective_actions' => 'array',
         'is_hpri' => 'boolean',
         'incident_date' => 'date',
-        'due_date' => 'date',
-        'presentation_date' => 'date',
-        'submit_date' => 'date',
         'kait_reporting_date' => 'date',
-        'progress_status_id' => 'integer',
     ];
 
     // Auto-generate notification_number sebelum create
@@ -132,8 +128,4 @@ class AccidentNotification extends Model
         return $this->belongsTo(\App\Models\MasterData\Employee::class, 'approver_id');
     }
 
-    public function progressStatus()
-    {
-        return $this->belongsTo(\App\Models\MasterData\Status::class, 'progress_status_id');
-    }
 }
