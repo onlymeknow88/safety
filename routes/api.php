@@ -80,7 +80,9 @@ Route::middleware('auth:api')->group(function () {
     // Accident Notification
     Route::post('accident-notification/{id}/approve', [AccidentNotificationController::class, 'approve']);
     Route::post('accident-notification/{id}/return', [AccidentNotificationController::class, 'return']);
+    Route::post('accident-notification/send-email', [AccidentNotificationController::class, 'sendEmail']);
     Route::get('accident-notification/{id}/export-pdf', [AccidentNotificationController::class, 'exportPdf']);
     Route::delete('accident-notification/{id}/photos/{photoId}', [AccidentNotificationController::class, 'destroyPhoto']);
+    Route::apiResource('email-groups', \App\Http\Controllers\Admin\Api\EmailGroupController::class);
     Route::apiResource('accident-notification', AccidentNotificationController::class);
 });

@@ -9,7 +9,7 @@ const SeveritySelector = ({ value, onChange, isDarkMode, disabled }) => {
         { level: 4, color: '#f97316' }, // Orange
         { level: 5, color: '#ef4444' }  // Red
     ];
-    
+
     return (
         <Space size={4} wrap>
             {levels.map(({ level, color }) => (
@@ -51,12 +51,12 @@ export default function SeveritySection({ prefix, severity, setSeverity, isDarkM
         }));
     };
 
-    const labelStyle = { 
-        fontSize: 11, 
-        fontWeight: 800, 
-        color: isDarkMode ? '#94a3b8' : '#64748b', 
-        textTransform: 'uppercase', 
-        display: 'block', 
+    const labelStyle = {
+        fontSize: 11,
+        fontWeight: 800,
+        color: isDarkMode ? '#94a3b8' : '#64748b',
+        textTransform: 'uppercase',
+        display: 'block',
         marginBottom: 8,
         letterSpacing: '0.05em'
     };
@@ -65,7 +65,7 @@ export default function SeveritySection({ prefix, severity, setSeverity, isDarkM
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <Row gutter={[24, 24]}>
                 <Col span={12}>
-                    <span style={labelStyle}>K3 (Safety)</span>
+                    <span style={labelStyle}>K3</span>
                     <SeveritySelector
                         value={severity[`${prefix}_k3`]}
                         onChange={(v) => handleChange('k3', v)}
@@ -74,7 +74,7 @@ export default function SeveritySection({ prefix, severity, setSeverity, isDarkM
                     />
                 </Col>
                 <Col span={12}>
-                    <span style={labelStyle}>KK (Health)</span>
+                    <span style={labelStyle}>KK</span>
                     <SeveritySelector
                         value={severity[`${prefix}_kk`]}
                         onChange={(v) => handleChange('kk', v)}
@@ -83,7 +83,7 @@ export default function SeveritySection({ prefix, severity, setSeverity, isDarkM
                     />
                 </Col>
                 <Col span={12}>
-                    <span style={labelStyle}>LH (Environment)</span>
+                    <span style={labelStyle}>LH</span>
                     <SeveritySelector
                         value={severity[`${prefix}_lh`]}
                         onChange={(v) => handleChange('lh', v)}
@@ -101,7 +101,7 @@ export default function SeveritySection({ prefix, severity, setSeverity, isDarkM
                     />
                 </Col>
                 <Col span={12}>
-                    <span style={labelStyle}>PP (Produksi)</span>
+                    <span style={labelStyle}>PP</span>
                     <SeveritySelector
                         value={severity[`${prefix}_pp`]}
                         onChange={(v) => handleChange('pp', v)}

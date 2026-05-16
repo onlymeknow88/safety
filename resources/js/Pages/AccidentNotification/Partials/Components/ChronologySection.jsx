@@ -21,12 +21,12 @@ const DynamicList = ({ title, items, setItems, placeholder, isDarkMode, disabled
         }
     };
 
-    const sectionTitleStyle = { 
-        fontSize: 11, 
-        fontWeight: 800, 
-        color: '#3b82f6', 
-        textTransform: 'uppercase', 
-        marginBottom: 16, 
+    const sectionTitleStyle = {
+        fontSize: 11,
+        fontWeight: 800,
+        color: '#3b82f6',
+        textTransform: 'uppercase',
+        marginBottom: 16,
         display: 'block',
         letterSpacing: '0.05em'
     };
@@ -43,25 +43,25 @@ const DynamicList = ({ title, items, setItems, placeholder, isDarkMode, disabled
                 dataSource={items}
                 split={false}
                 renderItem={(item, index) => (
-                    <div style={{ 
-                        display: 'flex', 
-                        gap: 16, 
-                        marginBottom: 12, 
-                        background: isDarkMode ? 'rgba(255,255,255,0.02)' : '#f8fafc', 
-                        padding: '12px 16px', 
+                    <div style={{
+                        display: 'flex',
+                        gap: 16,
+                        marginBottom: 12,
+                        background: isDarkMode ? 'rgba(255,255,255,0.02)' : '#f8fafc',
+                        padding: '12px 16px',
                         borderRadius: 12,
                         border: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
                         alignItems: 'center',
                         transition: 'all 0.2s ease'
                     }}>
-                        <div style={{ 
-                            width: 24, 
-                            height: 24, 
-                            borderRadius: '50%', 
-                            background: '#3b82f6', 
-                            color: '#fff', 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        <div style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
+                            background: '#3b82f6',
+                            color: '#fff',
+                            display: 'flex',
+                            alignItems: 'center',
                             justifyContent: 'center',
                             fontSize: 12,
                             fontWeight: 900,
@@ -107,10 +107,10 @@ const DynamicList = ({ title, items, setItems, placeholder, isDarkMode, disabled
 };
 
 export default function ChronologySection({ incidentFacts, setIncidentFacts, correctiveActions, setCorrectiveActions, isDarkMode, disabled }) {
-    const labelStyle = { 
-        fontSize: 11, 
-        fontWeight: 800, 
-        color: '#3b82f6', 
+    const labelStyle = {
+        fontSize: 11,
+        fontWeight: 800,
+        color: '#3b82f6',
         textTransform: 'uppercase',
         marginBottom: 16,
         display: 'block',
@@ -126,8 +126,8 @@ export default function ChronologySection({ incidentFacts, setIncidentFacts, cor
                         placeholder="Uraikan kronologi singkat kejadian..."
                         autoSize={{ minRows: 4, maxRows: 8 }}
                         showCount
-                        maxLength={255}
-                        style={{ 
+                        maxLength={1000}
+                        style={{
                             background: isDarkMode ? 'rgba(255,255,255,0.02)' : '#f8fafc',
                             borderRadius: 16,
                             padding: '16px 20px',

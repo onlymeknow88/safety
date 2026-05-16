@@ -6,10 +6,10 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
     const form = Form.useFormInstance();
     const selectedCcowId = Form.useWatch('ccow_id', form);
 
-    const labelStyle = { 
-        fontSize: 11, 
-        fontWeight: 800, 
-        color: disabled ? '#94a3b8' : '#64748b', 
+    const labelStyle = {
+        fontSize: 11,
+        fontWeight: 800,
+        color: disabled ? '#94a3b8' : '#64748b',
         textTransform: 'uppercase',
         letterSpacing: '0.05em'
     };
@@ -37,29 +37,29 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
 
     return (
         <Row gutter={[32, 24]}>
-            <Col xs={24} md={12}>
+            <Col xs={24} md={24}>
                 <Form.Item
                     name="incident_title"
                     label={<span style={labelStyle}>Judul Insiden (Maks 40 Karakter)</span>}
                     rules={[{ required: true, message: 'Wajib diisi' }]}
                 >
-                    <Input.TextArea 
-                        placeholder="Contoh: Kaca Kabin EX-365 Pecah" 
-                        maxLength={40} 
-                        showCount 
+                    <Input.TextArea
+                        placeholder="Contoh: Kaca Kabin EX-365 Pecah"
+                        maxLength={255}
+                        showCount
                         autoSize={{ minRows: 2, maxRows: 2 }}
                         style={{ borderRadius: 8, padding: '10px 12px' }}
                     />
                 </Form.Item>
             </Col>
-            <Col xs={24} md={12}>
+            {/* <Col xs={24} md={12}>
                 <Form.Item
                     name="hse_alert_no"
                     label={<span style={labelStyle}>No HSE Alert</span>}
                 >
                     <Input placeholder="Contoh: 01/HA-LC/I/2026" style={inputStyle} />
                 </Form.Item>
-            </Col>
+            </Col> */}
 
             <Col xs={24} md={6}>
                 <Form.Item
@@ -76,6 +76,18 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
                     label={<span style={labelStyle}>Pelaporan KaIT</span>}
                 >
                     <DatePicker style={{ width: '100%', ...inputStyle }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
+                </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+                <Form.Item
+                    name="lpks_lpkl"
+                    label={<span style={labelStyle}>Tipe (LPKL/LPKS)</span>}
+                >
+                    <Input 
+                        placeholder="Otomatis" 
+                        style={{ ...inputStyle, background: '#f8fafc', fontWeight: 700, color: '#3b82f6' }} 
+                        readOnly 
+                    />
                 </Form.Item>
             </Col>
             <Col xs={24} md={6}>

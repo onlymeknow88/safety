@@ -162,33 +162,37 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
 
                 .custom-tree-menu .ant-menu-item:not(.ant-menu-item-selected):hover .anticon,
                 .custom-tree-menu .ant-menu-submenu-title:hover .anticon {
-                    color: #2563eb !important;
+                    color: ${isDarkMode ? "#ff5722" : "#2563eb"} !important;
                 }
 
                 /* Submenu Title Style when has Active Child (NOT HOVERED) */
                 .custom-tree-menu .ant-menu-submenu-selected > .ant-menu-submenu-title:not(:hover) {
-                    background-color: ${isDarkMode ? "rgba(37, 99, 235, 0.15)" : "#e6f4ff"} !important;
-                    color: #2563eb !important;
+                    background-color: ${isDarkMode ? "rgba(255, 87, 34, 0.12)" : "#e6f4ff"} !important;
+                    color: ${isDarkMode ? "#ffffff" : "#2563eb"} !important;
                     font-weight: 700 !important;
                 }
 
                 .custom-tree-menu .ant-menu-submenu-selected > .ant-menu-submenu-title:not(:hover) * {
-                    color: #2563eb !important;
+                    color: ${isDarkMode ? "#ffffff" : "#2563eb"} !important;
+                }
+
+                .custom-tree-menu .ant-menu-submenu-selected > .ant-menu-submenu-title:not(:hover) .anticon {
+                    color: ${isDarkMode ? "#ff5722" : "#2563eb"} !important;
                 }
 
                 /* Active/Selected State - PILL LOOK */
                 .custom-tree-menu .ant-menu-item-selected,
                 .custom-tree-menu.ant-menu-light .ant-menu-item-selected,
                 .custom-tree-menu.ant-menu-dark .ant-menu-item-selected {
-                    background-color: #2563eb !important;
+                    background-color: ${isDarkMode ? "#ff5722" : "#2563eb"} !important;
                     color: #ffffff !important;
                     font-weight: 700 !important; /* Bold for selected */
-                    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+                    box-shadow: ${isDarkMode ? "0 4px 16px rgba(255, 87, 34, 0.4)" : "0 4px 12px rgba(37, 99, 235, 0.25)"};
                 }
 
                 /* Ensure Selected state stays consistent even when hovered */
                 .custom-tree-menu .ant-menu-item-selected:hover {
-                    background-color: #1d4ed8 !important;
+                    background-color: ${isDarkMode ? "#e64a19" : "#1d4ed8"} !important;
                     color: #ffffff !important;
                 }
                 .custom-tree-menu .ant-menu-item-selected a,
@@ -352,7 +356,7 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
                 width={280}
                 closable={false}
                 drawerStyle={{
-                    background: isDarkMode ? "#141414" : "#ffffff",
+                    background: isDarkMode ? "#0d0d12" : "#ffffff",
                 }}
             >
                 <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
@@ -380,7 +384,7 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
                 scrollbarColor: "unset",
                 boxShadow: isDarkMode ? "none" : "2px 0 8px rgba(0,0,0,0.05)",
                 borderRight: isDarkMode
-                    ? "1px solid #303030"
+                    ? "1px solid #2d2d3a"
                     : "1px solid #f0f0f0",
                 zIndex: 100,
             }}

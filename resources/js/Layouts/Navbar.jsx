@@ -96,7 +96,7 @@ export default function Navbar({ collapsed, setCollapsed, title, isMobile, setIs
                     position: "sticky",
                     top: 0,
                     zIndex: 100,
-                    borderBottom: `1px solid ${isDarkMode ? '#303030' : '#f0f0f0'}`,
+                    borderBottom: `1px solid ${isDarkMode ? '#2d2d3a' : '#f0f0f0'}`,
                     boxShadow: isDarkMode ? "none" : "0 1px 4px rgba(0,21,41,0.08)",
                     height: 64,
                     lineHeight: "64px",

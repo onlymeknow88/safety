@@ -61,8 +61,6 @@ export default function AccidentNotificationModal({
     const isCrs = userRoles.includes('crs');
     const isApproved = initialValues?.status_id == 7;
     
-    // Administrator can edit anytime, CRS only after full approval
-    const canEditReporting = authUser?.is_administrator || (isCrs && isApproved);
 
     const {
         isHpri, setIsHpri,
@@ -79,9 +77,6 @@ export default function AccidentNotificationModal({
                     ...initialValues,
                     incident_date: initialValues.incident_date ? dayjs(initialValues.incident_date) : null,
                     incident_time: initialValues.incident_time ? dayjs(`2000-01-01 ${initialValues.incident_time}`) : null,
-                    due_date: initialValues.due_date ? dayjs(initialValues.due_date) : null,
-                    presentation_date: initialValues.presentation_date ? dayjs(initialValues.presentation_date) : null,
-                    submit_date: initialValues.submit_date ? dayjs(initialValues.submit_date) : null,
                     kait_reporting_date: initialValues.kait_reporting_date ? dayjs(initialValues.kait_reporting_date) : null,
                 });
 
@@ -106,6 +101,27 @@ export default function AccidentNotificationModal({
             }
         }
     }, [visible, initialValues]);
+
+    useEffect(() => {
+        if (visible) {
+            const actual = severity.actual_k3;
+            const potential = severity.potential_k3;
+            
+            let type = null;
+            // Rules:
+            // LPKL: Actual 4,5 OR Potential 3,4,5
+            // LPKS: Actual 1,2 AND Potential 1,2,3
+            if ((actual === 4 || actual === 5) || (potential === 3 || potential === 4 || potential === 5)) {
+                type = 'LPKL';
+            } else if ((actual === 1 || actual === 2) && (potential === 1 || potential === 2 || potential === 3)) {
+                type = 'LPKS';
+            }
+            
+            if (type !== form.getFieldValue('lpks_lpkl')) {
+                form.setFieldsValue({ lpks_lpkl: type });
+            }
+        }
+    }, [severity.actual_k3, severity.potential_k3, visible]);
 
     const cardStyle = {
         marginBottom: 24,
@@ -418,65 +434,6 @@ export default function AccidentNotificationModal({
                         <MediaSection fileList={fileList} setFileList={setFileList} disabled={isDetail} />
                     </Card>
 
-                    <Card 
-                        title={<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div style={{ width: 4, height: 16, background: '#14b8a6', borderRadius: 2 }}></div>
-                            <span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800, letterSpacing: 0.5 }}>PELAPORAN</span>
-                        </div>} 
-                        style={cardStyle}
-                        styles={{ 
-                            header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px' },
-                            body: { padding: '24px' }
-                        }}
-                    >
-                        <Row gutter={[24, 24]}>
-                            <Col xs={24} md={4}>
-                                <Form.Item name="lpks_lpkl" label={<span style={{ fontSize: 12, fontWeight: 800, color: isDarkMode ? '#94a3b8' : '#475569', textTransform: 'uppercase' }}>LPKS / LPKL</span>}>
-                                    <Select placeholder="Pilih Tipe" style={{ width: '100%', height: 40 }} disabled={!canEditReporting}>
-                                        <Select.Option value="LPKS">LPKS</Select.Option>
-                                        <Select.Option value="LPKL">LPKL</Select.Option>
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                            <Col xs={24} md={5}>
-                                <Form.Item name="due_date" label={<span style={{ fontSize: 12, fontWeight: 800, color: isDarkMode ? '#94a3b8' : '#475569', textTransform: 'uppercase' }}>DUE DATE</span>}>
-                                    <DatePicker style={{ width: '100%', height: 40 }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" disabled={!canEditReporting} />
-                                </Form.Item>
-                            </Col>
-                            <Col xs={24} md={5}>
-                                <Form.Item name="presentation_date" label={<span style={{ fontSize: 12, fontWeight: 800, color: isDarkMode ? '#94a3b8' : '#475569', textTransform: 'uppercase' }}>TANGGAL PRESENTASI</span>}>
-                                    <DatePicker style={{ width: '100%', height: 40 }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" disabled={!canEditReporting} />
-                                </Form.Item>
-                            </Col>
-                            <Col xs={24} md={5}>
-                                <Form.Item name="submit_date" label={<span style={{ fontSize: 12, fontWeight: 800, color: isDarkMode ? '#94a3b8' : '#475569', textTransform: 'uppercase' }}>SUBMIT DATE</span>}>
-                                    <DatePicker style={{ width: '100%', height: 40 }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" disabled={!canEditReporting} />
-                                </Form.Item>
-                            </Col>
-                            <Col xs={24} md={5}>
-                                <Form.Item name="progress_status_id" label={<span style={{ fontSize: 12, fontWeight: 800, color: isDarkMode ? '#94a3b8' : '#475569', textTransform: 'uppercase' }}>STATUS LAPORAN</span>}>
-                                    <Select placeholder="Pilih Status" style={{ width: '100%', height: 40 }} disabled={!canEditReporting}>
-                                        {(master.statuses || [])
-                                            .filter(s => [1, 2, 3, 4].includes(s.id))
-                                            .map(status => (
-                                                <Select.Option key={status.id} value={status.id}>
-                                                    {status.name}
-                                                </Select.Option>
-                                            ))
-                                        }
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                            <Col xs={24}>
-                                <Form.Item name="presentation_invitation" label={<span style={{ fontSize: 12, fontWeight: 800, color: isDarkMode ? '#94a3b8' : '#475569', textTransform: 'uppercase' }}>UNDANGAN PRESENTASI</span>}>
-                                    <Select placeholder="Pilih Status" style={{ width: '100%', height: 40 }} disabled={!canEditReporting}>
-                                        <Select.Option value="DONE">DONE</Select.Option>
-                                        <Select.Option value="PENDING">PENDING</Select.Option>
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                    </Card>
 
                     <Row gutter={24}>
                         <Col xs={24} md={12}>
@@ -552,25 +509,6 @@ export default function AccidentNotificationModal({
                     <Button onClick={onCancel} style={{ borderRadius: 10, fontWeight: 700, padding: '0 24px', height: 40, fontSize: 14 }}>
                         {isDetail ? 'Close' : 'Cancel'}
                     </Button>
-                    {isDetail && canEditReporting && (
-                        <Button 
-                            type="primary" 
-                            onClick={() => onFinish(form, 'edit')} 
-                            loading={loading} 
-                            style={{ 
-                                background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)", 
-                                border: "none", 
-                                fontWeight: 700, 
-                                borderRadius: 10, 
-                                padding: '0 32px', 
-                                height: 40, 
-                                fontSize: 14,
-                                boxShadow: "0 10px 15px -3px rgba(139, 92, 246, 0.2)" 
-                            }}
-                        >
-                            Update Reporting
-                        </Button>
-                    )}
 
                     {!isDetail && (
                         <>

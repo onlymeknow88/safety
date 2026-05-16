@@ -77,6 +77,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return Inertia::render('Admin/Menu/Index');
         })->name('admin.menu.index');
 
+        // Email Groups
+        Route::resource('email-groups', \App\Http\Controllers\Admin\EmailGroupController::class);
+
     });
 
     // Master Data Group
