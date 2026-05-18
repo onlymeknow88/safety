@@ -213,6 +213,51 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('index');
     });
 
+    Route::prefix('investigation-report')->name('investigation-report.')->group(function () {
+        Route::get('/', function () {
+            $user = auth()->user();
+            $isCrs = $user && (
+                $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') ||
+                ($user->employee && $user->employee->can_approve)
+            );
+
+            $query = \App\Models\InvestigationReport::with([
+                'accidentNotification.ccow',
+                'accidentNotification.company',
+                'accidentNotification.location',
+                'accidentNotification.incidentType',
+                'documents',
+                'approvals.approvedBy'
+            ]);
+
+            if (!$isCrs && $user && $user->employee_id) {
+                $query->whereHas('accidentNotification', function($q) use ($user) {
+                    $q->where('company_id', $user->employee->company_id);
+                });
+            }
+
+            $reports = $query->latest()->get();
+
+            $approvedNotificationsQuery = \App\Models\AccidentNotification::with([
+                'ccow', 'company', 'location', 'incidentType', 'photos', 'department',
+                'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience',
+                'companyContractor', 'reporter', 'approver', 'status'
+            ])
+            ->where('status_id', 7); // 7 is Approved
+
+            if (!$isCrs && $user && $user->employee_id) {
+                $approvedNotificationsQuery->where('company_id', $user->employee->company_id);
+            }
+
+            $approvedNotifications = $approvedNotificationsQuery->latest()->get();
+
+            return Inertia::render('InvestigationReport/Index', [
+                'investigationReports' => $reports,
+                'approvedNotifications' => $approvedNotifications,
+            ]);
+        })->name('index');
+    });
+
     // Master Data Employee (API for Select2/Autocomplete)
     Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');
 });

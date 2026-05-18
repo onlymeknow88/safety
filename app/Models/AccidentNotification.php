@@ -82,6 +82,12 @@ class AccidentNotification extends Model
         return $this->hasMany(AccidentNotificationPhoto::class);
     }
 
+    public function investigationReport()
+    {
+        return $this->hasOne(InvestigationReport::class, 'accident_notification_id');
+    }
+
+
     public function status()
     {
         return $this->belongsTo(\App\Models\MasterData\Status::class, 'status_id');

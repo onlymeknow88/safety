@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AccidentNotificationController;
+use App\Http\Controllers\Api\InvestigationReportController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\RoleController;
@@ -85,4 +86,9 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('accident-notification/{id}/photos/{photoId}', [AccidentNotificationController::class, 'destroyPhoto']);
     Route::apiResource('email-groups', \App\Http\Controllers\Admin\Api\EmailGroupController::class);
     Route::apiResource('accident-notification', AccidentNotificationController::class);
+
+    // Investigation Report (LPKS/LPKL)
+    Route::post('investigation-report/{id}/approve', [InvestigationReportController::class, 'approve']);
+    Route::post('investigation-report/{id}/return', [InvestigationReportController::class, 'return']);
+    Route::apiResource('investigation-report', InvestigationReportController::class);
 });

@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             MenuSeeder::class,
             RoleMenuSeeder::class,
             AppSettingSeeder::class,
+            InvestigationRoleSeeder::class,
         ]);
     }
 }
