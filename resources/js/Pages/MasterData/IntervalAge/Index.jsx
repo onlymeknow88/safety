@@ -1,5 +1,5 @@
 import { Button, Col, Row, Space, Grid } from "antd";
-import { ReloadOutlined } from "@back-design/icons";
+import { ReloadOutlined } from "@ant-design/icons";
 
 import IntervalAgeHeader from "./Partials/IntervalAgeHeader";
 import IntervalAgeModal from "./Partials/IntervalAgeModal";
@@ -53,8 +53,8 @@ export default function IntervalAgeIndex() {
                     </Col>
                     <Col xs={24} md={12} style={{ textAlign: isMobile ? "left" : "right" }}>
                         <Space>
-                            <Button 
-                                icon={<ReloadOutlined />} 
+                            <Button
+                                icon={<ReloadOutlined />}
                                 onClick={() => fetchItems()}
                                 loading={loading}
                             />
@@ -63,7 +63,7 @@ export default function IntervalAgeIndex() {
                 </Row>
 
                 {/* Filter & Action Section */}
-                <IntervalAgeHeader 
+                <IntervalAgeHeader
                     searchText={searchText}
                     onSearchChange={handleSearchChange}
                     onAddClick={handleAdd}
@@ -72,8 +72,8 @@ export default function IntervalAgeIndex() {
                 />
 
                 {/* Table Section */}
-                <IntervalAgeTable 
-                    table={table} 
+                <IntervalAgeTable
+                    table={table}
                     loading={loading}
                     totalRows={totalRows}
                     isDarkMode={isDarkMode}

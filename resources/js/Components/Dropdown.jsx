@@ -1,4 +1,4 @@
-import { Transition } from '@headlessui/react';
+
 import { Link } from '@inertiajs/react';
 import { createContext, useContext, useState } from 'react';
 
@@ -59,17 +59,10 @@ const Content = ({
 
     return (
         <>
-            <Transition
-                show={open}
-                enter="transition ease-out duration-200"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="transition ease-in duration-75"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-            >
+        <>
+            {open && (
                 <div
-                    className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
+                    className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses} transition-all duration-200 ease-out`}
                     onClick={() => setOpen(false)}
                 >
                     <div
@@ -81,7 +74,8 @@ const Content = ({
                         {children}
                     </div>
                 </div>
-            </Transition>
+            )}
+        </>
         </>
     );
 };

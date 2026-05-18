@@ -266,20 +266,8 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <span class="label">Departemen : <span
-                                            class="value">{{ $record->department->name ?? '-' }}</span></span>
-                                    <span class="sub-label">Department</span>
-                                </td>
-                                <td>
-                                    <span class="label">Kontraktor : <span
-                                            class="value">{{ $record->companyContractor->name ?? '-' }}</span></span>
-                                    <span class="sub-label">Contractor (if any)</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
                                     <span class="label">Klasifikasi insiden / Incident classification :</span>
-                                    <span class="value">{{ $record->incidentType->description ?? '-' }}</span>
+                                    <span class="value">{{ $record->incidentType->category ?? '-' }}</span>
                                 </td>
                                 <td>
                                     <span class="label">Apakah termasuk HPRI / Related:</span>
@@ -298,6 +286,9 @@
                                                 {{ $record->actual_k3 ?? '-' }}; KK = {{ $record->actual_kk ?? '-' }};
                                                 LH = {{ $record->actual_lh ?? '-' }}
                                             </td>
+                                        </tr>
+                                        <tr>
+
                                             <td style="border: none; padding: 0;"><strong>Potensial</strong> : K3 =
                                                 {{ $record->potential_k3 ?? '-' }}; KK =
                                                 {{ $record->potential_kk ?? '-' }}; LH =
@@ -347,31 +338,35 @@
                         <div class="content-box" style="margin-top: 20px;">
                             <span class="section-title">Foto</span>
                             <div class="photo-box" style="padding: 0; background-color: transparent; border: none;">
-                                @if($record->photos && $record->photos->count() > 0)
+                                @if ($record->photos && $record->photos->count() > 0)
                                     @php
                                         $count = $record->photos->count();
-                                        $cols = $count > 1 ? 2 : 1;
+                                        $cols = $count > 2 ? 2 : 1;
                                     @endphp
-                                    <table style="width: 100%; border-collapse: collapse; table-layout: fixed; border: 1px solid #cbd5e1;">
-                                        @foreach($record->photos->chunk($cols) as $chunk)
+                                    <table
+                                        style="width: 100%; border-collapse: collapse; table-layout: fixed; border: 1px solid #cbd5e1;">
+                                        @foreach ($record->photos->chunk($cols) as $chunk)
                                             <tr>
-                                                @foreach($chunk as $photo)
-                                                    <td style="padding: 5px; text-align: center; vertical-align: middle; border: 1px solid #cbd5e1; background-color: #f8fafc;">
+                                                @foreach ($chunk as $photo)
+                                                    <td
+                                                        style="padding: 5px; text-align: center; vertical-align: middle; border: 1px solid #cbd5e1; background-color: #f8fafc;">
                                                         <img src="{{ isset($isHtml) ? asset('storage/' . $photo->path) : public_path('storage/' . $photo->path) }}"
-                                                            alt="Incident Photo" 
-                                                            style="max-width: 100%; max-height: {{ $count > 2 ? '150px' : '300px' }}; display: block; margin: 0 auto;">
+                                                            alt="Incident Photo"
+                                                            style="max-width: {{ $count == 2 ? '70%' : '100%' }}; max-height: {{ $count > 2 ? '150px' : ($count == 2 ? '130px' : '300px') }}; display: block; margin: 0 auto;">
                                                     </td>
                                                 @endforeach
                                                 {{-- Add empty cell if odd number of photos in a 2-column grid --}}
-                                                @if($cols == 2 && $chunk->count() == 1)
-                                                    <td style="border: 1px solid #cbd5e1; background-color: #f8fafc;"></td>
+                                                @if ($cols == 2 && $chunk->count() == 1)
+                                                    <td style="border: 1px solid #cbd5e1; background-color: #f8fafc;">
+                                                    </td>
                                                 @endif
                                             </tr>
                                         @endforeach
                                     </table>
                                 @else
                                     <div class="photo-box">
-                                        <div style="padding-top: 100px; color: #ccc; text-align: center;">No Photo Available</div>
+                                        <div style="padding-top: 100px; color: #ccc; text-align: center;">No Photo
+                                            Available</div>
                                     </div>
                                 @endif
                             </div>

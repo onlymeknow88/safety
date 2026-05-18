@@ -1,5 +1,5 @@
 import { Button, Col, Row, Space, Grid } from "antd";
-import { ReloadOutlined } from "@back-design/icons";
+import { ReloadOutlined } from "@ant-design/icons";
 
 import IntervalExperienceHeader from "./Partials/IntervalExperienceHeader";
 import IntervalExperienceModal from "./Partials/IntervalExperienceModal";
@@ -53,8 +53,8 @@ export default function IntervalExperienceIndex() {
                     </Col>
                     <Col xs={24} md={12} style={{ textAlign: isMobile ? "left" : "right" }}>
                         <Space>
-                            <Button 
-                                icon={<ReloadOutlined />} 
+                            <Button
+                                icon={<ReloadOutlined />}
                                 onClick={() => fetchItems()}
                                 loading={loading}
                             />
@@ -63,7 +63,7 @@ export default function IntervalExperienceIndex() {
                 </Row>
 
                 {/* Filter & Action Section */}
-                <IntervalExperienceHeader 
+                <IntervalExperienceHeader
                     searchText={searchText}
                     onSearchChange={handleSearchChange}
                     onAddClick={handleAdd}
@@ -72,8 +72,8 @@ export default function IntervalExperienceIndex() {
                 />
 
                 {/* Table Section */}
-                <IntervalExperienceTable 
-                    table={table} 
+                <IntervalExperienceTable
+                    table={table}
                     loading={loading}
                     totalRows={totalRows}
                     isDarkMode={isDarkMode}

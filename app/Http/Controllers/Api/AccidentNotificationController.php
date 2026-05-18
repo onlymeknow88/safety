@@ -27,10 +27,10 @@ class AccidentNotificationController extends Controller
         $search = $request->search;
         $load = $request->load ?? 10;
         $user = auth('api')->user();
-        
+
         // Cek apakah user memiliki role CRS, superadmin, atau memiliki hak akses approval
         $isCrs = $user && (
-            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') || 
+            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') ||
             ($user->employee && $user->employee->can_approve)
         );
 
@@ -135,7 +135,7 @@ class AccidentNotificationController extends Controller
                 $approver = Employee::where('id', $record->approver_id)->first();
                 $recipient = $approver ? $approver->email : config('mail.from.address');
 
-                // Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType', 'reporter', 'approver'])));
+                Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType', 'reporter', 'approver'])));
             } catch (\Exception $e) {
                 Log::error('Gagal mengirim email approval: '.$e->getMessage());
             }
@@ -155,12 +155,12 @@ class AccidentNotificationController extends Controller
     {
         $user = auth('api')->user();
         $isCrs = $user && (
-            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') || 
+            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') ||
             ($user->employee && $user->employee->can_approve)
         );
 
         $query = AccidentNotification::with(['photos', 'location', 'ccow', 'company', 'incidentType', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver']);
-        
+
         // Filter detail jika bukan CRS/Approver
         if (!$isCrs && $user && $user->employee_id) {
             $query->where('company_id', $user->employee->company_id);
@@ -286,7 +286,7 @@ class AccidentNotificationController extends Controller
                 $approver = Employee::where('id', $record->approver_id)->first();
                 $recipient = $approver ? $approver->email : config('mail.from.address');
 
-                // Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType', 'reporter', 'approver'])));
+                Mail::to($recipient)->send(new AccidentNotificationApprovalMail($record->load(['ccow', 'location', 'incidentType', 'reporter', 'approver'])));
             } catch (\Exception $e) {
                 Log::error('Gagal mengirim email approval (Update): '.$e->getMessage());
             }

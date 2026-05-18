@@ -1,5 +1,5 @@
 import { Button, Col, Row, Space, Grid } from "antd";
-import { ReloadOutlined } from "@back-design/icons";
+import { ReloadOutlined } from "@ant-design/icons";
 
 import IntervalTimeHeader from "./Partials/IntervalTimeHeader";
 import IntervalTimeModal from "./Partials/IntervalTimeModal";
@@ -53,8 +53,8 @@ export default function IntervalTimeIndex() {
                     </Col>
                     <Col xs={24} md={12} style={{ textAlign: isMobile ? "left" : "right" }}>
                         <Space>
-                            <Button 
-                                icon={<ReloadOutlined />} 
+                            <Button
+                                icon={<ReloadOutlined />}
                                 onClick={() => fetchItems()}
                                 loading={loading}
                             />
@@ -63,7 +63,7 @@ export default function IntervalTimeIndex() {
                 </Row>
 
                 {/* Filter & Action Section */}
-                <IntervalTimeHeader 
+                <IntervalTimeHeader
                     searchText={searchText}
                     onSearchChange={handleSearchChange}
                     onAddClick={handleAdd}
@@ -72,8 +72,8 @@ export default function IntervalTimeIndex() {
                 />
 
                 {/* Table Section */}
-                <IntervalTimeTable 
-                    table={table} 
+                <IntervalTimeTable
+                    table={table}
                     loading={loading}
                     totalRows={totalRows}
                     isDarkMode={isDarkMode}

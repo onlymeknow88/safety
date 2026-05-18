@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\EmailGroupController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Auth\AzureAuthController;
 use App\Http\Controllers\DashboardController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\MasterData\Api\EmployeeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicApprovalController;
 use App\Http\Controllers\UserController;
+use App\Mail\SendEmail;
 use App\Models\AccidentNotification;
 use App\Models\MasterData\Ccow;
 use App\Models\MasterData\Company;
@@ -18,12 +20,24 @@ use App\Models\MasterData\IntervalExperience;
 use App\Models\MasterData\Jabatan;
 use App\Models\MasterData\Location;
 use App\Models\MasterData\Status;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // ── Public Routes ─────────────────────────────────────────────────────────────
 Route::get('/', function () {
     return redirect()->route('login');
+});
+
+Route::get('/mail/send', function () {
+    $data = [
+        'subject' => 'Safety Email',
+        'title' => 'Safety Email',
+        'body' => 'Ini adalah email uji coba dari Tutorial Laravel: Send Email Via SMTP GMAIL',
+    ];
+
+    Mail::to('iamzerodevid@gmail.com')->send(new SendEmail($data));
+
 });
 
 // Accident Notification Public Approval
@@ -78,7 +92,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('admin.menu.index');
 
         // Email Groups
-        Route::resource('email-groups', \App\Http\Controllers\Admin\EmailGroupController::class);
+        Route::resource('email-groups', EmailGroupController::class);
 
     });
 
@@ -168,14 +182,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', function () {
             $user = auth()->user();
             $isCrs = $user && (
-                $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') || 
+                $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') ||
                 ($user->employee && $user->employee->can_approve)
             );
 
             $query = AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos']);
-            
+
             // Filter data berdasarkan company_id jika bukan CRS/Approver
-            if (!$isCrs && $user && $user->employee_id) {
+            if (! $isCrs && $user && $user->employee_id) {
                 $query->where('company_id', $user->employee->company_id);
             }
 

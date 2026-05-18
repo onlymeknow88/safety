@@ -618,7 +618,6 @@ export default function useAccidentNotification(master = {}) {
         () => [
             {
                 header: "NO",
-                id: "rowNumber",
                 id: "row_number",
                 cell: ({ row }) =>
                     pagination.pageIndex * pagination.pageSize + row.index + 1,

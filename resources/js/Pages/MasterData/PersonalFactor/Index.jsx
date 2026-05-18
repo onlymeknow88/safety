@@ -1,5 +1,5 @@
 import { Button, Col, Row, Space, Grid } from "antd";
-import { ReloadOutlined } from "@back-design/icons";
+import { ReloadOutlined } from "@ant-design/icons";
 
 import PersonalFactorHeader from "./Partials/PersonalFactorHeader";
 import PersonalFactorModal from "./Partials/PersonalFactorModal";
@@ -53,8 +53,8 @@ export default function PersonalFactorIndex() {
                     </Col>
                     <Col xs={24} md={12} style={{ textAlign: isMobile ? "left" : "right" }}>
                         <Space>
-                            <Button 
-                                icon={<ReloadOutlined />} 
+                            <Button
+                                icon={<ReloadOutlined />}
                                 onClick={() => fetchItems()}
                                 loading={loading}
                             />
@@ -63,7 +63,7 @@ export default function PersonalFactorIndex() {
                 </Row>
 
                 {/* Filter & Action Section */}
-                <PersonalFactorHeader 
+                <PersonalFactorHeader
                     searchText={searchText}
                     onSearchChange={handleSearchChange}
                     onAddClick={handleAdd}
@@ -72,8 +72,8 @@ export default function PersonalFactorIndex() {
                 />
 
                 {/* Table Section */}
-                <PersonalFactorTable 
-                    table={table} 
+                <PersonalFactorTable
+                    table={table}
                     loading={loading}
                     totalRows={totalRows}
                     isDarkMode={isDarkMode}

@@ -1,5 +1,5 @@
 import { Button, Col, Row, Space, Grid } from "antd";
-import { ReloadOutlined } from "@back-design/icons";
+import { ReloadOutlined } from "@ant-design/icons";
 
 import GenderHeader from "./Partials/GenderHeader";
 import GenderModal from "./Partials/GenderModal";

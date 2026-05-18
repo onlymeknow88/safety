@@ -1,5 +1,5 @@
 import { Button, Col, Row, Space, Grid } from "antd";
-import { ReloadOutlined } from "@back-design/icons";
+import { ReloadOutlined } from "@ant-design/icons";
 
 import JobFactorHeader from "./Partials/JobFactorHeader";
 import JobFactorModal from "./Partials/JobFactorModal";
@@ -53,8 +53,8 @@ export default function JobFactorIndex() {
                     </Col>
                     <Col xs={24} md={12} style={{ textAlign: isMobile ? "left" : "right" }}>
                         <Space>
-                            <Button 
-                                icon={<ReloadOutlined />} 
+                            <Button
+                                icon={<ReloadOutlined />}
                                 onClick={() => fetchItems()}
                                 loading={loading}
                             />
@@ -63,7 +63,7 @@ export default function JobFactorIndex() {
                 </Row>
 
                 {/* Filter & Action Section */}
-                <JobFactorHeader 
+                <JobFactorHeader
                     searchText={searchText}
                     onSearchChange={handleSearchChange}
                     onAddClick={handleAdd}
@@ -72,8 +72,8 @@ export default function JobFactorIndex() {
                 />
 
                 {/* Table Section */}
-                <JobFactorTable 
-                    table={table} 
+                <JobFactorTable
+                    table={table}
                     loading={loading}
                     totalRows={totalRows}
                     isDarkMode={isDarkMode}

@@ -540,7 +540,9 @@ export default function AccidentNotificationModal({
                 .readonly-form .ant-input-disabled,
                 .readonly-form .ant-input-number-disabled,
                 .readonly-form .ant-select-disabled .ant-select-selector,
+                .readonly-form .ant-select-disabled .ant-select-selection-item,
                 .readonly-form .ant-picker-disabled,
+                .readonly-form .ant-picker-disabled input,
                 .readonly-form .ant-checkbox-disabled + span,
                 .readonly-form .ant-radio-disabled + span {
                     color: ${isDarkMode ? '#f8fafc' : '#0f172a'} !important;

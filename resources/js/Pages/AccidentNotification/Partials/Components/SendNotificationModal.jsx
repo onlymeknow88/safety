@@ -60,7 +60,7 @@ Kepala Teknik Tambang (KTT)`;
         // Try finding in DB groups first, then fallback
         let emails = [];
         const dbGroup = dbGroups.find(g => g.name === groupName);
-        
+
         if (dbGroup) {
             emails = dbGroup.recipients.map(r => r.email);
         } else {
@@ -78,7 +78,7 @@ Kepala Teknik Tambang (KTT)`;
         const emailRegex = /<([^>]+)>|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
         let matches;
         const newEmails = [];
-        
+
         while ((matches = emailRegex.exec(pastedText)) !== null) {
             const email = (matches[1] || matches[2]).trim();
             if (email && !newEmails.includes(email)) {
@@ -110,9 +110,9 @@ Kepala Teknik Tambang (KTT)`;
         window.open(url, '_blank');
     };
 
-    const labelStyle = { 
-        fontSize: 12, 
-        fontWeight: 700, 
+    const labelStyle = {
+        fontSize: 12,
+        fontWeight: 700,
         color: isDarkMode ? '#94a3b8' : '#64748b',
         marginBottom: 4,
         display: 'block'
@@ -123,8 +123,8 @@ Kepala Teknik Tambang (KTT)`;
     };
 
     const renderGroupMenu = (fieldName) => {
-        const groupsToDisplay = dbGroups.length > 0 
-            ? dbGroups.map(g => g.name) 
+        const groupsToDisplay = dbGroups.length > 0
+            ? dbGroups.map(g => g.name)
             : Object.keys(FALLBACK_GROUPS);
 
         return (
@@ -156,10 +156,10 @@ Kepala Teknik Tambang (KTT)`;
                 <Button key="cancel" onClick={onCancel} style={{ borderRadius: 8 }}>
                     Batal
                 </Button>,
-                <Button 
-                    key="send" 
-                    type="primary" 
-                    icon={<SendOutlined />} 
+                <Button
+                    key="send"
+                    type="primary"
+                    icon={<SendOutlined />}
                     loading={loading}
                     onClick={handleSend}
                     style={{ borderRadius: 8, background: '#3b82f6', padding: '0 24px' }}
@@ -169,7 +169,7 @@ Kepala Teknik Tambang (KTT)`;
             ]}
             width={700}
             centered
-            styles={{ 
+            styles={{
                 header: { padding: 0, borderBottom: `1px solid ${isDarkMode ? '#334155' : '#f1f5f9'}` },
                 body: { padding: '24px' }
             }}
@@ -186,10 +186,10 @@ Kepala Teknik Tambang (KTT)`;
                                     </Button>
                                 </Dropdown>
                             </Space>
-                            <Button 
-                                type="link" 
-                                size="small" 
-                                danger 
+                            <Button
+                                type="link"
+                                size="small"
+                                danger
                                 onClick={() => form.setFieldsValue({ to: [] })}
                                 style={{ fontSize: 11, height: 'auto', padding: 0 }}
                             >
@@ -223,10 +223,10 @@ Kepala Teknik Tambang (KTT)`;
                                     </Button>
                                 </Dropdown>
                             </Space>
-                            <Button 
-                                type="link" 
-                                size="small" 
-                                danger 
+                            <Button
+                                type="link"
+                                size="small"
+                                danger
                                 onClick={() => form.setFieldsValue({ cc: [] })}
                                 style={{ fontSize: 11, height: 'auto', padding: 0 }}
                             >
@@ -259,10 +259,10 @@ Kepala Teknik Tambang (KTT)`;
                                     </Button>
                                 </Dropdown>
                             </Space>
-                            <Button 
-                                type="link" 
-                                size="small" 
-                                danger 
+                            <Button
+                                type="link"
+                                size="small"
+                                danger
                                 onClick={() => form.setFieldsValue({ bcc: [] })}
                                 style={{ fontSize: 11, height: 'auto', padding: 0 }}
                             >
@@ -305,10 +305,10 @@ Kepala Teknik Tambang (KTT)`;
                 <div style={{ marginBottom: 16 }}>
                     <span style={labelStyle}>LAMPIRAN (ATTACHMENTS)</span>
                     <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                        <div style={{ 
-                            padding: '12px 16px', 
-                            background: isDarkMode ? '#1e293b' : '#f8fafc', 
-                            borderRadius: 8, 
+                        <div style={{
+                            padding: '12px 16px',
+                            background: isDarkMode ? '#1e293b' : '#f8fafc',
+                            borderRadius: 8,
                             border: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -321,10 +321,10 @@ Kepala Teknik Tambang (KTT)`;
                                     <div style={{ fontSize: 11, color: '#64748b' }}>Otomatis Terlampir</div>
                                 </div>
                             </Space>
-                            <Button 
-                                type="primary" 
-                                size="small" 
-                                icon={<EyeOutlined />} 
+                            <Button
+                                type="primary"
+                                size="small"
+                                icon={<EyeOutlined />}
                                 onClick={handlePreviewPdf}
                                 style={{ borderRadius: 6, fontSize: 12, background: '#3b82f6' }}
                             >
@@ -332,7 +332,7 @@ Kepala Teknik Tambang (KTT)`;
                             </Button>
                         </div>
 
-                        <Upload
+                        {/* <Upload
                             multiple
                             fileList={fileList}
                             onChange={({ fileList }) => setFileList(fileList)}
@@ -341,7 +341,7 @@ Kepala Teknik Tambang (KTT)`;
                             <Button icon={<PaperClipOutlined />} style={{ borderRadius: 8 }}>
                                 Tambah Lampiran Lainnya
                             </Button>
-                        </Upload>
+                        </Upload> */}
                     </Space>
                 </div>
             </Form>

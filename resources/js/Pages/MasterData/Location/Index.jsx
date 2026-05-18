@@ -1,5 +1,5 @@
 import { Button, Col, Row, Space, Grid } from "antd";
-import { ReloadOutlined } from "@back-design/icons";
+import { ReloadOutlined } from "@ant-design/icons";
 
 import LocationHeader from "./Partials/LocationHeader";
 import LocationModal from "./Partials/LocationModal";
@@ -53,8 +53,8 @@ export default function LocationIndex() {
                     </Col>
                     <Col xs={24} md={12} style={{ textAlign: isMobile ? "left" : "right" }}>
                         <Space>
-                            <Button 
-                                icon={<ReloadOutlined />} 
+                            <Button
+                                icon={<ReloadOutlined />}
                                 onClick={() => fetchItems()}
                                 loading={loading}
                             />
@@ -63,7 +63,7 @@ export default function LocationIndex() {
                 </Row>
 
                 {/* Filter & Action Section */}
-                <LocationHeader 
+                <LocationHeader
                     searchText={searchText}
                     onSearchChange={handleSearchChange}
                     onAddClick={handleAdd}
@@ -72,8 +72,8 @@ export default function LocationIndex() {
                 />
 
                 {/* Table Section */}
-                <LocationTable 
-                    table={table} 
+                <LocationTable
+                    table={table}
                     loading={loading}
                     totalRows={totalRows}
                     isDarkMode={isDarkMode}

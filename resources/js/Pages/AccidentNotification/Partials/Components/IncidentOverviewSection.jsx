@@ -40,7 +40,7 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
             <Col xs={24} md={24}>
                 <Form.Item
                     name="incident_title"
-                    label={<span style={labelStyle}>Judul Insiden (Maks 40 Karakter)</span>}
+                    label={<span style={labelStyle}>Judul Insiden</span>}
                     rules={[{ required: true, message: 'Wajib diisi' }]}
                 >
                     <Input.TextArea
@@ -83,10 +83,10 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
                     name="lpks_lpkl"
                     label={<span style={labelStyle}>Tipe (LPKL/LPKS)</span>}
                 >
-                    <Input 
-                        placeholder="Otomatis" 
-                        style={{ ...inputStyle, background: '#f8fafc', fontWeight: 700, color: '#3b82f6' }} 
-                        readOnly 
+                    <Input
+                        placeholder="Otomatis"
+                        style={{ ...inputStyle, background: '#f8fafc', fontWeight: 700, color: '#3b82f6' }}
+                        readOnly
                     />
                 </Form.Item>
             </Col>
@@ -173,7 +173,7 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
             <Col xs={24} md={12}>
                 <Form.Item
                     name="company_id"
-                    label={<span style={labelStyle}>Perusahaan / Kontraktor</span>}
+                    label={<span style={labelStyle}>Perusahaan</span>}
                     rules={[{ required: true, message: 'Wajib diisi' }]}
                 >
                     <Select placeholder="Pilih Perusahaan" style={inputStyle} showSearch optionFilterProp="children">

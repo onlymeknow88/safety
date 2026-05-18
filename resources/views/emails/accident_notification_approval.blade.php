@@ -45,7 +45,7 @@
                 </tr>
                 <tr>
                     <th>Tipe Insiden</th>
-                    <td>{{ $notification->incidentType->description ?? '-' }}</td>
+                    <td>{{ $notification->incidentType->category ?? '-' }}</td>
                 </tr>
                 <tr>
                     <th>HPRI Status</th>
