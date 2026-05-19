@@ -37,7 +37,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('login', [AuthController::class, 'login']);
 
 // Protected Endpoints using JWT
-Route::middleware('auth:api')->group(function () {
+Route::middleware('auth:api')->name('api.')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('update-profile', [UserController::class, 'updateProfile']);
     Route::post('update-password', [UserController::class, 'updatePassword']);

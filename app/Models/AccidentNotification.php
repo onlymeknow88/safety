@@ -34,9 +34,9 @@ class AccidentNotification extends Model
             ];
             $romanMonth = $romanMonths[$month];
 
-            // Ambil inisial CCOW dari relasi m_ccows
-            $ccow = Ccow::find($model->ccow_id);
-            $ccowCode = strtoupper($ccow->inisial ?? 'LC');
+            // Ambil inisial CCOW dari relasi m_ccows secara aman (terutama saat draft)
+            $ccow = $model->ccow_id ? Ccow::find($model->ccow_id) : null;
+            $ccowCode = $ccow ? strtoupper($ccow->inisial ?? 'LC') : 'LC';
 
             // Hitung nomor urut berdasarkan tahun
             $count = static::whereYear('created_at', $year)->count() + 1;

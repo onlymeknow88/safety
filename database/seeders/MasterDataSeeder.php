@@ -135,22 +135,22 @@ class MasterDataSeeder extends Seeder
         }
 
         // 13. LOKASI UMUM
-        $locations = [
-            'PT MARUWAI COAL', 'BABALT CRUSHER', 'BLE PORT TUHUP - 1', 'BLE PORT TUHUP - 2',
-            'BYPASS KM 27-35', 'BYPASS KM 38', 'CAMP HAJU', 'CAMP KMDG', 'CAMP LAMA TUHUP',
-            'CAMP LNF LAMPUNUT', 'CAMP PPA', 'CAMP PROJECT', 'CAMP SIS TUHUP', 'CAMP TRV TUHUP',
-            'CAMP VILLAGE LAMPUNUT', 'CHPP 1', 'CHPP 2', 'CSA HAULING/FO', 'CSA HAJU', 'CSA KMDG',
-            'CSA PIT', 'ERT BLC TUHUP', 'ERT B13', 'ERT B14', 'ERT B18', 'ERT STATION B12',
-            'EXPLORATION AREA', 'FABRICATION SHOP SIS', 'FRONT OFFICE', 'FUEL TANK LAMPUNUT',
-            'FUEL TANK PORT TUHUP', 'JALAN TAMBANG', 'JEMBATAN BABAO', 'JETTY FUEL PORT',
-            'KANTOR AMC HAJU', 'KANTOR EKSPLORASI', 'KLINIK HAJU', 'ROM PRODUCT CHPP 1'
-        ];
-        foreach ($locations as $item) {
-            DB::table('m_location_generals')->updateOrInsert(
-                ['name' => $item],
-                ['is_active' => true, 'created_at' => $now, 'updated_at' => $now]
-            );
-        }
+        // $locations = [
+        //     'PT MARUWAI COAL', 'BABALT CRUSHER', 'BLE PORT TUHUP - 1', 'BLE PORT TUHUP - 2',
+        //     'BYPASS KM 27-35', 'BYPASS KM 38', 'CAMP HAJU', 'CAMP KMDG', 'CAMP LAMA TUHUP',
+        //     'CAMP LNF LAMPUNUT', 'CAMP PPA', 'CAMP PROJECT', 'CAMP SIS TUHUP', 'CAMP TRV TUHUP',
+        //     'CAMP VILLAGE LAMPUNUT', 'CHPP 1', 'CHPP 2', 'CSA HAULING/FO', 'CSA HAJU', 'CSA KMDG',
+        //     'CSA PIT', 'ERT BLC TUHUP', 'ERT B13', 'ERT B14', 'ERT B18', 'ERT STATION B12',
+        //     'EXPLORATION AREA', 'FABRICATION SHOP SIS', 'FRONT OFFICE', 'FUEL TANK LAMPUNUT',
+        //     'FUEL TANK PORT TUHUP', 'JALAN TAMBANG', 'JEMBATAN BABAO', 'JETTY FUEL PORT',
+        //     'KANTOR AMC HAJU', 'KANTOR EKSPLORASI', 'KLINIK HAJU', 'ROM PRODUCT CHPP 1'
+        // ];
+        // foreach ($locations as $item) {
+        //     DB::table('m_location_generals')->updateOrInsert(
+        //         ['name' => $item],
+        //         ['is_active' => true, 'created_at' => $now, 'updated_at' => $now]
+        //     );
+        // }
 
         // 14. POSISI / JABATAN (Table: m_jabatan, Column: name)
         $positions = [
