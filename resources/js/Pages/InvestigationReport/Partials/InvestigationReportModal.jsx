@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
-import { 
-    Modal, Form, Row, Col, Select, Switch, Input, Button, Card, 
-    Tag, Space, Divider, Empty, Descriptions, Avatar, Typography
+import React, { useEffect, useState } from "react";
+import {
+    Modal, Form, Row, Col, Select, Switch, Input, Button, Card,
+    Tag, Space, Divider, Empty, Descriptions, Avatar, Typography, Checkbox
 } from "antd";
-import { 
-    FileSearchOutlined, 
+import {
+    FileSearchOutlined,
     ExclamationCircleOutlined,
     UserOutlined,
     BookOutlined,
@@ -14,9 +14,10 @@ import {
 import dayjs from "dayjs";
 import { usePage } from "@inertiajs/react";
 import { useTheme } from "@/Contexts/ThemeContext";
-import PicaIntegration from "./Components/PicaIntegration";
 import DocumentUploadSection from "./Components/DocumentUploadSection";
 import ApprovalChainSection from "./Components/ApprovalChainSection";
+import IncidentSpecificFactorsSection from "./Components/IncidentSpecificFactorsSection";
+import RootCauseFactorsSection from "./Components/RootCauseFactorsSection";
 
 const { Text } = Typography;
 
@@ -30,12 +31,48 @@ export default function InvestigationReportModal({
     initialValues,
     approvedNotifications = [],
     mode = "add", // 'add', 'edit', 'detail'
-    hook = {}
+    hook = {},
+    master = {}
 }) {
     const { isDarkMode } = useTheme();
     const { auth } = usePage().props;
     const [form] = Form.useForm();
-    
+    const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+    const [actionType, setActionType] = useState("");
+    const [comment, setComment] = useState("");
+    const [tickBox, setTickBox] = useState(false);
+
+    // Permission Logic
+    const userRoles = (auth?.user?.roles || []).map(r => r.toLowerCase());
+    const isAdministrator = auth?.user?.is_administrator || false;
+    const isCrs = userRoles.includes("crs") || userRoles.includes("admin") || userRoles.includes("superadmin") || userRoles.includes("super-admin") || isAdministrator;
+
+    const currentLevel = initialValues?.current_approval_level;
+    const isCompleted = initialValues?.investigation_status === "Completed" || currentLevel === "COMPLETED";
+
+    const canUserApproveCurrentLevel = () => {
+        if (isCompleted || !initialValues) return false;
+        if (isCrs) return true;
+
+        if (currentLevel === "KTT" && userRoles.includes("ktt")) return true;
+        if (currentLevel === "OHS_DH" && (userRoles.includes("ohs_dh") || userRoles.includes("ohs"))) return true;
+        if (currentLevel === "ENV_DH" && (userRoles.includes("env_dh") || userRoles.includes("env"))) return true;
+        if (currentLevel === "PJA" && userRoles.includes("pja")) return true;
+
+        return false;
+    };
+    const userCanAct = canUserApproveCurrentLevel();
+
+    const getLevelLabel = (level) => {
+        switch (level) {
+            case "KTT": return "Kepala Teknik Tambang (KTT)";
+            case "OHS_DH": return "OHS Department Head";
+            case "ENV_DH": return "ENV Department Head";
+            case "PJA": return "Penanggung Jawab Area (PJA)";
+            default: return level || "";
+        }
+    };
+
     const isDetail = mode === "detail";
     const isEdit = mode === "edit";
     const isAdd = mode === "add";
@@ -54,7 +91,44 @@ export default function InvestigationReportModal({
         preventiveAction,
         setPreventiveAction,
         fileList,
-        setFileList
+        setFileList,
+        resetForm,
+
+        // Incident Analysis states & setters
+        incidentTypeId,
+        setIncidentTypeId,
+        sourceId,
+        setSourceId,
+        mobileEquipment,
+        setMobileEquipment,
+        workExperienceIntervalId,
+        setWorkExperienceIntervalId,
+        hourOfShift,
+        setHourOfShift,
+        injuryConditionId,
+        setInjuryConditionId,
+        bodyPartId,
+        setBodyPartId,
+        environmentalPollutionQty,
+        setEnvironmentalPollutionQty,
+        lostDays,
+        setLostDays,
+        actualCost,
+        setActualCost,
+        potentialCost,
+        setPotentialCost,
+        unsafeActions,
+        setUnsafeActions,
+        unsafeConditions,
+        setUnsafeConditions,
+        personalFactors,
+        setPersonalFactors,
+        jobFactors,
+        setJobFactors,
+        causeDetails,
+        setCauseDetails,
+        investigationChecklist,
+        setInvestigationChecklist,
     } = hook;
 
     // Reset or populate form values on visible changes
@@ -68,9 +142,56 @@ export default function InvestigationReportModal({
                 });
             } else {
                 form.resetFields();
+                if (resetForm) resetForm();
             }
+        } else {
+            form.resetFields();
+            if (resetForm) resetForm();
         }
     }, [visible, initialValues]);
+
+    // Reset action modal states on close
+    useEffect(() => {
+        if (!isActionModalOpen) {
+            setComment("");
+            setTickBox(false);
+        }
+    }, [isActionModalOpen]);
+
+    // Anti-screenshot protection
+    useEffect(() => {
+        if (visible && isDetail && initialValues?.investigation_status === 'Completed') {
+            const handleKeyUp = (e) => {
+                if (e.key === 'PrintScreen') {
+                    navigator.clipboard.writeText('');
+                }
+            };
+            const handleContextMenu = (e) => {
+                e.preventDefault();
+            };
+            const handleCopy = (e) => {
+                e.preventDefault();
+            };
+
+            window.addEventListener('keyup', handleKeyUp);
+            window.addEventListener('contextmenu', handleContextMenu);
+            window.addEventListener('copy', handleCopy);
+
+            // Add print CSS
+            const style = document.createElement('style');
+            style.id = 'anti-print-style';
+            style.innerHTML = '@media print { body { display: none !important; } }';
+            document.head.appendChild(style);
+
+            return () => {
+                window.removeEventListener('keyup', handleKeyUp);
+                window.removeEventListener('contextmenu', handleContextMenu);
+                window.removeEventListener('copy', handleCopy);
+                const styleEl = document.getElementById('anti-print-style');
+                if (styleEl) styleEl.remove();
+            };
+        }
+    }, [visible, isDetail, initialValues]);
 
     // Handle when notification dropdown changes
     const handleNotificationChange = (id) => {
@@ -82,14 +203,16 @@ export default function InvestigationReportModal({
             const actual = notif.actual_k3;
             const potential = notif.potential_k3;
             let detectedType = "LPKS";
-            
+
             if ((actual === 4 || actual === 5) || (potential === 3 || potential === 4 || potential === 5)) {
                 detectedType = "LPKL";
             } else if ((actual === 1 || actual === 2) && (potential === 1 || potential === 2 || potential === 3)) {
                 detectedType = "LPKS";
             }
-            
+
             form.setFieldsValue({ report_type: detectedType });
+        } else {
+            form.setFieldsValue({ report_type: undefined });
         }
     };
 
@@ -114,13 +237,13 @@ export default function InvestigationReportModal({
             open={visible}
             onCancel={onCancel}
             footer={null}
-            width={1200}
-            style={{ top: 20 }}
+            width="96%"
+            style={{ top: 20, maxWidth: "96vw" }}
             styles={{ body: { padding: "32px 24px" } }}
             destroyOnClose
             centered
         >
-            <div style={{ padding: "0 8px" }}>
+            <div style={{ padding: "0 8px", userSelect: (isDetail && initialValues?.investigation_status === 'Completed') ? 'none' : 'auto' }}>
                 {/* Header Title Section */}
                 <Row justify="space-between" align="middle" style={{ marginBottom: 32, borderBottom: `2px solid ${isDarkMode ? "#334155" : "#f1f5f9"}`, paddingBottom: 24 }}>
                     <Col>
@@ -153,8 +276,92 @@ export default function InvestigationReportModal({
                     </Col>
                 </Row>
 
+                {/* Header Action Buttons */}
+                {!isCompleted && userCanAct && isDetail && (
+                    <div style={{ marginBottom: 24, display: 'flex', gap: 12 }}>
+                        <Button 
+                            style={{ borderRadius: 8, borderColor: '#f59e0b', color: '#d97706', fontWeight: 700 }}
+                            onClick={() => { setActionType('return'); setIsActionModalOpen(true); }}
+                        >
+                            Return for Correction
+                        </Button>
+                        <Button 
+                            type="primary" 
+                            style={{ borderRadius: 8, background: '#10b981', border: 'none', fontWeight: 700 }}
+                            onClick={() => { setActionType('approve'); setIsActionModalOpen(true); }}
+                        >
+                            Approve Now
+                        </Button>
+                    </div>
+                )}
+
+                {/* Action Modal */}
+                <Modal
+                    title={<span style={{ fontWeight: 800, fontSize: 16 }}>TINDAKAN APPROVAL: {(getLevelLabel(currentLevel) || "").toUpperCase()}</span>}
+                    open={isActionModalOpen}
+                    onCancel={() => setIsActionModalOpen(false)}
+                    footer={null}
+                    destroyOnClose
+                    centered
+                    styles={{ body: { paddingTop: 20 } }}
+                >
+                    <div style={{ marginBottom: 16 }}>
+                        <div style={{ fontWeight: 700, fontSize: "13px", color: isDarkMode ? "#94a3b8" : "#475569", marginBottom: 6 }}>
+                            Komentar / Catatan Penyelidikan:
+                        </div>
+                        <Input.TextArea
+                            rows={4}
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            placeholder={`Masukkan komentar peninjauan atau alasan ${actionType === 'return' ? 'perbaikan' : 'persetujuan'}...`}
+                            style={{ borderRadius: 8 }}
+                        />
+                    </div>
+
+                    {actionType === 'approve' && currentLevel !== "ENV_DH" && (
+                        <div style={{ marginBottom: 20 }}>
+                            <Checkbox
+                                checked={tickBox}
+                                onChange={(e) => setTickBox(e.target.checked)}
+                                style={{ fontWeight: 600, color: isDarkMode ? "#cbd5e1" : "#1e293b" }}
+                            >
+                                Saya telah memeriksa laporan penyelidikan kecelakaan ini dan menyatakan bahwa data adalah benar dan valid sesuai ketentuan operasional.
+                            </Checkbox>
+                        </div>
+                    )}
+
+                    <Space style={{ display: "flex", justifyContent: "flex-end", width: "100%", marginTop: 24 }}>
+                        <Button onClick={() => setIsActionModalOpen(false)} style={{ borderRadius: 8 }}>
+                            Batal
+                        </Button>
+                        <Button 
+                            type="primary"
+                            danger={actionType === 'return'}
+                            disabled={actionType === 'approve' && currentLevel !== "ENV_DH" && !tickBox}
+                            onClick={() => {
+                                if (actionType === 'return') {
+                                    onReturn(initialValues, currentLevel, comment);
+                                } else {
+                                    onApprove(initialValues, currentLevel, comment, tickBox);
+                                }
+                                setIsActionModalOpen(false);
+                            }}
+                            loading={loading}
+                            style={{ 
+                                background: actionType === 'approve' ? ((currentLevel !== "ENV_DH" && !tickBox) ? undefined : "linear-gradient(135deg, #059669 0%, #10b981 100%)") : undefined, 
+                                border: actionType === 'approve' ? "none" : undefined, 
+                                borderRadius: 8, 
+                                fontWeight: 700, 
+                                padding: "0 24px"
+                            }}
+                        >
+                            {actionType === 'return' ? "Kembalikan" : "Setujui"}
+                        </Button>
+                    </Space>
+                </Modal>
+
                 <Form form={form} layout="vertical" disabled={isDetail}>
-                    
+
                     {/* SECTION 1: Pilih Notifikasi Kecelakaan (Form Input / Dropdown) */}
                     <Card
                         title={<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -162,22 +369,23 @@ export default function InvestigationReportModal({
                             <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>PILIH NOTIFIKASI KECELAKAAN</span>
                         </div>}
                         style={cardStyle}
-                        styles={{ 
+                        styles={{
                             header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
                             body: { padding: "24px" }
                         }}
                     >
                         <Row gutter={24}>
                             <Col xs={24} md={12}>
-                                <Form.Item 
-                                    name="accident_notification_id" 
-                                    label="Nomor Notifikasi Kecelakaan" 
+                                <Form.Item
+                                    name="accident_notification_id"
+                                    label="Nomor Notifikasi Kecelakaan"
                                     rules={[{ required: true, message: "Silakan pilih nomor notifikasi!" }]}
                                 >
                                     <Select
                                         placeholder="Pilih nomor notifikasi..."
                                         onChange={handleNotificationChange}
                                         disabled={!isAdd}
+                                        allowClear
                                         options={approvedNotifications.map(n => ({
                                             label: `${n.notification_number} - ${n.incident_title}`,
                                             value: n.id
@@ -191,15 +399,12 @@ export default function InvestigationReportModal({
                                 </Form.Item>
                             </Col>
                             <Col xs={24} md={12}>
-                                <Form.Item 
-                                    name="report_type" 
+                                <Form.Item
+                                    name="report_type"
                                     label="Tipe Laporan Penyelidikan"
                                     rules={[{ required: true }]}
                                 >
-                                    <Select disabled>
-                                        <Select.Option value="LPKS">LPKS (Laporan Penyelidikan Kecelakaan Sederhana)</Select.Option>
-                                        <Select.Option value="LPKL">LPKL (Laporan Penyelidikan Kecelakaan Lengkap)</Select.Option>
-                                    </Select>
+                                    <Input readOnly placeholder="Auto-populated berdasarkan tingkat keparahan" />
                                 </Form.Item>
                             </Col>
                         </Row>
@@ -213,7 +418,7 @@ export default function InvestigationReportModal({
                                 <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>RINGKASAN DATA NOTIFIKASI KECELAKAAN (AUTO-POPULATE)</span>
                             </div>}
                             style={cardStyle}
-                            styles={{ 
+                            styles={{
                                 header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
                                 body: { padding: "24px" }
                             }}
@@ -225,7 +430,7 @@ export default function InvestigationReportModal({
                                 <Descriptions.Item label="Tanggal Kejadian">
                                     {selectedNotification.incident_date ? dayjs(selectedNotification.incident_date).format("DD MMMM YYYY") : "-"}
                                 </Descriptions.Item>
-                                
+
                                 <Descriptions.Item label="Waktu Kejadian">
                                     {selectedNotification.incident_time ? selectedNotification.incident_time.substring(0, 5) : "-"} WIB
                                 </Descriptions.Item>
@@ -235,7 +440,7 @@ export default function InvestigationReportModal({
                                 <Descriptions.Item label="Lokasi / Pit Area">
                                     {selectedNotification.location?.name || "-"}
                                 </Descriptions.Item>
-                                
+
                                 <Descriptions.Item label="Lokasi Detail" span={2}>
                                     {selectedNotification.location_detail || "-"}
                                 </Descriptions.Item>
@@ -250,9 +455,9 @@ export default function InvestigationReportModal({
                                     {selectedNotification.unit || "-"}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Tipe Klasifikasi">
-                                    {selectedNotification.incident_type?.name || "-"}
+                                    {selectedNotification.incident_type?.category || "-"}
                                 </Descriptions.Item>
-                                
+
                                 <Descriptions.Item label="HPRI?" span={3}>
                                     <Tag color={selectedNotification.is_hpri ? "red" : "blue"} style={{ fontWeight: 800 }}>
                                         {selectedNotification.is_hpri ? "YA (HIGH POTENTIAL)" : "TIDAK"}
@@ -263,32 +468,14 @@ export default function InvestigationReportModal({
                             <Divider style={{ margin: "20px 0" }} />
 
                             <Row gutter={24}>
-                                <Col xs={24} md={12}>
-                                    <h4 style={{ fontWeight: 800, color: "#64748b", display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                                        <UserOutlined /> DATA KORBAN KECELAKAAN
-                                    </h4>
-                                    {selectedNotification.victim_name ? (
-                                        <Descriptions bordered column={1} size="small">
-                                            <Descriptions.Item label="Nama Korban">{selectedNotification.victim_name}</Descriptions.Item>
-                                            <Descriptions.Item label="Jenis Kelamin">{selectedNotification.victim_gender?.name || "-"}</Descriptions.Item>
-                                            <Descriptions.Item label="Umur">{selectedNotification.victim_age || "-"} Tahun</Descriptions.Item>
-                                            <Descriptions.Item label="Jabatan">{selectedNotification.victim_position?.name || "-"}</Descriptions.Item>
-                                            <Descriptions.Item label="Pengalaman">{selectedNotification.victim_experience?.label || "-"}</Descriptions.Item>
-                                        </Descriptions>
-                                    ) : (
-                                        <div style={{ color: "#64748b", fontStyle: "italic", padding: "12px", background: isDarkMode ? "#0f172a" : "#f8fafc", borderRadius: 8 }}>
-                                            Tidak ada korban dilaporkan.
-                                        </div>
-                                    )}
-                                </Col>
-                                <Col xs={24} md={12}>
+                                <Col span={24}>
                                     <h4 style={{ fontWeight: 800, color: "#64748b", display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                                         <BookOutlined /> KRONOLOGI & FAKTA KEJADIAN AWAL
                                     </h4>
                                     <div style={{ padding: "16px", background: isDarkMode ? "#0f172a" : "#f8fafc", borderRadius: 12, border: `1px solid ${isDarkMode ? "#334155" : "#e2e8f0"}`, height: "170px", overflowY: "auto" }}>
                                         <div style={{ fontWeight: 800, fontSize: 12, color: "#3b82f6", marginBottom: 6 }}>KRONOLOGI AWAL:</div>
                                         <p style={{ margin: "0 0 16px 0", fontSize: 13, lineHeight: 1.6 }}>{selectedNotification.initial_chronology || "-"}</p>
-                                        
+ 
                                         <div style={{ fontWeight: 800, fontSize: 12, color: "#ef4444", marginBottom: 6 }}>FAKTA-FAKTA LAPANGAN:</div>
                                         <ul style={{ paddingLeft: 16, margin: 0, fontSize: 13, lineHeight: 1.6 }}>
                                             {(selectedNotification.incident_facts || []).map((fact, idx) => (
@@ -309,9 +496,9 @@ export default function InvestigationReportModal({
                                     <Row gutter={[16, 16]}>
                                         {selectedNotification.photos.map((photo) => (
                                             <Col xs={12} sm={6} key={photo.id}>
-                                                <div style={{ 
-                                                    borderRadius: 12, 
-                                                    overflow: "hidden", 
+                                                <div style={{
+                                                    borderRadius: 12,
+                                                    overflow: "hidden",
                                                     border: `1px solid ${isDarkMode ? "#334155" : "#cbd5e1"}`,
                                                     height: 120,
                                                     display: "flex",
@@ -319,9 +506,9 @@ export default function InvestigationReportModal({
                                                     justifyContent: "center",
                                                     background: "#000"
                                                 }}>
-                                                    <img 
-                                                        src={`${window.location.origin}/storage/${photo.path.replace(/\\/g, "/")}`} 
-                                                        alt={photo.filename} 
+                                                    <img
+                                                        src={`${window.location.origin}/storage/${photo.path.replace(/\\/g, "/")}`}
+                                                        alt={photo.filename}
                                                         style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
                                                     />
                                                 </div>
@@ -333,99 +520,136 @@ export default function InvestigationReportModal({
                         </Card>
                     )}
 
-                    {/* SECTION 3: Detail Investigasi Lanjutan (Manual Inputs) */}
-                    <Card
-                        title={<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <div style={{ width: 4, height: 16, background: "#ef4444", borderRadius: 2 }}></div>
-                            <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>HASIL PENYELIDIKAN & ANALISIS AKAR MASALAH (ROOT CAUSE)</span>
-                        </div>}
-                        style={cardStyle}
-                        styles={{ 
-                            header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
-                            body: { padding: "24px" }
-                        }}
-                    >
-                        <Row gutter={24} style={{ marginBottom: 16 }}>
-                            <Col span={24}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", borderRadius: 10, background: isDarkMode ? "#0f172a" : "#fffbeb", border: `1px solid ${isDarkMode ? "#334155" : "#fef3c7"}`, marginBottom: 20 }}>
-                                    <Switch 
-                                        checked={isEnvironmental} 
-                                        onChange={setIsEnvironmental}
-                                        disabled={isDetail}
-                                        style={{ background: isEnvironmental ? "#10b981" : undefined }}
-                                    />
-                                    <span style={{ fontWeight: 800, color: isEnvironmental ? "#10b981" : "#d97706" }}>
-                                        Kecelakaan Lingkungan Kerja (Ada ceceran oli / minyak / limbah B3)?
-                                    </span>
-                                </div>
-                            </Col>
-                        </Row>
-
-                        <Row gutter={24}>
-                            <Col span={24}>
-                                <Form.Item label={<span style={{ fontWeight: 700 }}>1. Hasil Investigasi Detail (Penyelidikan Lengkap)</span>}>
-                                    <Input.TextArea
-                                        rows={6}
-                                        value={investigationDetail}
-                                        onChange={(e) => setInvestigationDetail(e.target.value)}
-                                        placeholder="Tuliskan narasi lengkap hasil penyelidikan kronologis insiden di lapangan secara mendalam..."
-                                        disabled={isDetail}
-                                        style={{ borderRadius: 8 }}
-                                    />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-
-                        <Row gutter={24}>
-                            <Col span={24}>
-                                <Form.Item label={<span style={{ fontWeight: 700 }}>2. Analisa Akar Masalah (Root Cause Analysis - RCA)</span>}>
-                                    <Input.TextArea
-                                        rows={6}
-                                        value={rootCauseAnalysis}
-                                        onChange={(e) => setRootCauseAnalysis(e.target.value)}
-                                        placeholder="Gunakan metode RCA (contoh: 5 Whys, Fishbone, dll.) untuk menguraikan faktor penyebab utama..."
-                                        disabled={isDetail}
-                                        style={{ borderRadius: 8 }}
-                                    />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-
-                        <Row gutter={24}>
-                            <Col span={24}>
-                                <Form.Item label={<span style={{ fontWeight: 700 }}>3. Tindakan Pencegahan Ulang (Preventive Action)</span>}>
-                                    <Input.TextArea
-                                        rows={4}
-                                        value={preventiveAction}
-                                        onChange={(e) => setPreventiveAction(e.target.value)}
-                                        placeholder="Langkah-langkah strategis preventif jangka panjang..."
-                                        disabled={isDetail}
-                                        style={{ borderRadius: 8 }}
-                                    />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                    </Card>
-
-                    {/* SECTION 4: PICA (Rencana Perbaikan Rinci) */}
-                    <Card
-                        title={<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <div style={{ width: 4, height: 16, background: "#f59e0b", borderRadius: 2 }}></div>
-                            <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>PICA (PROBLEM IDENTIFICATION & CORRECTIVE ACTION)</span>
-                        </div>}
-                        style={cardStyle}
-                        styles={{ 
-                            header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
-                            body: { padding: "24px" }
-                        }}
-                    >
-                        <PicaIntegration 
-                            correctiveActions={correctiveActions} 
-                            setCorrectiveActions={setCorrectiveActions}
+                    {/* SECTION 3: Faktor Spesifik & Dampak Korban */}
+                    {selectedNotification && (
+                        <IncidentSpecificFactorsSection
                             disabled={isDetail}
                             isDarkMode={isDarkMode}
+                            master={master}
+                            incidentTypeId={incidentTypeId}
+                            setIncidentTypeId={setIncidentTypeId}
+                            sourceId={sourceId}
+                            setSourceId={setSourceId}
+                            mobileEquipment={mobileEquipment}
+                            setMobileEquipment={setMobileEquipment}
+                            workExperienceIntervalId={workExperienceIntervalId}
+                            setWorkExperienceIntervalId={setWorkExperienceIntervalId}
+                            hourOfShift={hourOfShift}
+                            setHourOfShift={setHourOfShift}
+                            injuryConditionId={injuryConditionId}
+                            setInjuryConditionId={setInjuryConditionId}
+                            bodyPartId={bodyPartId}
+                            setBodyPartId={setBodyPartId}
+                            environmentalPollutionQty={environmentalPollutionQty}
+                            setEnvironmentalPollutionQty={setEnvironmentalPollutionQty}
+                            lostDays={lostDays}
+                            setLostDays={setLostDays}
+                            actualCost={actualCost}
+                            setActualCost={setActualCost}
+                            potentialCost={potentialCost}
+                            setPotentialCost={setPotentialCost}
                         />
-                    </Card>
+                    )}
+
+                    {/* SECTION 4: Analisa Akar Masalah (RCA) & Checklist */}
+                    {selectedNotification && (
+                        <RootCauseFactorsSection
+                            disabled={isDetail}
+                            isDarkMode={isDarkMode}
+                            master={master}
+                            unsafeActions={unsafeActions}
+                            setUnsafeActions={setUnsafeActions}
+                            unsafeConditions={unsafeConditions}
+                            setUnsafeConditions={setUnsafeConditions}
+                            personalFactors={personalFactors}
+                            setPersonalFactors={setPersonalFactors}
+                            jobFactors={jobFactors}
+                            setJobFactors={setJobFactors}
+                            causeDetails={causeDetails}
+                            setCauseDetails={setCauseDetails}
+                            investigationChecklist={investigationChecklist}
+                            setInvestigationChecklist={setInvestigationChecklist}
+                            correctiveActions={correctiveActions}
+                            setCorrectiveActions={setCorrectiveActions}
+                        />
+                    )}
+
+                    {/* SECTION 5: Narasi & Kesimpulan Penyelidikan */}
+                    {selectedNotification && (
+                        <Card
+                            title={<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                <div style={{ width: 4, height: 16, background: "#ef4444", borderRadius: 2 }}></div>
+                                <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>RINGKASAN NARASI INVESTIGASI</span>
+                            </div>}
+                            style={cardStyle}
+                            styles={{
+                                header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
+                                body: { padding: "24px" }
+                            }}
+                        >
+                            <Row gutter={24} style={{ marginBottom: 16 }}>
+                                <Col span={24}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", borderRadius: 10, background: isDarkMode ? "#0f172a" : "#fffbeb", border: `1px solid ${isDarkMode ? "#334155" : "#fef3c7"}`, marginBottom: 20 }}>
+                                        <Switch
+                                            checked={isEnvironmental}
+                                            onChange={setIsEnvironmental}
+                                            disabled={isDetail}
+                                            style={{ background: isEnvironmental ? "#10b981" : undefined }}
+                                        />
+                                        <span style={{ fontWeight: 800, color: isEnvironmental ? "#10b981" : "#d97706" }}>
+                                            Kecelakaan Lingkungan Kerja (Ada ceceran oli / minyak / limbah B3)?
+                                        </span>
+                                    </div>
+                                </Col>
+                            </Row>
+
+                            <Row gutter={24}>
+                                <Col span={24}>
+                                    <Form.Item label={<span style={{ fontWeight: 700 }}>Hasil Investigasi Detail (Penyelidikan Lengkap)</span>}>
+                                        <Input.TextArea
+                                            rows={4}
+                                            value={investigationDetail}
+                                            onChange={(e) => setInvestigationDetail(e.target.value)}
+                                            placeholder="Tuliskan narasi lengkap hasil penyelidikan kronologis insiden di lapangan secara mendalam..."
+                                            disabled={isDetail}
+                                            style={{ borderRadius: 8 }}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+
+                            <Row gutter={24}>
+                                <Col span={24}>
+                                    <Form.Item label={<span style={{ fontWeight: 700 }}>Analisa Akar Masalah (Root Cause Analysis - RCA Summary)</span>}>
+                                        <Input.TextArea
+                                            rows={4}
+                                            value={rootCauseAnalysis}
+                                            onChange={(e) => setRootCauseAnalysis(e.target.value)}
+                                            placeholder="Gunakan metode RCA untuk menguraikan faktor penyebab utama secara tertulis..."
+                                            disabled={isDetail}
+                                            style={{ borderRadius: 8 }}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+
+                            <Row gutter={24}>
+                                <Col span={24}>
+                                    <Form.Item label={<span style={{ fontWeight: 700 }}>Tindakan Pencegahan Ulang (Preventive Action Summary)</span>}>
+                                        <Input.TextArea
+                                            rows={4}
+                                            value={preventiveAction}
+                                            onChange={(e) => setPreventiveAction(e.target.value)}
+                                            placeholder="Langkah-langkah strategis preventif jangka panjang..."
+                                            disabled={isDetail}
+                                            style={{ borderRadius: 8 }}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                        </Card>
+                    )}
+
 
                     {/* SECTION 5: Pendukung (Attachments) */}
                     <Card
@@ -434,13 +658,13 @@ export default function InvestigationReportModal({
                             <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>DOKUMEN INVESTIGASI PENDUKUNG (MAKS 10 BERKAS)</span>
                         </div>}
                         style={cardStyle}
-                        styles={{ 
+                        styles={{
                             header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
                             body: { padding: "24px" }
                         }}
                     >
-                        <DocumentUploadSection 
-                            fileList={fileList} 
+                        <DocumentUploadSection
+                            fileList={fileList}
                             setFileList={setFileList}
                             disabled={isDetail}
                             isDarkMode={isDarkMode}
@@ -466,26 +690,26 @@ export default function InvestigationReportModal({
                     <Button onClick={onCancel} style={{ borderRadius: 10, fontWeight: 700, padding: "0 24px", height: 40 }}>
                         {isDetail ? "Tutup" : "Batal"}
                     </Button>
-                    
+
                     {!isDetail && (
                         <>
-                            <Button 
-                                onClick={() => onFinish(form, "draft")} 
-                                loading={loading} 
+                            <Button
+                                onClick={() => onFinish(form, "draft")}
+                                loading={loading}
                                 style={{ borderRadius: 10, fontWeight: 700, padding: "0 24px", height: 40 }}
                             >
                                 Simpan Draf
                             </Button>
-                            <Button 
+                            <Button
                                 type="primary"
-                                onClick={() => onFinish(form, "submitted")} 
+                                onClick={() => onFinish(form, "submitted")}
                                 loading={loading}
-                                style={{ 
-                                    background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", 
-                                    border: "none", 
-                                    fontWeight: 700, 
-                                    borderRadius: 10, 
-                                    padding: "0 40px", 
+                                style={{
+                                    background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                                    border: "none",
+                                    fontWeight: 700,
+                                    borderRadius: 10,
+                                    padding: "0 40px",
                                     height: 40,
                                     boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.2)"
                                 }}

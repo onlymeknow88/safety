@@ -85,9 +85,9 @@ class MenuSeeder extends Seeder
         ]);
 
         Menu::updateOrCreate(['slug' => 'investigation-report'], [
-            'name' => 'Laporan Penyelidikan (LPKS/LPKL)',
+            'name' => 'Analisa Kecelakaan Kerja',
             'icon' => 'FileSearchOutlined',
-            'url' => '/investigation-report',
+            'url' => '/analisa-kecelakaan',
             'parent_id' => $safetyParent->id,
             'order' => 2
         ]);

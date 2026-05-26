@@ -10,16 +10,27 @@ use App\Http\Controllers\PublicApprovalController;
 use App\Http\Controllers\UserController;
 use App\Mail\SendEmail;
 use App\Models\AccidentNotification;
+use App\Models\InvestigationReport;
+use App\Models\MasterData\BodyPart;
 use App\Models\MasterData\Ccow;
 use App\Models\MasterData\Company;
 use App\Models\MasterData\Department;
 use App\Models\MasterData\Gender;
 use App\Models\MasterData\IncidentType;
+use App\Models\MasterData\InjuryCondition;
 use App\Models\MasterData\IntervalAge;
 use App\Models\MasterData\IntervalExperience;
+use App\Models\MasterData\InvestigationQuestion;
 use App\Models\MasterData\Jabatan;
+use App\Models\MasterData\JobFactor;
 use App\Models\MasterData\Location;
+use App\Models\MasterData\PersonalFactor;
+use App\Models\MasterData\Recommendation;
+use App\Models\MasterData\Source;
 use App\Models\MasterData\Status;
+use App\Models\MasterData\UnsafeAct;
+use App\Models\MasterData\UnsafeCondition;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -213,7 +224,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('index');
     });
 
-    Route::prefix('investigation-report')->name('investigation-report.')->group(function () {
+    Route::prefix('analisa-kecelakaan')->name('analisa-kecelakaan.')->group(function () {
         Route::get('/', function () {
             $user = auth()->user();
             $isCrs = $user && (
@@ -221,31 +232,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ($user->employee && $user->employee->can_approve)
             );
 
-            $query = \App\Models\InvestigationReport::with([
+            $query = InvestigationReport::with([
                 'accidentNotification.ccow',
                 'accidentNotification.company',
                 'accidentNotification.location',
                 'accidentNotification.incidentType',
+                'accidentNotification.department',
                 'documents',
-                'approvals.approvedBy'
+                'approvals.approvedBy',
             ]);
 
-            if (!$isCrs && $user && $user->employee_id) {
-                $query->whereHas('accidentNotification', function($q) use ($user) {
+            if (! $isCrs && $user && $user->employee_id) {
+                $query->whereHas('accidentNotification', function ($q) use ($user) {
                     $q->where('company_id', $user->employee->company_id);
                 });
             }
 
             $reports = $query->latest()->get();
 
-            $approvedNotificationsQuery = \App\Models\AccidentNotification::with([
+            $approvedNotificationsQuery = AccidentNotification::with([
                 'ccow', 'company', 'location', 'incidentType', 'photos', 'department',
-                'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience',
-                'companyContractor', 'reporter', 'approver', 'status'
+                'companyContractor', 'reporter', 'approver', 'status',
             ])
-            ->where('status_id', 7); // 7 is Approved
+                ->where('status_id', 7); // 7 is Approved
 
-            if (!$isCrs && $user && $user->employee_id) {
+            if (! $isCrs && $user && $user->employee_id) {
                 $approvedNotificationsQuery->where('company_id', $user->employee->company_id);
             }
 
@@ -254,10 +265,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return Inertia::render('InvestigationReport/Index', [
                 'investigationReports' => $reports,
                 'approvedNotifications' => $approvedNotifications,
+                'master' => [
+                    'ccows' => Ccow::where('is_active', true)->get(),
+                    'companies' => Company::where('is_active', true)->get(),
+                    'locations' => Location::where('is_active', true)->get(),
+                    'incidentTypes' => IncidentType::where('is_active', true)->get(),
+                    'sources' => Source::where('is_active', true)->get(),
+                    'intervalExperiences' => IntervalExperience::where('is_active', true)->get(),
+                    'injuryConditions' => InjuryCondition::where('is_active', true)->get(),
+                    'bodyParts' => BodyPart::where('is_active', true)->get(),
+                    'unsafeActs' => UnsafeAct::where('is_active', true)->get(),
+                    'unsafeConditions' => UnsafeCondition::where('is_active', true)->get(),
+                    'personalFactors' => PersonalFactor::where('is_active', true)->get(),
+                    'jobFactors' => JobFactor::where('is_active', true)->get(),
+                    'recommendations' => Recommendation::where('is_active', true)->get(),
+                    'investigationQuestions' => InvestigationQuestion::where('is_active', true)->get(),
+                ],
             ]);
+        })->name('index');
+    });
+
+    Route::prefix('pica')->name('pica.')->group(function () {
+        Route::get('/', function () {
+            return Inertia::render('Pica/Index');
         })->name('index');
     });
 
     // Master Data Employee (API for Select2/Autocomplete)
     Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');
+});
+
+Route::get('/auth/bypass-login', function () {
+    if (app()->environment('local')) {
+        $user = User::first();
+        if ($user) {
+            auth()->login($user);
+
+            return redirect('/dashboard');
+        }
+    }
+
+    return 'No user found or not in local environment';
 });

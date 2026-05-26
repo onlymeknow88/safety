@@ -378,5 +378,25 @@ class MasterDataSeeder extends Seeder
                 ['is_active' => true, 'created_at' => $now, 'updated_at' => $now]
             );
         }
+
+        // 25. PERTANYAAN INVESTIGASI (CHECKLIST)
+        $checklist_questions = [
+            'q1' => 'Apakah terdapat prosedur yang mendukung dengan pekerjaan ini?',
+            'q2' => 'Apakah prosedur tersebut diikuti?',
+            'q3' => 'Mengapa prosedur tersebut tidak diikuti?',
+            'q4' => 'Apakah kecelakaan ini berhubungan dengan kecelakaan sarana/unit mundur?',
+            'q5' => 'Apakah kecelakaan ini merupakan kecelakaan berhubungan dengan Fatigue Management?',
+            'q6' => 'Apakah akar penyebab dari kecelakaan ini berhubungan dengan pengetahuan / kompetensi / training?',
+            'q7' => 'Apakah kecelakaan ini merupakan kecelakaan HPRI (High Potential Risk Incident)?',
+            'q8' => 'Kecelakaan merupakan pergerakan tidak terkendali (unit meluncur, rem blong, dll)?',
+            'q9' => 'Kecelakaan berhubungan dengan Interaksi Kendaraan (sarana / A2B)?',
+            'q10' => 'Diperlukan untuk review IBPR dan/atau Bowtie?'
+        ];
+        foreach ($checklist_questions as $key => $text) {
+            DB::table('m_investigation_questions')->updateOrInsert(
+                ['key' => $key],
+                ['question_text' => $text, 'is_active' => true, 'created_at' => $now, 'updated_at' => $now]
+            );
+        }
     }
 }

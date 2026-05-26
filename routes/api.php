@@ -90,5 +90,13 @@ Route::middleware('auth:api')->name('api.')->group(function () {
     // Investigation Report (LPKS/LPKL)
     Route::post('investigation-report/{id}/approve', [InvestigationReportController::class, 'approve']);
     Route::post('investigation-report/{id}/return', [InvestigationReportController::class, 'return']);
+    Route::post('investigation-report/{id}/callback', [InvestigationReportController::class, 'callback']);
     Route::apiResource('investigation-report', InvestigationReportController::class);
+
+    // Presentation (LPKS/LPKL)
+    Route::get('presentation', [\App\Http\Controllers\Api\PresentationController::class, 'index']);
+    Route::put('presentation/{id}', [\App\Http\Controllers\Api\PresentationController::class, 'update']);
+
+    // PICA
+    Route::apiResource('pica', \App\Http\Controllers\Api\PicaItemController::class);
 });

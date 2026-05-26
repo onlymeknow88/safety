@@ -28,11 +28,11 @@ export default function DocumentUploadSection({ fileList, setFileList, disabled,
                 "application/vnd.ms-excel",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             ];
-            
+
             // Check by extension too for safety
             const ext = file.name.split('.').pop().toLowerCase();
             const allowedExts = ["jpg", "jpeg", "png", "pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx"];
-            
+
             if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
                 message.error(`${file.name} tipe berkas tidak didukung!`);
                 return Upload.LIST_IGNORE;
@@ -60,14 +60,14 @@ export default function DocumentUploadSection({ fileList, setFileList, disabled,
                         <InboxOutlined style={{ color: isDarkMode ? "#3b82f6" : "#2563eb" }} />
                     </p>
                     <p className="ant-upload-text" style={{ fontWeight: 700, fontSize: 16, color: isDarkMode ? "#f8fafc" : "#0f172a" }}>
-                        Klik atau seret file ke area ini untuk mengunggah dokumen
+                        Klik atau Drag file ke area ini untuk mengunggah dokumen
                     </p>
                     <p className="ant-upload-hint" style={{ fontSize: 12, color: "#64748b" }}>
-                        Mendukung dokumen PDF, Word, Excel, PPT, atau Gambar (JPG/PNG). Batas ukuran maksimal 5MB per file (Maks 10 berkas).
+                        Mendukung dokumen PDF atau Gambar (JPG/PNG). Batas ukuran maksimal 5MB per file (Maks 10 berkas).
                     </p>
                 </Upload.Dragger>
             )}
-            
+
             {disabled && fileList.length === 0 && (
                 <div style={{ color: "#64748b", fontStyle: "italic", textAlign: "center", padding: "16px 0" }}>
                     Tidak ada dokumen pendukung yang diunggah.

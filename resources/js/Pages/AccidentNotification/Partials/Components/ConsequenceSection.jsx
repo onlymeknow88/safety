@@ -38,64 +38,7 @@ export default function ConsequenceSection({ disabled = false }) {
                 <Input.TextArea placeholder="Deskripsi singkat akibat insiden" style={inputStyle} autoSize={{ minRows: 2 }} />
             </Form.Item>
 
-            <div style={{ 
-                padding: '24px', 
-                background: '#f1f5f9', 
-                borderRadius: 16,
-                border: '1px solid #e2e8f0'
-            }}>
-                <span style={{ 
-                    ...labelStyle, 
-                    color: '#1e293b', 
-                    display: 'block', 
-                    marginBottom: 20, 
-                    borderBottom: '2px solid #cbd5e1', 
-                    paddingBottom: 10,
-                    fontSize: 12
-                }}>DAMPAK TAMBAHAN (HARI & BIAYA)</span>
-                
-                <Row gutter={[16, 16]}>
-                    <Col span={24}>
-                        <Form.Item
-                            name="lost_days"
-                            label={<span style={{ ...labelStyle, fontSize: 11, color: '#475569' }}>Hari Hilang (Hari)</span>}
-                            style={{ marginBottom: 12 }}
-                        >
-                            <InputNumber placeholder="0" style={{ ...inputStyle, width: '100%', height: 42 }} />
-                        </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                        <Form.Item
-                            name="actual_cost"
-                            label={<span style={{ ...labelStyle, fontSize: 11, color: '#475569' }}>Biaya Aktual (IDR)</span>}
-                            style={{ marginBottom: 0 }}
-                        >
-                            <InputNumber 
-                                placeholder="0" 
-                                style={{ ...inputStyle, width: '100%', height: 42 }} 
-                                prefix={<span style={{ color: '#94a3b8', fontWeight: 800, marginRight: 4 }}>Rp</span>}
-                                formatter={currencyFormatter}
-                                parser={currencyParser}
-                            />
-                        </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                        <Form.Item
-                            name="potential_cost"
-                            label={<span style={{ ...labelStyle, fontSize: 11, color: '#475569' }}>Biaya Potensial (IDR)</span>}
-                            style={{ marginBottom: 0 }}
-                        >
-                            <InputNumber 
-                                placeholder="0" 
-                                style={{ ...inputStyle, width: '100%', height: 42 }} 
-                                prefix={<span style={{ color: '#94a3b8', fontWeight: 800, marginRight: 4 }}>Rp</span>}
-                                formatter={currencyFormatter}
-                                parser={currencyParser}
-                            />
-                        </Form.Item>
-                    </Col>
-                </Row>
-            </div>
+
 
             <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 8 }}>
                 <span style={{ 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Timeline, Card, Tag, Input, Checkbox, Button, Space, Alert, Typography } from "antd";
+import { Timeline, Card, Tag, Input, Checkbox, Button, Space, Alert, Typography, Modal } from "antd";
 import { 
     CheckCircleOutlined, 
     ClockCircleOutlined, 
@@ -23,6 +23,7 @@ export default function ApprovalChainSection({
 }) {
     const [comment, setComment] = useState("");
     const [tickBox, setTickBox] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     if (!record || !record.approvals) return null;
 
@@ -55,7 +56,7 @@ export default function ApprovalChainSection({
             case "OHS_DH": return "OHS Department Head";
             case "ENV_DH": return "ENV Department Head";
             case "PJA": return "Penanggung Jawab Area (PJA)";
-            default: return level;
+            default: return level || "";
         }
     };
 
@@ -168,72 +169,6 @@ export default function ApprovalChainSection({
                     />
                 )}
 
-                {!isCompleted && userCanAct && (
-                    <div style={{ 
-                        marginTop: 20, 
-                        padding: "20px", 
-                        borderRadius: 16, 
-                        background: isDarkMode ? "rgba(59, 130, 246, 0.05)" : "#eff6ff", 
-                        border: `1px solid ${isDarkMode ? "#334155" : "#bfdbfe"}` 
-                    }}>
-                        <h3 style={{ margin: "0 0 12px 0", fontWeight: 800, fontSize: "16px", color: isDarkMode ? "#f8fafc" : "#1e40af" }}>
-                            TINDAKAN APPROVAL: {getLevelLabel(currentLevel).toUpperCase()}
-                        </h3>
-                        
-                        <div style={{ marginBottom: 16 }}>
-                            <div style={{ fontWeight: 700, fontSize: "13px", color: isDarkMode ? "#94a3b8" : "#475569", marginBottom: 6 }}>
-                                Komentar / Catatan Penyelidikan:
-                            </div>
-                            <Input.TextArea
-                                rows={4}
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                                placeholder="Masukkan komentar peninjauan atau alasan perbaikan..."
-                                style={{ borderRadius: 8 }}
-                            />
-                        </div>
-
-                        {currentLevel !== "ENV_DH" && (
-                            <div style={{ marginBottom: 20 }}>
-                                <Checkbox
-                                    checked={tickBox}
-                                    onChange={(e) => setTickBox(e.target.checked)}
-                                    style={{ fontWeight: 600, color: isDarkMode ? "#cbd5e1" : "#1e293b" }}
-                                >
-                                    Saya telah memeriksa laporan penyelidikan kecelakaan ini dan menyatakan bahwa data adalah benar dan valid sesuai ketentuan operasional.
-                                </Checkbox>
-                            </div>
-                        )}
-
-                        <Space style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
-                            <Button 
-                                danger
-                                onClick={() => onReturn(record, currentLevel, comment)}
-                                loading={loading}
-                                style={{ borderRadius: 8, fontWeight: 700, height: 38 }}
-                            >
-                                Kembalikan (Return)
-                            </Button>
-                            <Button 
-                                type="primary"
-                                disabled={currentLevel !== "ENV_DH" && !tickBox}
-                                onClick={() => onApprove(record, currentLevel, comment, tickBox)}
-                                loading={loading}
-                                style={{ 
-                                    background: (currentLevel !== "ENV_DH" && !tickBox) ? undefined : "linear-gradient(135deg, #059669 0%, #10b981 100%)", 
-                                    border: "none", 
-                                    borderRadius: 8, 
-                                    fontWeight: 700, 
-                                    height: 38,
-                                    padding: "0 24px"
-                                }}
-                            >
-                                Setujui (Approve)
-                            </Button>
-                        </Space>
-                    </div>
-                )}
-
                 {!isCompleted && !userCanAct && (
                     <div style={{ 
                         marginTop: 12, 
@@ -249,7 +184,7 @@ export default function ApprovalChainSection({
                         fontWeight: 500
                     }}>
                         <ExclamationCircleOutlined />
-                        <span>Menunggu tindakan persetujuan dari <strong>{getLevelLabel(currentLevel)}</strong>. Akun Anda tidak memiliki kewenangan untuk menyetujui level ini.</span>
+                        <span>Menunggu tindakan persetujuan dari <strong>{getLevelLabel(currentLevel)}</strong>.</span>
                     </div>
                 )}
             </div>

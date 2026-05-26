@@ -7,7 +7,7 @@ use App\Models\MasterData\Ccow;
 
 class InvestigationReport extends Model
 {
-    protected $table = 'investigation_reports';
+    protected $table = 'analisa_kecelakaan';
 
     protected $guarded = [];
 
@@ -19,6 +19,12 @@ class InvestigationReport extends Model
         'ohs_approved' => 'boolean',
         'env_approved' => 'boolean',
         'pja_approved' => 'boolean',
+        'unsafe_actions' => 'array',
+        'unsafe_conditions' => 'array',
+        'personal_factors' => 'array',
+        'job_factors' => 'array',
+        'cause_details' => 'array',
+        'investigation_checklist' => 'array',
     ];
 
     protected static function booted(): void
@@ -58,11 +64,46 @@ class InvestigationReport extends Model
 
     public function documents()
     {
-        return $this->hasMany(InvestigationDocument::class, 'investigation_report_id');
+        return $this->hasMany(InvestigationDocument::class, 'analisa_kecelakaan_id');
     }
 
     public function approvals()
     {
-        return $this->hasMany(InvestigationApproval::class, 'investigation_report_id');
+        return $this->hasMany(InvestigationApproval::class, 'analisa_kecelakaan_id');
+    }
+
+    public function presentation()
+    {
+        return $this->hasOne(Presentation::class, 'analisa_kecelakaan_id');
+    }
+
+    public function picaItems()
+    {
+        return $this->hasMany(PicaItem::class, 'analisa_kecelakaan_id');
+    }
+
+    public function incidentType()
+    {
+        return $this->belongsTo(MasterData\IncidentType::class, 'incident_type_id');
+    }
+
+    public function source()
+    {
+        return $this->belongsTo(MasterData\Source::class, 'source_id');
+    }
+
+    public function workExperienceInterval()
+    {
+        return $this->belongsTo(MasterData\IntervalExperience::class, 'work_experience_interval_id');
+    }
+
+    public function injuryCondition()
+    {
+        return $this->belongsTo(MasterData\InjuryCondition::class, 'injury_condition_id');
+    }
+
+    public function bodyPart()
+    {
+        return $this->belongsTo(MasterData\BodyPart::class, 'body_part_id');
     }
 }

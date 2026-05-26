@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class InvestigationDocument extends Model
 {
-    protected $table = 'investigation_documents';
+    protected $table = 'analisa_kecelakaan_documents';
 
     protected $guarded = [];
 
     public function investigationReport()
     {
-        return $this->belongsTo(InvestigationReport::class, 'investigation_report_id');
+        return $this->belongsTo(InvestigationReport::class, 'analisa_kecelakaan_id');
     }
 }

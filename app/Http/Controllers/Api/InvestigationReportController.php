@@ -37,8 +37,14 @@ class InvestigationReportController extends Controller
             'accidentNotification.company',
             'accidentNotification.location',
             'accidentNotification.incidentType',
+            'accidentNotification.department',
             'documents',
-            'approvals.approvedBy'
+            'approvals.approvedBy',
+            'incidentType',
+            'source',
+            'workExperienceInterval',
+            'injuryCondition',
+            'bodyPart'
         ])
         // Filter by company if not CRS
         ->when(!$isCrs && $user && $user->employee_id, function ($q) use ($user) {
@@ -66,7 +72,7 @@ class InvestigationReportController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'accident_notification_id' => 'required|exists:accident_notifications,id|unique:investigation_reports,accident_notification_id',
+            'accident_notification_id' => 'required|exists:accident_notifications,id|unique:analisa_kecelakaan,accident_notification_id',
             'report_type' => 'required|in:LPKS,LPKL',
             'is_environmental' => 'nullable|boolean',
             'investigation_detail' => 'nullable|string',
@@ -76,6 +82,23 @@ class InvestigationReportController extends Controller
             'safe_draft' => 'nullable|boolean',
             'documents' => 'nullable|array|max:10',
             'documents.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,ppt,pptx,xls,xlsx|max:5120', // Max 5MB per file
+            'incident_type_id' => 'nullable|exists:m_incident_types,id',
+            'source_id' => 'nullable|exists:m_sources,id',
+            'mobile_equipment' => 'nullable|string',
+            'work_experience_interval_id' => 'nullable|exists:m_interval_experiences,id',
+            'hour_of_shift' => 'nullable|string',
+            'injury_condition_id' => 'nullable|exists:m_injury_conditions,id',
+            'body_part_id' => 'nullable|exists:m_body_parts,id',
+            'environmental_pollution_qty' => 'nullable|integer',
+            'lost_days' => 'nullable|integer',
+            'actual_cost' => 'nullable|numeric',
+            'potential_cost' => 'nullable|numeric',
+            'unsafe_actions' => 'nullable|array',
+            'unsafe_conditions' => 'nullable|array',
+            'personal_factors' => 'nullable|array',
+            'job_factors' => 'nullable|array',
+            'cause_details' => 'nullable|array',
+            'investigation_checklist' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
@@ -86,7 +109,7 @@ class InvestigationReportController extends Controller
         try {
             $user = auth('api')->user();
 
-            $data = $request->except(['documents', 'corrective_action_plan']);
+            $data = $request->except(['documents', 'existing_documents', 'corrective_action_plan']);
             $data['corrective_action_plan'] = $request->input('corrective_action_plan', []);
             $data['created_by'] = $user->name ?? 'System';
             $data['updated_by'] = $user->name ?? 'System';
@@ -165,8 +188,14 @@ class InvestigationReportController extends Controller
             'accidentNotification.company',
             'accidentNotification.location',
             'accidentNotification.incidentType',
+            'accidentNotification.department',
             'documents',
-            'approvals.approvedBy'
+            'approvals.approvedBy',
+            'incidentType',
+            'source',
+            'workExperienceInterval',
+            'injuryCondition',
+            'bodyPart'
         ]);
 
         // Filter detail if not CRS
@@ -206,6 +235,23 @@ class InvestigationReportController extends Controller
             'safe_draft' => 'nullable|boolean',
             'documents' => 'nullable|array|max:10',
             'documents.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,ppt,pptx,xls,xlsx|max:5120',
+            'incident_type_id' => 'nullable|exists:m_incident_types,id',
+            'source_id' => 'nullable|exists:m_sources,id',
+            'mobile_equipment' => 'nullable|string',
+            'work_experience_interval_id' => 'nullable|exists:m_interval_experiences,id',
+            'hour_of_shift' => 'nullable|string',
+            'injury_condition_id' => 'nullable|exists:m_injury_conditions,id',
+            'body_part_id' => 'nullable|exists:m_body_parts,id',
+            'environmental_pollution_qty' => 'nullable|integer',
+            'lost_days' => 'nullable|integer',
+            'actual_cost' => 'nullable|numeric',
+            'potential_cost' => 'nullable|numeric',
+            'unsafe_actions' => 'nullable|array',
+            'unsafe_conditions' => 'nullable|array',
+            'personal_factors' => 'nullable|array',
+            'job_factors' => 'nullable|array',
+            'cause_details' => 'nullable|array',
+            'investigation_checklist' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
@@ -406,6 +452,17 @@ class InvestigationReportController extends Controller
             if ($nextLevel === 'COMPLETED') {
                 $updateData['current_approval_level'] = 'COMPLETED';
                 $updateData['investigation_status'] = 'Completed';
+
+                // Phase 3: Auto-generate presentation schedule
+                // H+3 untuk LPKS, H+8 untuk LPKL
+                $daysToAdd = $report->report_type === 'LPKS' ? 3 : 8;
+                $scheduledDate = now()->addDays($daysToAdd);
+
+                $report->presentation()->create([
+                    'scheduled_date' => $scheduledDate,
+                    'status' => 'Scheduled',
+                ]);
+
             } else {
                 $updateData['current_approval_level'] = $nextLevel;
                 $updateData['investigation_status'] = "Waiting for {$nextLevel}";
@@ -505,6 +562,55 @@ class InvestigationReportController extends Controller
             DB::rollBack();
             Log::error('Error returning investigation report: ' . $e->getMessage());
             return SafetyResponse::error(null, 'Gagal memproses return: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * POST /api/investigation-report/{id}/callback
+     * CRS action to reopen an investigation report
+     */
+    public function callback(Request $request, string $id)
+    {
+        $report = InvestigationReport::find($id);
+
+        if (!$report) {
+            return SafetyResponse::error(null, 'Laporan tidak ditemukan', 404);
+        }
+
+        $user = auth('api')->user();
+
+        // Check if user is CRS
+        $isCrs = $user && $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin');
+
+        if (!$isCrs) {
+            return SafetyResponse::error(null, 'Hanya CRS yang dapat melakukan callback', 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            $report->update([
+                'investigation_status' => 'Returned',
+                'current_approval_level' => 'KTT',
+                'ktt_approved' => false,
+                'ohs_approved' => false,
+                'env_approved' => false,
+                'pja_approved' => false,
+                'updated_by' => $user->name ?? 'System',
+            ]);
+
+            // Reset all approvals
+            $report->approvals()->update([
+                'status' => 'Pending',
+                'tick_box' => false,
+                'approved_by' => null,
+            ]);
+
+            DB::commit();
+            return SafetyResponse::success($report, 'Berhasil melakukan callback Laporan Penyelidikan');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error callback investigation report: ' . $e->getMessage());
+            return SafetyResponse::error(null, 'Gagal memproses callback: ' . $e->getMessage(), 500);
         }
     }
 }

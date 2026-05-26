@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('investigation_reports', function (Blueprint $table) {
+        Schema::create('analisa_kecelakaan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('accident_notification_id')
                   ->unique()
@@ -42,10 +42,10 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('investigation_documents', function (Blueprint $table) {
+        Schema::create('analisa_kecelakaan_documents', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('investigation_report_id')
-                  ->constrained('investigation_reports')
+            $table->foreignId('analisa_kecelakaan_id')
+                  ->constrained('analisa_kecelakaan')
                   ->cascadeOnDelete();
             $table->string('path');
             $table->string('filename');
@@ -55,10 +55,10 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('investigation_approvals', function (Blueprint $table) {
+        Schema::create('analisa_kecelakaan_approvals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('investigation_report_id')
-                  ->constrained('investigation_reports')
+            $table->foreignId('analisa_kecelakaan_id')
+                  ->constrained('analisa_kecelakaan')
                   ->cascadeOnDelete();
             $table->enum('approval_level', ['KTT', 'OHS_DH', 'ENV_DH', 'PJA']);
             $table->foreignId('approved_by')
@@ -78,8 +78,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('investigation_approvals');
-        Schema::dropIfExists('investigation_documents');
-        Schema::dropIfExists('investigation_reports');
+        Schema::dropIfExists('analisa_kecelakaan_approvals');
+        Schema::dropIfExists('analisa_kecelakaan_documents');
+        Schema::dropIfExists('analisa_kecelakaan');
     }
 };

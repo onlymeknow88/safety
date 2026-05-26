@@ -665,12 +665,7 @@ export default function useAccidentNotification(master = {}) {
                 cell: ({ row }) => row.original.incident_date ? dayjs(row.original.incident_date).format('DD/MM/YYYY') : "-",
                 meta: { width: 150, align: "center" },
             },
-            {
-                header: "TANGGAL PELAPORAN KEPADA KaIT / Kadis a/n KaIT",
-                accessorKey: "kait_reporting_date",
-                cell: ({ row }) => row.original.kait_reporting_date ? dayjs(row.original.kait_reporting_date).format('DD/MM/YYYY') : "N/A",
-                meta: { width: 220, align: "center" },
-            },
+
             {
                 header: "TIPE",
                 accessorKey: "lpks_lpkl",
@@ -754,48 +749,7 @@ export default function useAccidentNotification(master = {}) {
                 cell: ({ row }) => row.original.incident_consequence || "-",
                 meta: { width: 250 },
             },
-            {
-                header: "NAMA KORBAN/ ORANG YANG TERLIBAT DALAM INSIDEN",
-                accessorKey: "victim_name",
-                cell: ({ row }) => row.original.victim_name || "-",
-                meta: { width: 250 },
-            },
-            {
-                header: "JENIS KELAMIN",
-                accessorKey: "victim_gender.name",
-                cell: ({ row }) => row.original.victim_gender?.name || "-",
-                meta: { width: 120, align: "center" },
-            },
-            {
-                header: "UMUR",
-                accessorKey: "victim_age",
-                cell: ({ row }) => row.original.victim_age || "-",
-                meta: { width: 80, align: "center" },
-            },
-            {
-                header: "INTERVAL UMUR",
-                accessorKey: "victim_age_interval.label",
-                cell: ({ row }) => row.original.victim_age_interval?.label || "-",
-                meta: { width: 150, align: "center" },
-            },
-            {
-                header: "POSISI / JABATAN",
-                accessorKey: "victim_position.name",
-                cell: ({ row }) => row.original.victim_position?.name || "-",
-                meta: { width: 150 },
-            },
-            {
-                header: "DETAIL POSISI / JABATAN",
-                accessorKey: "victim_position_detail",
-                cell: ({ row }) => row.original.victim_position_detail || "-",
-                meta: { width: 180 },
-            },
-            {
-                header: "PENGALAMAN BEKERJA",
-                accessorKey: "victim_experience.label",
-                cell: ({ row }) => row.original.victim_experience?.label || "-",
-                meta: { width: 180 },
-            },
+
             {
                 header: "DEPARTEMEN / DEPARTEMEN USER",
                 accessorKey: "department.name",
@@ -830,30 +784,7 @@ export default function useAccidentNotification(master = {}) {
                     },
                 ],
             },
-            {
-                header: "AKIBAT INSIDEN / KECELAKAAN",
-                id: "consequence_group",
-                columns: [
-                    {
-                        header: "HARI HILANG (HARI)",
-                        accessorKey: "lost_days",
-                        cell: ({ row }) => row.original.lost_days ?? "-",
-                        meta: { align: "center", width: 120 },
-                    },
-                    {
-                        header: "BIAYA KERUGIAN AKTUAL (IDR)",
-                        accessorKey: "actual_cost",
-                        cell: ({ row }) => row.original.actual_cost ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(row.original.actual_cost) : "-",
-                        meta: { align: "right", width: 180 },
-                    },
-                    {
-                        header: "BIAYA KERUGIAN POTENSIAL (IDR)",
-                        accessorKey: "potential_cost",
-                        cell: ({ row }) => row.original.potential_cost ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(row.original.potential_cost) : "-",
-                        meta: { align: "right", width: 180 },
-                    },
-                ],
-            },
+
             {
                 header: "STATUS APPROVAL",
                 accessorKey: "status.name",

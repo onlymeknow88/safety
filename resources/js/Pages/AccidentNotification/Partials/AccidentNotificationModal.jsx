@@ -9,7 +9,6 @@ import IncidentOverviewSection from "@/Pages/AccidentNotification/Partials/Compo
 import MediaSection from "@/Pages/AccidentNotification/Partials/Components/MediaSection";
 import ReporterSection from "@/Pages/AccidentNotification/Partials/Components/ReporterSection";
 import SeveritySection from "@/Pages/AccidentNotification/Partials/Components/SeveritySection";
-import VictimSection from "@/Pages/AccidentNotification/Partials/Components/VictimSection";
 import dayjs from "dayjs";
 import { useTheme } from "@/Contexts/ThemeContext";
 
@@ -77,7 +76,6 @@ export default function AccidentNotificationModal({
                     ...initialValues,
                     incident_date: initialValues.incident_date ? dayjs(initialValues.incident_date) : null,
                     incident_time: initialValues.incident_time ? dayjs(`2000-01-01 ${initialValues.incident_time}`) : null,
-                    kait_reporting_date: initialValues.kait_reporting_date ? dayjs(initialValues.kait_reporting_date) : null,
                 });
 
                 if (initialValues.photos) {
@@ -368,19 +366,7 @@ export default function AccidentNotificationModal({
                         </Col>
                     </Row>
 
-                    <Card 
-                        title={<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div style={{ width: 4, height: 16, background: '#8b5cf6', borderRadius: 2 }}></div>
-                            <span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800, letterSpacing: 0.5 }}>DATA KORBAN / ORANG YANG TERLIBAT</span>
-                        </div>} 
-                        style={cardStyle}
-                        styles={{ 
-                            header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px' },
-                            body: { padding: '24px' }
-                        }}
-                    >
-                        <VictimSection master={master} disabled={isDetail} />
-                    </Card>
+
 
                     <Row gutter={24}>
                         <Col xs={24} lg={16}>

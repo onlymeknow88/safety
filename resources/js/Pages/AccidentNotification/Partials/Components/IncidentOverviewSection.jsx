@@ -61,7 +61,7 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
                 </Form.Item>
             </Col> */}
 
-            <Col xs={24} md={6}>
+            <Col xs={24} md={8}>
                 <Form.Item
                     name="incident_date"
                     label={<span style={labelStyle}>Tanggal Insiden</span>}
@@ -70,15 +70,7 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
                     <DatePicker style={{ width: '100%', ...inputStyle }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
                 </Form.Item>
             </Col>
-            <Col xs={24} md={6}>
-                <Form.Item
-                    name="kait_reporting_date"
-                    label={<span style={labelStyle}>Pelaporan KaIT</span>}
-                >
-                    <DatePicker style={{ width: '100%', ...inputStyle }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
-                </Form.Item>
-            </Col>
-            <Col xs={24} md={6}>
+            <Col xs={24} md={8}>
                 <Form.Item
                     name="lpks_lpkl"
                     label={<span style={labelStyle}>Tipe (LPKL/LPKS)</span>}
@@ -90,7 +82,7 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
                     />
                 </Form.Item>
             </Col>
-            <Col xs={24} md={6}>
+            <Col xs={24} md={8}>
                 <Form.Item
                     name="incident_time"
                     label={<span style={labelStyle}>Waktu (hh:ss)</span>}

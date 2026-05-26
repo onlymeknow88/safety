@@ -16,8 +16,7 @@ class PublicApprovalController extends Controller
     {
         $record = AccidentNotification::with([
             'status', 'ccow', 'location', 'incidentType', 'department', 
-            'victimGender', 'victimAgeInterval', 'victimPosition', 
-            'victimExperience', 'company', 'companyContractor',
+            'company', 'companyContractor',
             'reporter', 'approver', 'progressStatus'
         ])->where('uuid', $uuid)->firstOrFail();
 

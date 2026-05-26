@@ -34,7 +34,7 @@ class AccidentNotificationController extends Controller
             ($user->employee && $user->employee->can_approve)
         );
 
-        $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])
+        $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status', 'department', 'companyContractor', 'reporter', 'approver'])
             // Filter berdasarkan company_id jika bukan CRS/Approver
             ->when(!$isCrs && $user && $user->employee_id, function($q) use ($user) {
                 return $q->where('company_id', $user->employee->company_id);
@@ -84,10 +84,6 @@ class AccidentNotificationController extends Controller
             'consequence_tool' => 'nullable|string',
             'consequence_environment' => 'nullable|string',
             'department_id' => 'nullable|exists:m_department,id',
-            'victim_gender_id' => 'nullable|exists:m_genders,id',
-            'victim_age_interval_id' => 'nullable|exists:m_interval_ages,id',
-            'victim_position_id' => 'nullable|exists:m_jabatan,id',
-            'victim_experience_id' => 'nullable|exists:m_interval_experiences,id',
             'company_contractor_id' => 'nullable|exists:m_company,id',
             'reporter_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'reporter_position' => 'nullable|string|max:255',
@@ -98,7 +94,6 @@ class AccidentNotificationController extends Controller
             'status_id' => 'required|exists:m_statuses,id',
             'photos' => 'nullable|array|max:4',
             'photos.*' => 'file|mimes:jpg,jpeg,png|max:2048',
-            'kait_reporting_date' => 'nullable|date',
             'lpks_lpkl' => 'nullable|string',
         ];
 
@@ -159,7 +154,7 @@ class AccidentNotificationController extends Controller
             ($user->employee && $user->employee->can_approve)
         );
 
-        $query = AccidentNotification::with(['photos', 'location', 'ccow', 'company', 'incidentType', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver']);
+        $query = AccidentNotification::with(['photos', 'location', 'ccow', 'company', 'incidentType', 'department', 'companyContractor', 'reporter', 'approver']);
 
         // Filter detail jika bukan CRS/Approver
         if (!$isCrs && $user && $user->employee_id) {
@@ -214,10 +209,6 @@ class AccidentNotificationController extends Controller
             'consequence_tool' => 'nullable|string',
             'consequence_environment' => 'nullable|string',
             'department_id' => 'nullable|exists:m_department,id',
-            'victim_gender_id' => 'nullable|exists:m_genders,id',
-            'victim_age_interval_id' => 'nullable|exists:m_interval_ages,id',
-            'victim_position_id' => 'nullable|exists:m_jabatan,id',
-            'victim_experience_id' => 'nullable|exists:m_interval_experiences,id',
             'company_contractor_id' => 'nullable|exists:m_company,id',
             'reporter_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'reporter_position' => 'nullable|string|max:255',
@@ -228,7 +219,6 @@ class AccidentNotificationController extends Controller
             'status_id' => 'required|exists:m_statuses,id',
             'photos' => 'nullable|array|max:4',
             'photos.*' => 'file|mimes:jpg,jpeg,png|max:2048',
-            'kait_reporting_date' => 'nullable|date',
             'lpks_lpkl' => 'nullable|string',
         ];
 
@@ -343,7 +333,7 @@ class AccidentNotificationController extends Controller
      */
     public function exportPdf(Request $request, string $id)
     {
-        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])->find($id);
+        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos', 'department', 'companyContractor', 'reporter', 'approver'])->find($id);
 
         if (! $record) {
             return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
@@ -435,7 +425,7 @@ class AccidentNotificationController extends Controller
             return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
-        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos', 'department', 'victimGender', 'victimAgeInterval', 'victimPosition', 'victimExperience', 'companyContractor', 'reporter', 'approver'])->find($request->accident_id);
+        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos', 'department', 'companyContractor', 'reporter', 'approver'])->find($request->accident_id);
 
         // 1. Generate PDF
         $pdf = Pdf::loadView('pdf.accident_notification', compact('record'));

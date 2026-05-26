@@ -134,7 +134,7 @@ export default function AccidentApproval({ accident }) {
                                     {accident.department?.name || '-'}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Tipe Insiden" span={2}>
-                                    {accident.incident_type?.name || '-'}
+                                    {accident.incident_type?.category || '-'}
                                 </Descriptions.Item>
                             </Descriptions>
 

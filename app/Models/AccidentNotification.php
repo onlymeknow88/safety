@@ -19,7 +19,6 @@ class AccidentNotification extends Model
         'corrective_actions' => 'array',
         'is_hpri' => 'boolean',
         'incident_date' => 'date',
-        'kait_reporting_date' => 'date',
     ];
 
     // Auto-generate notification_number sebelum create
@@ -98,25 +97,7 @@ class AccidentNotification extends Model
         return $this->belongsTo(\App\Models\MasterData\Department::class, 'department_id');
     }
 
-    public function victimGender()
-    {
-        return $this->belongsTo(\App\Models\MasterData\Gender::class, 'victim_gender_id');
-    }
 
-    public function victimAgeInterval()
-    {
-        return $this->belongsTo(\App\Models\MasterData\IntervalAge::class, 'victim_age_interval_id');
-    }
-
-    public function victimPosition()
-    {
-        return $this->belongsTo(\App\Models\MasterData\Jabatan::class, 'victim_position_id');
-    }
-
-    public function victimExperience()
-    {
-        return $this->belongsTo(\App\Models\MasterData\IntervalExperience::class, 'victim_experience_id');
-    }
 
     public function companyContractor()
     {

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class InvestigationApproval extends Model
 {
-    protected $table = 'investigation_approvals';
+    protected $table = 'analisa_kecelakaan_approvals';
 
     protected $guarded = [];
 
@@ -17,7 +17,7 @@ class InvestigationApproval extends Model
 
     public function investigationReport()
     {
-        return $this->belongsTo(InvestigationReport::class, 'investigation_report_id');
+        return $this->belongsTo(InvestigationReport::class, 'analisa_kecelakaan_id');
     }
 
     public function approvedBy()

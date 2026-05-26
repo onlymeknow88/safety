@@ -46,6 +46,10 @@ class AccidentNotificationRecommendationSeeder extends Seeder
             ['description' => 'Kerusakan Properti/Alat']
         );
 
+        $department = \App\Models\MasterData\Department::firstOrCreate(
+            ['name' => 'Mining Operations']
+        );
+
         // Workflow Status
         $approvedStatus = Status::firstOrCreate(['name' => 'Approved']);
 
@@ -59,7 +63,7 @@ class AccidentNotificationRecommendationSeeder extends Seeder
                 'ccow_id' => $ccow->id,
                 'company_id' => $company->id,
                 'location_id' => $location->id,
-                'location_detail_id' => $locationDetail->id,
+                'location_detail' => 'Blok 1 Pit Danum',
                 'incident_type_id' => $incidentType->id,
                 'status_id' => $approvedStatus->id,
                 
@@ -69,27 +73,12 @@ class AccidentNotificationRecommendationSeeder extends Seeder
                 'incident_title' => 'Kaca Kabin EX-365 Pecah Terkena Lenting',
                 'incident_consequence' => 'Kaca depan pecah',
                 
-                // Image 3 (Victim Data)
-                'victim_name' => 'Gusti Jamal Basri',
-                'victim_gender' => 'Pria',
-                'victim_age' => 25,
-                'victim_age_interval' => '>= 20 s/d < 25',
-                'victim_position' => 'Operator',
-                'victim_position_detail' => 'Operator Excavator',
-                'victim_experience' => '> 2 - 5 Tahun',
-                
                 // Image 4
-                'department' => 'Mining Operations',
+                'department_id' => $department->id,
                 'is_hpri' => false,
                 
                 // Image 5
-                'actual_cost' => 5868200,
                 'lpks_lpkl' => 'LPKS',
-                'due_date' => '2026-01-06',
-                'presentation_date' => '2026-01-04',
-                'submit_date' => '2026-01-08',
-                'report_status' => 'Closed Overdue',
-                'presentation_invitation' => 'DONE',
                 
                 // Supplemental (Chronology/Facts from image content)
                 'chronology' => 'Kaca Kabin EX-365-006 Pecah Terkena Lentingan Material Batu saat operasional.',
