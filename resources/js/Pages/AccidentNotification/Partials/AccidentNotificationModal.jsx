@@ -101,7 +101,7 @@ export default function AccidentNotificationModal({
     }, [visible, initialValues]);
 
     useEffect(() => {
-        if (visible) {
+        if (visible && !isDetail) {
             const actual = severity.actual_k3;
             const potential = severity.potential_k3;
             
@@ -115,11 +115,20 @@ export default function AccidentNotificationModal({
                 type = 'LPKS';
             }
             
-            if (type !== form.getFieldValue('lpks_lpkl')) {
-                form.setFieldsValue({ lpks_lpkl: type });
+            // Only overwrite if type is found, or if we are in 'add' mode,
+            // or if the user has changed the severity levels from their initial database values.
+            const hasChanged = initialValues ? (
+                (actual ?? null) !== (initialValues.actual_k3 ?? null) ||
+                (potential ?? null) !== (initialValues.potential_k3 ?? null)
+            ) : false;
+
+            if (type !== null || mode === 'add' || hasChanged) {
+                if (type !== form.getFieldValue('lpks_lpkl')) {
+                    form.setFieldsValue({ lpks_lpkl: type });
+                }
             }
         }
-    }, [severity.actual_k3, severity.potential_k3, visible]);
+    }, [severity.actual_k3, severity.potential_k3, visible, isDetail, mode, initialValues]);
 
     const cardStyle = {
         marginBottom: 24,
