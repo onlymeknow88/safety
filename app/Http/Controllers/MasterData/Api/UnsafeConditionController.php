@@ -13,7 +13,7 @@ class UnsafeConditionController extends Controller
     public function index(Request $request)
     {
         $search = $request->search;
-        $load = $request->load ?? 10;
+        $load = $request->load ?? 50;
         $query = UnsafeCondition::query();
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -21,7 +21,7 @@ class UnsafeConditionController extends Controller
                   ->orWhere('description', 'like', "%$search%");
             });
         }
-        $paginateData = $query->orderBy('code', 'asc')->paginate($load);
+        $paginateData = $query->orderBy('id', 'asc')->paginate($load);
         return SafetyResponse::success($paginateData, "Berhasil mengambil data");
     }
 

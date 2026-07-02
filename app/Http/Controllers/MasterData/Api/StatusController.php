@@ -13,7 +13,7 @@ class StatusController extends Controller
     public function index(Request $request)
     {
         $search = $request->search;
-        $load = $request->load ?? 10;
+        $load = $request->load ?? 50;
         $query = Status::query();
         if ($search) $query->where('name', 'like', "%$search%");
         $paginateData = $query->orderBy('name', 'asc')->paginate($load);

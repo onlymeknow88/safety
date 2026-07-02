@@ -16,7 +16,7 @@ class ShiftController extends Controller
     public function index(Request $request)
     {
         $search = $request->search;
-        $load = $request->load ?? 10;
+        $load = $request->load ?? 50;
 
         $query = Shift::query();
 
@@ -24,7 +24,7 @@ class ShiftController extends Controller
             $query->where('name', 'like', "%$search%");
         }
 
-        $paginateData = $query->orderBy('name', 'asc')->paginate($load);
+        $paginateData = $query->orderBy('sort_order', 'asc')->paginate($load);
 
         return SafetyResponse::success($paginateData, "Berhasil mengambil data");
     }

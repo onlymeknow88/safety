@@ -50,22 +50,22 @@ export default function RootCauseFactorsSection({
         const selected = [];
         
         unsafeActions.forEach(id => {
-            const item = (master.unsafeActs || []).find(x => x.id === id);
+            const item = (master.unsafeActs || []).find(x => String(x.id) === String(id));
             if (item) selected.push({ id: item.id, code: item.code || `USA-${item.id}`, name: item.description });
         });
 
         unsafeConditions.forEach(id => {
-            const item = (master.unsafeConditions || []).find(x => x.id === id);
+            const item = (master.unsafeConditions || []).find(x => String(x.id) === String(id));
             if (item) selected.push({ id: item.id, code: item.code || `USC-${item.id}`, name: item.description });
         });
 
         personalFactors.forEach(id => {
-            const item = (master.personalFactors || []).find(x => x.id === id);
+            const item = (master.personalFactors || []).find(x => String(x.id) === String(id));
             if (item) selected.push({ id: item.id, code: item.code || `PF-${item.id}`, name: item.description });
         });
 
         jobFactors.forEach(id => {
-            const item = (master.jobFactors || []).find(x => x.id === id);
+            const item = (master.jobFactors || []).find(x => String(x.id) === String(id));
             if (item) selected.push({ id: item.id, code: item.code || `JF-${item.id}`, name: item.description });
         });
 
@@ -184,12 +184,12 @@ export default function RootCauseFactorsSection({
                             mode="multiple"
                             placeholder="+ Add Action"
                             style={{ width: "100%" }}
-                            value={unsafeActions}
+                            value={unsafeActions ? unsafeActions.map(String) : []}
                             onChange={setUnsafeActions}
                             disabled={disabled}
                             options={(master.unsafeActs || []).map(x => ({
                                 label: x.code ? `${x.code} - ${x.description}` : x.description,
-                                value: x.id
+                                value: String(x.id)
                             }))}
                             maxTagCount="responsive"
                             tagRender={({ label, closable, onClose }) => (
@@ -199,7 +199,7 @@ export default function RootCauseFactorsSection({
                                     onClose={onClose}
                                     style={{ marginRight: 3, fontWeight: 700 }}
                                 >
-                                    {label.split(" - ")[0]}
+                                    {label}
                                 </Tag>
                             )}
                         />
@@ -214,12 +214,12 @@ export default function RootCauseFactorsSection({
                             mode="multiple"
                             placeholder="+ Add Condition"
                             style={{ width: "100%" }}
-                            value={unsafeConditions}
+                            value={unsafeConditions ? unsafeConditions.map(String) : []}
                             onChange={setUnsafeConditions}
                             disabled={disabled}
                             options={(master.unsafeConditions || []).map(x => ({
                                 label: x.code ? `${x.code} - ${x.description}` : x.description,
-                                value: x.id
+                                value: String(x.id)
                             }))}
                             maxTagCount="responsive"
                             tagRender={({ label, closable, onClose }) => (
@@ -229,7 +229,7 @@ export default function RootCauseFactorsSection({
                                     onClose={onClose}
                                     style={{ marginRight: 3, fontWeight: 700 }}
                                 >
-                                    {label.split(" - ")[0]}
+                                    {label}
                                 </Tag>
                             )}
                         />
@@ -244,12 +244,12 @@ export default function RootCauseFactorsSection({
                             mode="multiple"
                             placeholder="+ Add Factor"
                             style={{ width: "100%" }}
-                            value={personalFactors}
+                            value={personalFactors ? personalFactors.map(String) : []}
                             onChange={setPersonalFactors}
                             disabled={disabled}
                             options={(master.personalFactors || []).map(x => ({
                                 label: x.code ? `${x.code} - ${x.description}` : x.description,
-                                value: x.id
+                                value: String(x.id)
                             }))}
                             maxTagCount="responsive"
                             tagRender={({ label, closable, onClose }) => (
@@ -259,7 +259,7 @@ export default function RootCauseFactorsSection({
                                     onClose={onClose}
                                     style={{ marginRight: 3, fontWeight: 700 }}
                                 >
-                                    {label.split(" - ")[0]}
+                                    {label}
                                 </Tag>
                             )}
                         />
@@ -274,12 +274,12 @@ export default function RootCauseFactorsSection({
                             mode="multiple"
                             placeholder="+ Add Factor"
                             style={{ width: "100%" }}
-                            value={jobFactors}
+                            value={jobFactors ? jobFactors.map(String) : []}
                             onChange={setJobFactors}
                             disabled={disabled}
                             options={(master.jobFactors || []).map(x => ({
                                 label: x.code ? `${x.code} - ${x.description}` : x.description,
-                                value: x.id
+                                value: String(x.id)
                             }))}
                             maxTagCount="responsive"
                             tagRender={({ label, closable, onClose }) => (
@@ -289,7 +289,7 @@ export default function RootCauseFactorsSection({
                                     onClose={onClose}
                                     style={{ marginRight: 3, fontWeight: 700 }}
                                 >
-                                    {label.split(" - ")[0]}
+                                    {label}
                                 </Tag>
                             )}
                         />

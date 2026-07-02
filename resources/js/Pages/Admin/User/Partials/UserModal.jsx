@@ -19,7 +19,7 @@ export default function UserModal({
             centered
             confirmLoading={loading}
             styles={{
-                content: { borderRadius: "16px" }
+                content: { borderRadius: "20px" }
             }}
             destroyOnHidden
         >

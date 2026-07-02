@@ -1,10 +1,23 @@
 import { Col, DatePicker, Form, Input, Row, Select, TimePicker } from "antd";
-
 import React from "react";
+import { usePage } from "@inertiajs/react";
+import { useTheme } from "@/Contexts/ThemeContext";
 
-export default function IncidentOverviewSection({ master = {}, disabled = false }) {
+export default function IncidentOverviewSection({ master = {}, disabled = false, isHpri = false }) {
+    const { isDarkMode } = useTheme();
+    const { auth } = usePage().props;
     const form = Form.useFormInstance();
     const selectedCcowId = Form.useWatch('ccow_id', form);
+
+    const userRoles = (auth?.user?.roles || []).map(r => r.toLowerCase());
+    const isAdministrator = auth?.user?.is_administrator || false;
+    const isCrsOrAdmin = isAdministrator || userRoles.includes("crs") || userRoles.includes("admin") || userRoles.includes("superadmin") || userRoles.includes("super-admin") || userRoles.includes("hse admin") || userRoles.includes("hse_admin");
+
+    React.useEffect(() => {
+        if (!isCrsOrAdmin && auth?.user?.employee?.company_id) {
+            form.setFieldValue('company_id', auth.user.employee.company_id);
+        }
+    }, [isCrsOrAdmin, auth, form]);
 
     const labelStyle = {
         fontSize: 11,
@@ -61,7 +74,7 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
                 </Form.Item>
             </Col> */}
 
-            <Col xs={24} md={8}>
+            <Col xs={24} md={6}>
                 <Form.Item
                     name="incident_date"
                     label={<span style={labelStyle}>Tanggal Insiden</span>}
@@ -70,19 +83,7 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
                     <DatePicker style={{ width: '100%', ...inputStyle }} format="DD/MM/YYYY" placeholder="DD/MM/YYYY" />
                 </Form.Item>
             </Col>
-            <Col xs={24} md={8}>
-                <Form.Item
-                    name="lpks_lpkl"
-                    label={<span style={labelStyle}>Tipe (LPKL/LPKS)</span>}
-                >
-                    <Input
-                        placeholder="Otomatis"
-                        style={{ ...inputStyle, background: '#f8fafc', fontWeight: 700, color: '#3b82f6' }}
-                        readOnly
-                    />
-                </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
+            <Col xs={24} md={6}>
                 <Form.Item
                     name="incident_time"
                     label={<span style={labelStyle}>Waktu (hh:ss)</span>}
@@ -93,14 +94,42 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
             </Col>
             <Col xs={24} md={6}>
                 <Form.Item
+                    name="lpks_lpkl"
+                    label={<span style={labelStyle}>Tipe (LPKL/LPKS)</span>}
+                >
+                    <Input
+                        placeholder="Otomatis"
+                        style={{ ...inputStyle, background: isDarkMode ? '#1e293b' : '#f8fafc', fontWeight: 700, color: '#3b82f6' }}
+                        readOnly
+                    />
+                </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+                <Form.Item
+                    label={<span style={labelStyle}>HPRI</span>}
+                >
+                    <Input
+                        value={isHpri ? 'HPRI' : 'NON HPRI'}
+                        style={{
+                            ...inputStyle,
+                            background: isDarkMode ? '#1e293b' : '#f8fafc',
+                            fontWeight: 700,
+                            color: isHpri ? '#ef4444' : (isDarkMode ? '#10b981' : '#64748b')
+                        }}
+                        readOnly
+                    />
+                </Form.Item>
+            </Col>
+
+            <Col xs={24} md={6}>
+                <Form.Item
                     name="unit"
                     label={<span style={labelStyle}>Unit</span>}
                 >
                     <Input placeholder="Contoh: DT-001" style={inputStyle} />
                 </Form.Item>
             </Col>
-
-            <Col xs={24} md={12}>
+            <Col xs={24} md={9}>
                 <Form.Item
                     name="ccow_id"
                     label={<span style={labelStyle}>CCOW Area</span>}
@@ -120,7 +149,7 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
                     </Select>
                 </Form.Item>
             </Col>
-            <Col xs={24} md={12}>
+            <Col xs={24} md={9}>
                 <Form.Item
                     name="department_id"
                     label={<span style={labelStyle}>Departemen / Departemen User</span>}
@@ -168,7 +197,7 @@ export default function IncidentOverviewSection({ master = {}, disabled = false 
                     label={<span style={labelStyle}>Perusahaan</span>}
                     rules={[{ required: true, message: 'Wajib diisi' }]}
                 >
-                    <Select placeholder="Pilih Perusahaan" style={inputStyle} showSearch optionFilterProp="children">
+                    <Select placeholder="Pilih Perusahaan" style={inputStyle} showSearch optionFilterProp="children" disabled={disabled || !isCrsOrAdmin}>
                         {master.companies?.map(item => (
                             <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>
                         ))}

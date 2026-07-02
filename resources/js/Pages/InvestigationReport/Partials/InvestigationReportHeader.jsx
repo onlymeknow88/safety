@@ -50,7 +50,7 @@ export default function InvestigationReportHeader({
                     gap: isMobile ? 12 : 0,
                     background: isDarkMode ? "#1c1c24" : "#fff",
                     padding: isMobile ? "16px" : "16px 24px",
-                    borderRadius: 16,
+                    borderRadius: 20,
                     boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                     position: "relative",
                     zIndex: 2,
@@ -75,7 +75,7 @@ export default function InvestigationReportHeader({
                         />
 
                         <Dropdown
-                            menu={{ 
+                            menu={{
                                 items: columnItems,
                                 style: { maxHeight: '500px', overflowY: 'auto' }
                             }}
@@ -115,7 +115,7 @@ export default function InvestigationReportHeader({
                             width: isMobile ? '100%' : 'auto',
                         }}
                     >
-                        Buat Laporan LPKS/LPKL
+                        Buat Laporan
                     </Button>
                 )}
             </div>

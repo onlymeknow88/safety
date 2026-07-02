@@ -61,12 +61,27 @@ class HandleInertiaRequests extends Middleware
                     'is_administrator' => $isAdministrator,
                     // Structured menus for dynamic sidebar
                     'menus' => $user->roles->flatMap->menus
-                        ->filter(function($m) use ($canApprove, $isAdministrator) {
+                        ->filter(function($m) use ($canApprove, $isAdministrator, $user) {
                             // Menu harus aktif dan bisa dilihat
                             if (!$m->is_active || !$m->pivot->can_view) return false;
                             
                             // Jika punya parent, parent tersebut juga harus aktif
                             if ($m->parent_id && $m->parent && !$m->parent->is_active) return false;
+                            
+                            // Sembunyikan menu LPKS/LPKL (slug: investigation-report) dari non-authorized users
+                            if ($m->slug === 'investigation-report') {
+                                $userRoles = $user->roles->map(fn($r) => strtolower($r->name))->toArray();
+                                $hasFullAccess = $isAdministrator || 
+                                    in_array('crs', $userRoles) || 
+                                    in_array('hse admin', $userRoles) || 
+                                    in_array('hse_admin', $userRoles) || 
+                                    in_array('admin', $userRoles) || 
+                                    in_array('super admin', $userRoles) || 
+                                    in_array('super-admin', $userRoles);
+                                if (!$hasFullAccess) {
+                                    return false;
+                                }
+                            }
                             
                             return true;
                         })

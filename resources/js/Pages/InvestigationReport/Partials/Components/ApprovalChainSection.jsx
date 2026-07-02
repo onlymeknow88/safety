@@ -61,10 +61,14 @@ export default function ApprovalChainSection({
     };
 
     const getTimelineItems = () => {
-        return record.approvals.map((app) => {
+        const order = { 'PJA': 1, 'ENV_DH': 2, 'OHS_DH': 3, 'KTT': 4 };
+        const sortedApprovals = [...record.approvals].sort((a, b) => {
+            return (order[a.approval_level] || 99) - (order[b.approval_level] || 99);
+        });
+        return sortedApprovals.map((app) => {
             let statusDot = <ClockCircleOutlined style={{ fontSize: "16px", color: "#64748b" }} />;
             let color = "gray";
-            let statusLabel = "Menunggu Antrean";
+            let statusLabel = "Waiting for";
             
             if (app.status === "Approved") {
                 statusDot = <CheckCircleOutlined style={{ fontSize: "16px", color: "#10b981" }} />;
@@ -77,7 +81,7 @@ export default function ApprovalChainSection({
             } else if (record.current_approval_level === app.approval_level && !isCompleted) {
                 statusDot = <ClockCircleOutlined style={{ fontSize: "16px", color: "#3b82f6" }} className="animate-spin" />;
                 color = "blue";
-                statusLabel = "Sedang Direview";
+                statusLabel = "In Review";
             }
 
             return {
@@ -134,12 +138,9 @@ export default function ApprovalChainSection({
     return (
         <Card 
             title={
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 4, height: 16, background: "#10b981", borderRadius: 2 }}></div>
-                    <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800, letterSpacing: 0.5 }}>
-                        ALUR APPROVAL BERJENJANG (APPROVAL CHAIN)
-                    </span>
-                </div>
+                <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800, letterSpacing: 0.5 }}>
+                    ALUR APPROVAL BERJENJANG (APPROVAL CHAIN)
+                </span>
             }
             styles={{ 
                 header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },

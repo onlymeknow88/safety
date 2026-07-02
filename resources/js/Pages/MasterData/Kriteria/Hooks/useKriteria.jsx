@@ -13,7 +13,7 @@ export default function useKriteria() {
 
     const [data, setData] = useState([]);
     const [searchText, setSearchText] = useState("");
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 50 });
     const [totalRows, setTotalRows] = useState(0);
     const debounceRef = useRef(null);
 

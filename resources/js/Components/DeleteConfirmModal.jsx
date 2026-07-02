@@ -20,7 +20,7 @@ export default function DeleteConfirmModal({
             centered
             width={400}
             styles={{
-                content: { borderRadius: "16px", padding: "24px" }
+                content: { borderRadius: "20px", padding: "24px" }
             }}
             closable={false}
         >
@@ -34,7 +34,7 @@ export default function DeleteConfirmModal({
                 <Space size="middle" style={{ width: "100%", justifyContent: "center" }}>
                     <Button 
                         onClick={onCancel} 
-                        style={{ borderRadius: 8, height: 40, padding: "0 24px" }}
+                        style={{ borderRadius: 10, height: 40, padding: "0 24px" }}
                         disabled={loading}
                     >
                         Cancel
@@ -44,7 +44,7 @@ export default function DeleteConfirmModal({
                         type="primary" 
                         onClick={onConfirm} 
                         loading={loading}
-                        style={{ borderRadius: 8, height: 40, padding: "0 24px" }}
+                        style={{ borderRadius: 10, height: 40, padding: "0 24px" }}
                     >
                         Yes, Delete
                     </Button>

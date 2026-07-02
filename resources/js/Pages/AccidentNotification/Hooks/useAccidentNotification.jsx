@@ -6,7 +6,7 @@ import {
     useReactTable,
 } from "@tanstack/react-table";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePage } from "@inertiajs/react";
+import { usePage, router } from "@inertiajs/react";
 import { useDelete, useGet } from "@/Helpers/useRequest";
 
 import TokenManager from "@/Utils/TokenManager";
@@ -20,10 +20,15 @@ export default function useAccidentNotification(master = {}) {
     const permissions = auth?.user?.permissions || [];
     const isAdministrator = auth?.user?.is_administrator || false;
 
-    const canCreate = isAdministrator || permissions.includes("accident-notification.create");
-    const canEdit = isAdministrator || permissions.includes("accident-notification.edit");
-    const canDelete = isAdministrator || permissions.includes("accident-notification.delete");
+    const userRoles = (auth?.user?.roles || []).map(r => r.toLowerCase());
+    const isCrs = userRoles.includes("crs");
+    const isHseAdminOrAdmin = isAdministrator || userRoles.includes("admin") || userRoles.includes("superadmin") || userRoles.includes("super-admin") || userRoles.includes("hse admin") || userRoles.includes("hse_admin");
+
+    const canCreate = (isAdministrator || permissions.includes("accident-notification.create")) && (!isCrs || isHseAdminOrAdmin);
+    const canEdit = (isAdministrator || permissions.includes("accident-notification.edit")) && (!isCrs || isHseAdminOrAdmin);
+    const canDelete = (isAdministrator || permissions.includes("accident-notification.delete")) && (!isCrs || isHseAdminOrAdmin);
     const canApprove = isAdministrator || auth?.user?.can_approve || permissions.includes("accident-notification.approval");
+    const canCreateInvestigation = isCrs || isHseAdminOrAdmin;
 
     const { notification, modal } = App.useApp();
 
@@ -34,6 +39,8 @@ export default function useAccidentNotification(master = {}) {
     // List States
     const [data, setData] = useState([]);
     const [searchText, setSearchText] = useState("");
+    const [companyFilter, setCompanyFilter] = useState(null);
+    const [ccowFilter, setCcowFilter] = useState(null);
     const [pagination, setPagination] = useState({
         pageIndex: 0,
         pageSize: 10,
@@ -99,6 +106,14 @@ export default function useAccidentNotification(master = {}) {
                             params.search !== undefined
                                 ? params.search
                                 : searchText,
+                        company_id:
+                            params.companyFilter !== undefined
+                                ? params.companyFilter
+                                : companyFilter,
+                        ccow_id:
+                            params.ccowFilter !== undefined
+                                ? params.ccowFilter
+                                : ccowFilter,
                     },
                     "accident-notification",
                 );
@@ -123,6 +138,8 @@ export default function useAccidentNotification(master = {}) {
             pagination.pageIndex,
             pagination.pageSize,
             searchText,
+            companyFilter,
+            ccowFilter,
             notification,
         ],
     );
@@ -631,7 +648,7 @@ export default function useAccidentNotification(master = {}) {
                         {row.original.accident_number || "-"}
                     </Text>
                 ),
-                meta: { width: 150 },
+                meta: { width: 180 },
             },
             {
                 header: "NO. NOTIFIKASI (NI)",
@@ -645,7 +662,7 @@ export default function useAccidentNotification(master = {}) {
                         {row.original.notification_number || "-"}
                     </Text>
                 ),
-                meta: { width: 150 },
+                meta: { width: 180 },
             },
             // {
             //     header: "NO HSE ALERT",
@@ -663,7 +680,7 @@ export default function useAccidentNotification(master = {}) {
                 header: "TANGGAL KEJADIAN",
                 accessorKey: "incident_date",
                 cell: ({ row }) => row.original.incident_date ? dayjs(row.original.incident_date).format('DD/MM/YYYY') : "-",
-                meta: { width: 150, align: "center" },
+                meta: { width: 110, align: "center" },
             },
 
             {
@@ -684,12 +701,7 @@ export default function useAccidentNotification(master = {}) {
                 header: "HARI",
                 id: "incident_day",
                 cell: ({ row }) => {
-                    if (!row.original.incident_date) return "-";
-                    const days = {
-                        'Sunday': 'Minggu', 'Monday': 'Senin', 'Tuesday': 'Selasa',
-                        'Wednesday': 'Rabu', 'Thursday': 'Kamis', 'Friday': 'Jumat', 'Saturday': 'Sabtu'
-                    };
-                    return days[dayjs(row.original.incident_date).format('dddd')] || "-";
+                    return row.original.day?.name || "-";
                 },
                 meta: { width: 100, align: "center" },
             },
@@ -754,13 +766,13 @@ export default function useAccidentNotification(master = {}) {
                 header: "DEPARTEMEN / DEPARTEMEN USER",
                 accessorKey: "department.name",
                 cell: ({ row }) => row.original.department?.name || "-",
-                meta: { width: 180 },
+                meta: { width: 150 },
             },
             {
                 header: "PERUSAHAAN",
                 accessorKey: "company.name",
                 cell: ({ row }) => row.original.company?.name || "-",
-                meta: { width: 180 },
+                meta: { width: 150 },
             },
             {
                 header: "JENIS INSIDEN / KECELAKAAN",
@@ -780,7 +792,7 @@ export default function useAccidentNotification(master = {}) {
                                 {row.original.is_hpri ? "HPRI" : "NON HPRI"}
                             </Text>
                         ),
-                        meta: { align: "center", width: 120 },
+                        meta: { align: "center", width: 100 },
                     },
                 ],
             },
@@ -795,9 +807,10 @@ export default function useAccidentNotification(master = {}) {
                     let color = "#64748b"; // Default Slate (Draft)
 
                     if (statusId == 7 || statusName.includes("approved")) color = "#10b981"; // Emerald
-                    else if (statusId == 6 || statusName.includes("submitted")) color = "#3b82f6"; // Blue
+                    else if (statusId == 2 || statusId == 6 || statusName.includes("submitted")) color = "#3b82f6"; // Blue
                     else if (statusId == 3 || statusName.includes("open")) color = "#06b6d4"; // Cyan
-                    else if (statusId == 8 || statusName.includes("return")) color = "#f59e0b"; // Amber (Return)
+                    else if (statusId == 9 || statusName.includes("investigation")) color = "#8b5cf6"; // Purple (In Investigation)
+                    else if (statusId == 10 || statusId == 8 || statusName.includes("return") || statusName.includes("returned")) color = "#f59e0b"; // Amber (Return/Returned)
                     else if (statusName.includes("overdue") || statusId == 4) color = "#ef4444"; // Red
 
                     return (
@@ -809,7 +822,7 @@ export default function useAccidentNotification(master = {}) {
                         </Tag>
                     );
                 },
-                meta: { width: 140, align: "center" },
+                meta: { width: 100, align: "center" },
             },
             {
                 header: "AKSI",
@@ -830,7 +843,7 @@ export default function useAccidentNotification(master = {}) {
                                 onClick={() => handleEdit(row.original)}
                             />
                         )}
-                        {row.original.status_id === 7 && (
+                        {(row.original.status_id === 7 || row.original.status_id === 9) && (
                             <>
                                 <Button
                                     size="small"
@@ -845,6 +858,16 @@ export default function useAccidentNotification(master = {}) {
                                     icon={<FilePdfOutlined />}
                                     onClick={() => handlePreviewPdf(row.original)}
                                 />
+                                {row.original.status_id === 7 && !row.original.investigation_report && canCreateInvestigation && (
+                                    <Button
+                                        size="small"
+                                        type="primary"
+                                        style={{ background: '#10b981', borderColor: '#10b981', color: '#fff' }}
+                                        onClick={() => router.visit('/analisa-kecelakaan?accident_notification_id=' + row.original.id)}
+                                    >
+                                        Buat {row.original.lpks_lpkl === 'LPKL' ? 'LPKL' : 'LPKS'}
+                                    </Button>
+                                )}
                             </>
                         )}
                         {canDelete && (
@@ -858,7 +881,7 @@ export default function useAccidentNotification(master = {}) {
                         )}
                     </Space>
                 ),
-                meta: { align: "center" },
+                meta: { align: "center", width: 130 },
             },
         ],
         [
@@ -868,6 +891,7 @@ export default function useAccidentNotification(master = {}) {
             handleEdit,
             handleApprove,
             handleDetail,
+            canCreateInvestigation,
         ],
     );
 
@@ -886,13 +910,17 @@ export default function useAccidentNotification(master = {}) {
 
     useEffect(() => {
         fetchItems();
-    }, [pagination.pageIndex, pagination.pageSize]);
+    }, [pagination.pageIndex, pagination.pageSize, companyFilter, ccowFilter]);
 
     return {
         table,
         data,
         searchText,
         handleSearchChange,
+        companyFilter,
+        setCompanyFilter,
+        ccowFilter,
+        setCcowFilter,
         isModalVisible,
         setIsModalVisible,
         modalMode,

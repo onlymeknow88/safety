@@ -7,13 +7,14 @@ export default function Footer() {
         <AntFooter
             style={{
                 textAlign: "center",
-                color: "#8c8c8c",
-                padding: "16px 24px",
+                color: "#94a3b8",
+                padding: "24px 24px",
                 fontSize: 12,
                 flexShrink: 0,
+                background: "transparent",
             }}
         >
-            ©{new Date().getFullYear()} — ALamtri Minerals Indonesia
+            ©{new Date().getFullYear()} — AIM-SAFE Enterprise Safety Management System
         </AntFooter>
     );
 }

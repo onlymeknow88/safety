@@ -49,7 +49,7 @@ export default function RosterHeader({
                     gap: isMobile ? 12 : 0,
                     background: isDarkMode ? "#1f1f1f" : "#fff",
                     padding: isMobile ? "16px" : "16px 24px",
-                    borderRadius: 16,
+                    borderRadius: 20,
                     boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                     position: "relative",
                     zIndex: 2,

@@ -13,7 +13,7 @@ export default function useUnsafeAct() {
 
     const [data, setData] = useState([]);
     const [searchText, setSearchText] = useState("");
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 50 });
     const [totalRows, setTotalRows] = useState(0);
     const debounceRef = useRef(null);
 
@@ -45,6 +45,13 @@ export default function useUnsafeAct() {
     };
 
     const columns = useMemo(() => [
+        {
+            header: "NO",
+            id: "row_number",
+            cell: ({ row }) =>
+                pagination.pageIndex * pagination.pageSize + row.index + 1,
+            meta: { align: "center", width: 60 },
+        },
         { header: "KODE", accessorKey: "code", cell: ({ row }) => <span style={{ fontWeight: 600 }}>{row.original.code}</span> },
         { header: "DESKRIPSI", accessorKey: "description", cell: ({ row }) => <span>{row.original.description}</span> },
         { header: "STATUS", accessorKey: "is_active", cell: ({ row }) => <Tag color={row.original.is_active ? "green" : "red"}>{row.original.is_active ? "ACTIVE" : "INACTIVE"}</Tag> },
@@ -54,7 +61,7 @@ export default function useUnsafeAct() {
                 <Button type="text" icon={<DeleteOutlined style={{ color: "#ef4444" }} />} onClick={() => { setItemToDelete(row.original); setIsDeleteModalVisible(true); }} />
             </Space>
         ), meta: { align: "right" } }
-    ], []);
+    ], [pagination]);
 
     const table = useReactTable({ data, columns, state: { pagination }, onPaginationChange: setPagination, manualPagination: true, rowCount: totalRows, getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel() });
 

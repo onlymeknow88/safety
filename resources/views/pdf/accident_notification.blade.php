@@ -241,7 +241,7 @@
                             <tr>
                                 <td>
                                     <span class="label">Tanggal : <span
-                                            class="value">{{ \Carbon\Carbon::parse($record->incident_date)->format('d-m-Y') }}</span></span>
+                                            class="value">{{ $record->day ? $record->day->name . ', ' : '' }}{{ \Carbon\Carbon::parse($record->incident_date)->format('d-m-Y') }}</span></span>
                                     <span class="sub-label">Date (dd-mm-yyyy)</span>
                                 </td>
                                 <td>

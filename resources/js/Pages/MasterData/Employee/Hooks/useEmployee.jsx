@@ -24,7 +24,7 @@ export default function useEmployee() {
     const [searchText, setSearchText] = useState("");
     const [pagination, setPagination] = useState({
         pageIndex: 0,
-        pageSize: 10,
+        pageSize: 50,
     });
     const [totalRows, setTotalRows] = useState(0);
     const debounceRef = useRef(null);

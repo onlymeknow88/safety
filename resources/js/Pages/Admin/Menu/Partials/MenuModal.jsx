@@ -56,7 +56,7 @@ export default function MenuModal({
             centered
             confirmLoading={loading}
             styles={{
-                content: { borderRadius: "16px" }
+                content: { borderRadius: "20px" }
             }}
             destroyOnHidden
         >

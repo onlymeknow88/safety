@@ -16,7 +16,7 @@ class JabatanController extends Controller
     public function index(Request $request)
     {
          $search = $request->search;
-        $load = $request->load ?? 10;
+        $load = $request->load ?? 50;
 
         $query = Jabatan::query();
 

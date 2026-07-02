@@ -45,8 +45,13 @@ class InvestigationReport extends Model
                 $ccowCode = strtoupper($notification->ccow->inisial ?? 'LC');
             }
 
-            // Count based on year
-            $count = static::whereYear('created_at', $year)->count() + 1;
+            // Count based on year and CCOW
+            $currentCcowId = $notification ? $notification->ccow_id : null;
+            $count = static::whereYear('created_at', $year)
+                ->whereHas('accidentNotification', function ($q) use ($currentCcowId) {
+                    $q->where('ccow_id', $currentCcowId);
+                })
+                ->count() + 1;
             $formattedCount = sprintf('%02d', $count);
 
             $type = $model->report_type ?? 'LPKS';
@@ -105,5 +110,10 @@ class InvestigationReport extends Model
     public function bodyPart()
     {
         return $this->belongsTo(MasterData\BodyPart::class, 'body_part_id');
+    }
+
+    public function mobileEquipment()
+    {
+        return $this->belongsTo(MasterData\MobileEquipment::class, 'mobile_equipment_id');
     }
 }

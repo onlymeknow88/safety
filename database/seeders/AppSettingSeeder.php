@@ -33,6 +33,16 @@ class AppSettingSeeder extends Seeder
                 'value' => config('app.url') . '/auth/azure/callback',
                 'group' => 'azure'
             ],
+            [
+                'key' => 'target_fr',
+                'value' => '0.5',
+                'group' => 'safety'
+            ],
+            [
+                'key' => 'target_sr',
+                'value' => '50',
+                'group' => 'safety'
+            ],
         ];
 
         foreach ($settings as $setting) {

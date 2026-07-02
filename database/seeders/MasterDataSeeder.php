@@ -16,22 +16,26 @@ class MasterDataSeeder extends Seeder
 
         // 1. CCOW
         $ccows = [
-            'PT Juloi Coal', 'PT Kalteng Coal', 'PT Lahai Coal',
-            'PT Maruwai Coal', 'PT Ratah Coal', 'PT Sumber Barito Coal'
+            ['name' => 'PT Juloi Coal', 'inisial' => 'JC'],
+            ['name' => 'PT Kalteng Coal', 'inisial' => 'KC'],
+            ['name' => 'PT Lahai Coal', 'inisial' => 'LC'],
+            ['name' => 'PT Maruwai Coal', 'inisial' => 'MC'],
+            ['name' => 'PT Ratah Coal', 'inisial' => 'RC'],
+            ['name' => 'PT Sumber Barito Coal', 'inisial' => 'SBC'],
         ];
         foreach ($ccows as $item) {
             DB::table('m_ccows')->updateOrInsert(
-                ['name' => $item],
-                ['is_active' => true, 'created_at' => $now, 'updated_at' => $now]
+                ['name' => $item['name']],
+                ['inisial' => $item['inisial'], 'is_active' => true, 'created_at' => $now, 'updated_at' => $now]
             );
         }
 
         // 2. SHIFT KERJA
         $shifts = ['Siang', 'Malam'];
-        foreach ($shifts as $item) {
+        foreach ($shifts as $index => $item) {
             DB::table('m_shifts')->updateOrInsert(
                 ['name' => $item],
-                ['is_active' => true, 'created_at' => $now, 'updated_at' => $now]
+                ['sort_order' => $index + 1, 'is_active' => true, 'created_at' => $now, 'updated_at' => $now]
             );
         }
 
@@ -41,28 +45,28 @@ class MasterDataSeeder extends Seeder
             '15.01 - 18.00', '18.01 - 21.00', '21.01 - 00.00',
             '00.01 - 03.00', '03.01 - 06.00'
         ];
-        foreach ($interval_times as $item) {
+        foreach ($interval_times as $index => $item) {
             DB::table('m_interval_times')->updateOrInsert(
                 ['label' => $item],
-                ['is_active' => true, 'created_at' => $now, 'updated_at' => $now]
+                ['sort_order' => $index + 1, 'is_active' => true, 'created_at' => $now, 'updated_at' => $now]
             );
         }
 
         // 4. HARI
         $days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        foreach ($days as $item) {
+        foreach ($days as $index => $item) {
             DB::table('m_days')->updateOrInsert(
                 ['name' => $item],
-                ['is_active' => true, 'created_at' => $now, 'updated_at' => $now]
+                ['sort_order' => $index + 1, 'is_active' => true, 'created_at' => $now, 'updated_at' => $now]
             );
         }
 
         // 5. ROSTER KERJA
         $rosters = ['5/2', '8/2', '10/2'];
-        foreach ($rosters as $item) {
+        foreach ($rosters as $index => $item) {
             DB::table('m_rosters')->updateOrInsert(
                 ['pattern' => $item],
-                ['is_active' => true, 'created_at' => $now, 'updated_at' => $now]
+                ['sort_order' => $index + 1, 'is_active' => true, 'created_at' => $now, 'updated_at' => $now]
             );
         }
 

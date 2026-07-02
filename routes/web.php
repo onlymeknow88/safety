@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\EmailGroupController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Auth\AzureAuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SafetyPerformanceController;
 use App\Http\Controllers\MasterData\Api\EmployeeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicApprovalController;
@@ -24,6 +25,7 @@ use App\Models\MasterData\InvestigationQuestion;
 use App\Models\MasterData\Jabatan;
 use App\Models\MasterData\JobFactor;
 use App\Models\MasterData\Location;
+use App\Models\MasterData\MobileEquipment;
 use App\Models\MasterData\PersonalFactor;
 use App\Models\MasterData\Recommendation;
 use App\Models\MasterData\Source;
@@ -187,17 +189,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/employee', function () {
             return Inertia::render('MasterData/Employee/Index');
         })->name('employee.index');
+        Route::get('/mobile-equipment', function () {
+            return Inertia::render('MasterData/MobileEquipment/Index');
+        })->name('mobile-equipment.index');
     });
 
     Route::prefix('accident-notification')->name('accident-notification.')->group(function () {
         Route::get('/', function () {
             $user = auth()->user();
             $isCrs = $user && (
-                $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') ||
+                $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin', 'hse admin', 'hse_admin') ||
                 ($user->employee && $user->employee->can_approve)
             );
 
-            $query = AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos']);
+            $query = AccidentNotification::with(['ccow', 'company', 'location', 'incidentType', 'photos', 'day']);
 
             // Filter data berdasarkan company_id jika bukan CRS/Approver
             if (! $isCrs && $user && $user->employee_id) {
@@ -228,9 +233,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', function () {
             $user = auth()->user();
             $isCrs = $user && (
-                $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') ||
+                $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin', 'hse admin', 'hse_admin') ||
                 ($user->employee && $user->employee->can_approve)
             );
+
+            if (!$isCrs && !$user->is_administrator) {
+                abort(403, 'Unauthorized action. LPKS/LPKL is only accessible by CRS, HSE Admin, and Approvers.');
+            }
 
             $query = InvestigationReport::with([
                 'accidentNotification.ccow',
@@ -240,6 +249,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 'accidentNotification.department',
                 'documents',
                 'approvals.approvedBy',
+                'mobileEquipment',
             ]);
 
             if (! $isCrs && $user && $user->employee_id) {
@@ -252,7 +262,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             $approvedNotificationsQuery = AccidentNotification::with([
                 'ccow', 'company', 'location', 'incidentType', 'photos', 'department',
-                'companyContractor', 'reporter', 'approver', 'status',
+                'companyContractor', 'reporter', 'approver', 'status', 'day',
             ])
                 ->where('status_id', 7); // 7 is Approved
 
@@ -280,6 +290,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     'jobFactors' => JobFactor::where('is_active', true)->get(),
                     'recommendations' => Recommendation::where('is_active', true)->get(),
                     'investigationQuestions' => InvestigationQuestion::where('is_active', true)->get(),
+                    'mobileEquipments' => MobileEquipment::where('is_active', true)->orderBy('sort_order')->get(),
                 ],
             ]);
         })->name('index');
@@ -289,6 +300,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', function () {
             return Inertia::render('Pica/Index');
         })->name('index');
+    });
+
+    Route::prefix('safety-performance')->name('safety-performance.')->group(function () {
+        Route::get('/', [SafetyPerformanceController::class, 'index'])->name('index');
+        Route::get('/export', [SafetyPerformanceController::class, 'export'])->name('export');
     });
 
     // Master Data Employee (API for Select2/Autocomplete)

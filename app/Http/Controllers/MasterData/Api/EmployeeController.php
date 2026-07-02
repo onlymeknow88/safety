@@ -45,7 +45,7 @@ class EmployeeController extends Controller
     {
         try {
             $search = $request->get('search');
-            $limit = $request->get('limit', 10);
+            $limit = $request->get('limit', 50);
             
             $query = Employee::with(['ccow', 'company', 'department', 'jabatan']);
 

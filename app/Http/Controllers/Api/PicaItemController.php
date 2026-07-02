@@ -18,6 +18,18 @@ class PicaItemController extends Controller
             $query->where('analisa_kecelakaan_id', $request->analisa_kecelakaan_id);
         }
 
+        $user = auth()->user();
+        $isCrs = $user && (
+            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin', 'hse admin', 'hse_admin') ||
+            ($user->employee && $user->employee->can_approve)
+        );
+
+        if (!$isCrs && $user && $user->employee_id) {
+            $query->whereHas('investigationReport.accidentNotification', function ($q) use ($user) {
+                $q->where('company_id', $user->employee->company_id);
+            });
+        }
+
         return response()->json([
             'data' => $query->get()
         ]);

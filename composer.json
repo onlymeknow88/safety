@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.27",
         "laravel/tinker": "^2.9",
+        "phpoffice/phpspreadsheet": "^5.8",
         "socialiteproviders/microsoft-azure": "^5.2",
         "tightenco/ziggy": "^2.0",
         "tymon/jwt-auth": "^2.3",

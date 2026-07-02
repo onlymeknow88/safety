@@ -81,6 +81,7 @@ export default function MasterDataIndex() {
                 { name: "Unsafe Condition", href: "/master-data/unsafe-condition" },
                 { name: "Personal Factor", href: "/master-data/personal-factor" },
                 { name: "Job Factor", href: "/master-data/job-factor" },
+                { name: "Jenis Mobile Equipment", href: "/master-data/mobile-equipment" },
                 { name: "Rekomendasi", href: "/master-data/recommendation" },
             ]
         }
@@ -112,7 +113,7 @@ export default function MasterDataIndex() {
                                     body: { padding: isMobile ? "16px" : "24px" }
                                 }}
                                 style={{ 
-                                    borderRadius: 16, 
+                                    borderRadius: 20, 
                                     background: isDarkMode ? "#1f1f1f" : "#fff",
                                     border: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
                                     height: '100%',

@@ -1,7 +1,7 @@
 import React from "react";
 import { Head } from "@inertiajs/react";
 import { Button, Space, Modal, App, Grid, Row, Col } from "antd";
-import { ReloadOutlined, ExclamationCircleOutlined, DeleteOutlined } from "@ant-design/icons";
+import { ReloadOutlined, ExclamationCircleOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { useTheme } from "@/Contexts/ThemeContext";
 import AccidentNotificationModal from "./Partials/AccidentNotificationModal";
@@ -26,6 +26,10 @@ export default function AccidentNotificationIndex({ master = {} }) {
         loading,
         searchText,
         handleSearchChange,
+        companyFilter,
+        setCompanyFilter,
+        ccowFilter,
+        setCcowFilter,
         isModalVisible,
         setIsModalVisible,
         modalMode,
@@ -80,8 +84,10 @@ export default function AccidentNotificationIndex({ master = {} }) {
                                 icon={<ReloadOutlined />} 
                                 onClick={() => fetchItems()}
                                 loading={loading}
-                                style={{ borderRadius: 10 }}
-                            />
+                                style={{ borderRadius: 10, fontWeight: 700 }}
+                            >
+                                Muat Ulang
+                            </Button>
                         </Space>
                     </Col>
                 </Row>
@@ -122,6 +128,11 @@ export default function AccidentNotificationIndex({ master = {} }) {
                 <AccidentNotificationHeader 
                     searchText={searchText}
                     onSearchChange={handleSearchChange}
+                    companyFilter={companyFilter}
+                    setCompanyFilter={setCompanyFilter}
+                    ccowFilter={ccowFilter}
+                    setCcowFilter={setCcowFilter}
+                    master={master}
                     onAddClick={handleAdd}
                     canCreate={canCreate}
                     isDarkMode={isDarkMode}

@@ -21,9 +21,13 @@ export default function useInvestigationReport(initialReports = []) {
     const isAdministrator = auth?.user?.is_administrator || false;
     const userRoles = (auth?.user?.roles || []).map(r => r.toLowerCase());
 
-    const canCreate = isAdministrator || permissions.includes("investigation-report.create") || userRoles.includes("crs") || userRoles.includes("mitra kerja") || userRoles.includes("dept ohs") || userRoles.includes("dept env");
-    const canEdit = isAdministrator || permissions.includes("investigation-report.edit") || userRoles.includes("crs") || userRoles.includes("dept ohs") || userRoles.includes("dept env");
-    const canDelete = isAdministrator || permissions.includes("investigation-report.delete") || userRoles.includes("crs");
+    const isCrs = userRoles.includes("crs");
+    const isHseAdminOrAdmin = isAdministrator || userRoles.includes("admin") || userRoles.includes("superadmin") || userRoles.includes("super-admin") || userRoles.includes("hse admin") || userRoles.includes("hse_admin");
+    const hasFullAccess = isCrs || isHseAdminOrAdmin;
+
+    const canCreate = hasFullAccess;
+    const canEdit = hasFullAccess;
+    const canDelete = hasFullAccess;
     
     // Check if user is an approver at any level
     const canApprove = isAdministrator || auth?.user?.can_approve || userRoles.includes("ktt") || userRoles.includes("ohs_dh") || userRoles.includes("env_dh") || userRoles.includes("pja") || userRoles.includes("crs");
@@ -65,9 +69,8 @@ export default function useInvestigationReport(initialReports = []) {
     // Incident Analysis States
     const [incidentTypeId, setIncidentTypeId] = useState(null);
     const [sourceId, setSourceId] = useState(null);
-    const [mobileEquipment, setMobileEquipment] = useState("");
+    const [mobileEquipmentId, setMobileEquipmentId] = useState(null);
     const [workExperienceIntervalId, setWorkExperienceIntervalId] = useState(null);
-    const [hourOfShift, setHourOfShift] = useState("");
     const [injuryConditionId, setInjuryConditionId] = useState(null);
     const [bodyPartId, setBodyPartId] = useState(null);
     const [environmentalPollutionQty, setEnvironmentalPollutionQty] = useState(0);
@@ -130,10 +133,13 @@ export default function useInvestigationReport(initialReports = []) {
     };
 
     // CRUD Actions
-    const handleAdd = () => {
+    const handleAdd = (preselectedNotification = null) => {
         setEditingItem(null);
         setModalMode("add");
         resetForm();
+        if (preselectedNotification) {
+            setSelectedNotification(preselectedNotification);
+        }
         setIsModalVisible(true);
     };
 
@@ -187,9 +193,8 @@ export default function useInvestigationReport(initialReports = []) {
 
         setIncidentTypeId(null);
         setSourceId(null);
-        setMobileEquipment("");
+        setMobileEquipmentId(null);
         setWorkExperienceIntervalId(null);
-        setHourOfShift("");
         setInjuryConditionId(null);
         setBodyPartId(null);
         setEnvironmentalPollutionQty(0);
@@ -214,9 +219,8 @@ export default function useInvestigationReport(initialReports = []) {
 
         setIncidentTypeId(record.incident_type_id || null);
         setSourceId(record.source_id || null);
-        setMobileEquipment(record.mobile_equipment || "");
+        setMobileEquipmentId(record.mobile_equipment_id || null);
         setWorkExperienceIntervalId(record.work_experience_interval_id || null);
-        setHourOfShift(record.hour_of_shift || "");
         setInjuryConditionId(record.injury_condition_id || null);
         setBodyPartId(record.body_part_id || null);
         setEnvironmentalPollutionQty(record.environmental_pollution_qty || 0);
@@ -260,9 +264,8 @@ export default function useInvestigationReport(initialReports = []) {
 
         fd.append("incident_type_id", incidentTypeId || "");
         fd.append("source_id", sourceId || "");
-        fd.append("mobile_equipment", mobileEquipment || "");
+        fd.append("mobile_equipment_id", mobileEquipmentId || "");
         fd.append("work_experience_interval_id", workExperienceIntervalId || "");
-        fd.append("hour_of_shift", hourOfShift || "");
         fd.append("injury_condition_id", injuryConditionId || "");
         fd.append("body_part_id", bodyPartId || "");
         fd.append("environmental_pollution_qty", environmentalPollutionQty || 0);
@@ -603,7 +606,7 @@ export default function useInvestigationReport(initialReports = []) {
                         </Text>
                     );
                 },
-                meta: { width: 150 },
+                meta: { width: 180 },
             },
             {
                 header: "JUDUL INSIDEN",
@@ -669,7 +672,7 @@ export default function useInvestigationReport(initialReports = []) {
                         </div>
                     );
                 },
-                meta: { align: "center", width: 140 },
+                meta: { align: "center", width: 100 },
             },
             {
                 header: "AKSI",
@@ -732,7 +735,7 @@ export default function useInvestigationReport(initialReports = []) {
                         </Space>
                     );
                 },
-                meta: { align: "center", width: 160 },
+                meta: { align: "center", width: 130 },
             },
         ],
         [
@@ -813,12 +816,10 @@ export default function useInvestigationReport(initialReports = []) {
         setIncidentTypeId,
         sourceId,
         setSourceId,
-        mobileEquipment,
-        setMobileEquipment,
+        mobileEquipmentId,
+        setMobileEquipmentId,
         workExperienceIntervalId,
         setWorkExperienceIntervalId,
-        hourOfShift,
-        setHourOfShift,
         injuryConditionId,
         setInjuryConditionId,
         bodyPartId,

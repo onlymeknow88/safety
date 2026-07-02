@@ -17,7 +17,7 @@ export default function UserHeader({
                 marginBottom: 24,
                 background: isDarkMode ? "#1f1f1f" : "#fff",
                 padding: "16px 24px",
-                borderRadius: 16,
+                borderRadius: 20,
                 boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
             }}
         >

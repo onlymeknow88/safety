@@ -100,32 +100,38 @@ export default function PicaIndex({ auth }) {
             title: 'LPKS/LPKL',
             dataIndex: ['investigation_report', 'report_number'],
             key: 'report_number',
+            width: 180,
         },
         {
             title: 'Problem Identification',
             dataIndex: 'problem_identification',
             key: 'problem_identification',
+            ellipsis: true,
         },
         {
             title: 'Corrective Action',
             dataIndex: 'corrective_action',
             key: 'corrective_action',
+            ellipsis: true,
         },
         {
             title: 'PIC',
             dataIndex: 'pic',
             key: 'pic',
+            width: 150,
         },
         {
             title: 'Due Date',
             dataIndex: 'due_date',
             key: 'due_date',
+            width: 110,
             render: (text) => text ? dayjs(text).format('DD MMM YYYY') : '-',
         },
         {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
+            width: 100,
             render: (status) => {
                 let color = status === 'Closed' ? 'green' : (status === 'In Progress' ? 'blue' : 'orange');
                 return <Tag color={color}>{status}</Tag>;
@@ -134,6 +140,7 @@ export default function PicaIndex({ auth }) {
         {
             title: 'Aksi',
             key: 'action',
+            width: 130,
             render: (_, record) => (
                 <Space size="middle">
                     <Button type="primary" icon={<EditOutlined />} onClick={() => handleEdit(record)} size="small" />
@@ -158,6 +165,7 @@ export default function PicaIndex({ auth }) {
                             dataSource={data} 
                             rowKey="id" 
                             loading={loading}
+                            scroll={{ x: 'max-content' }}
                         />
                     </Card>
                 </div>

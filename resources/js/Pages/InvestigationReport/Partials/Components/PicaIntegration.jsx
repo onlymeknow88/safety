@@ -98,14 +98,14 @@ export default function PicaIntegration({
             width: 200,
             render: (value, record) => (
                 <Select
-                    value={value}
+                    value={value ? String(value) : undefined}
                     onChange={(val) => handleFieldChange(record.cause_code, "recommendation_id", val)}
                     placeholder="Pilih rekomendasi..."
                     disabled={disabled}
                     style={{ width: "100%" }}
                     options={recommendations.map(r => ({
                         label: r.name,
-                        value: r.id
+                        value: String(r.id)
                     }))}
                 />
             )

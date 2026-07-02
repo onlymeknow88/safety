@@ -4,12 +4,6 @@ import { InboxOutlined, DeleteOutlined } from "@ant-design/icons";
 
 export default function DocumentUploadSection({ fileList, setFileList, disabled, isDarkMode }) {
     const props = {
-        onRemove: (file) => {
-            const index = fileList.indexOf(file);
-            const newFileList = fileList.slice();
-            newFileList.splice(index, 1);
-            setFileList(newFileList);
-        },
         beforeUpload: (file) => {
             const isLt5M = file.size / 1024 / 1024 < 5;
             if (!isLt5M) {
@@ -43,8 +37,10 @@ export default function DocumentUploadSection({ fileList, setFileList, disabled,
                 return Upload.LIST_IGNORE;
             }
 
-            setFileList([...fileList, file]);
             return false; // prevent auto upload
+        },
+        onChange: ({ fileList: newFileList }) => {
+            setFileList(newFileList);
         },
         fileList,
         multiple: true,

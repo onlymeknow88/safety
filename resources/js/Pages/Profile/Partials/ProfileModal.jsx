@@ -67,17 +67,17 @@ export default function ProfileModal({ visible, onCancel }) {
         body: {
             padding: '0',
             overflow: 'hidden',
-            borderRadius: '24px',
+            borderRadius: '20px',
             background: isDarkMode ? '#1e293b' : '#fff',
         },
         content: {
-            borderRadius: '24px',
+            borderRadius: '20px',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         }
     };
 
     const inputStyle = {
-        borderRadius: '12px',
+        borderRadius: '10px',
         padding: '10px 16px',
         fontSize: '14px',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -289,7 +289,7 @@ export default function ProfileModal({ visible, onCancel }) {
                                             size="large"
                                             style={{ 
                                                 height: 52, 
-                                                borderRadius: '16px', 
+                                                borderRadius: '10px', 
                                                 fontWeight: 800, 
                                                 marginTop: 16,
                                                 background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
@@ -370,7 +370,7 @@ export default function ProfileModal({ visible, onCancel }) {
                                             size="large"
                                             style={{ 
                                                 height: 52, 
-                                                borderRadius: '16px', 
+                                                borderRadius: '10px', 
                                                 fontWeight: 800, 
                                                 marginTop: 16,
                                                 background: 'linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)',

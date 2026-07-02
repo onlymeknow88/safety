@@ -73,7 +73,7 @@ export default function AccidentApproval({ accident }) {
         return (
             <div style={{ minHeight: '100vh', background: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
                 <Head title={isApproved ? "Approval Selesai" : "Laporan Dikembalikan"} />
-                <Card style={{ maxWidth: 600, width: '100%', borderRadius: 16, boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
+                <Card style={{ maxWidth: 600, width: '100%', borderRadius: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
                     <Result
                         status={isApproved ? "success" : "warning"}
                         title={isApproved ? "Laporan Sudah Disetujui" : "Laporan Sudah Dikembalikan"}
@@ -107,7 +107,7 @@ export default function AccidentApproval({ accident }) {
                 <Row gutter={[24, 24]}>
                     {/* Left: Detail Section */}
                     <Col xs={24} lg={16}>
-                        <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+                        <Card bordered={false} style={{ borderRadius: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
                                 <div>
                                     <Text type="secondary" style={{ fontSize: 12, fontWeight: 700 }}>NOMOR NOTIFIKASI</Text>
@@ -162,7 +162,7 @@ export default function AccidentApproval({ accident }) {
                         {!isVerified ? (
                             <Card 
                                 title={<Space><LockOutlined /> Verifikasi Identitas</Space>}
-                                style={{ borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0' }}
+                                style={{ borderRadius: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0' }}
                             >
                                 <Paragraph type="secondary" style={{ fontSize: 13 }}>
                                     Masukkan NIK atau Email Anda untuk memverifikasi hak akses approval.
@@ -184,7 +184,7 @@ export default function AccidentApproval({ accident }) {
                         ) : (
                             <Card 
                                 title={<Space><CheckCircleOutlined /> Keputusan Approval</Space>}
-                                style={{ borderRadius: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.1)', border: '1px solid #1677ff' }}
+                                style={{ borderRadius: 20, boxShadow: '0 10px 30px rgba(0,0,0,0.1)', border: '1px solid #1677ff' }}
                             >
                                 <Paragraph type="secondary" style={{ fontSize: 13 }}>
                                     Anda memverifikasi sebagai: <br />

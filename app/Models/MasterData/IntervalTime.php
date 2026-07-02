@@ -7,5 +7,5 @@ use Illuminate\Database\Eloquent\Model;
 class IntervalTime extends Model
 {
     protected $table = 'm_interval_times';
-    protected $fillable = ['label', 'is_active'];
+    protected $fillable = ['label', 'is_active', 'sort_order'];
 }

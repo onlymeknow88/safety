@@ -129,7 +129,7 @@ export default function ChronologySection({ incidentFacts, setIncidentFacts, cor
                         maxLength={1000}
                         style={{
                             background: isDarkMode ? 'rgba(255,255,255,0.02)' : '#f8fafc',
-                            borderRadius: 16,
+                            borderRadius: 20,
                             padding: '16px 20px',
                             border: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
                             fontSize: 14,

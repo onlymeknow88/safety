@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Col, DatePicker, Form, Modal, Row, Select, Space, Switch, Tag } from "antd";
+import { Alert, Button, Card, Col, DatePicker, Form, Modal, Row, Select, Space, Switch, Tag, Drawer, Grid } from "antd";
 import React, { useEffect } from "react";
 import { usePage } from "@inertiajs/react";
 
@@ -28,7 +28,9 @@ export default function AccidentNotificationModal({
     const [form] = Form.useForm();
     const isDetail = mode === 'detail';
     const authUser = usePage().props.auth.user;
-    
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.md;
+
     // Debugging (bisa dihapus setelah ok)
     // console.log('Auth User:', authUser);
     // console.log('Initial Values Status ID:', initialValues?.status_id);
@@ -38,20 +40,20 @@ export default function AccidentNotificationModal({
     // canApprove strictly follows role permissions for the ACTION
     const canApproveAction = isAdministrator || permissions.includes("accident-notification.approval");
 
-    const showApproveButton = isDetail && 
-        (initialValues?.status_id == 3 || initialValues?.status_id == 6 || initialValues?.status?.name?.toLowerCase() === 'submitted') && 
+    const showApproveButton = isDetail &&
+        (initialValues?.status_id == 3 || initialValues?.status_id == 6 || initialValues?.status?.name?.toLowerCase() === 'submitted') &&
         canApproveAction;
 
     const getStatusColor = () => {
         const name = initialValues?.status?.name?.toLowerCase() || "";
         const id = initialValues?.status_id;
-        
-        if (name.includes("approved") || name.includes("closed") || id == 7) return { color: "#059669", bg: "#ecfdf5" };
-        if (name.includes("submitted") || id == 6) return { color: "#2563eb", bg: "#eff6ff" };
-        if (name.includes("open") || id == 3) return { color: "#0891b2", bg: "#ecfeff" };
-        if (name.includes("return") || id == 8) return { color: "#d97706", bg: "#fffbeb" }; // Amber
-        if (name.includes("overdue")) return { color: "#dc2626", bg: "#fef2f2" };
-        return { color: "#64748b", bg: "#f8fafc" }; // Draft/Default
+
+        if (name.includes("approved") || name.includes("closed") || id == 7) return { color: "#6CBB5D", bg: "#f0fdf4" };
+        if (name.includes("submitted") || id == 6) return { color: "#0F828A", bg: "#f0fdfa" };
+        if (name.includes("open") || id == 3) return { color: "#0F828A", bg: "#f0fdfa" };
+        if (name.includes("return") || id == 8) return { color: "#ED832D", bg: "#fff7ed" }; // Orange Care
+        if (name.includes("overdue")) return { color: "#ef4444", bg: "#fef2f2" };
+        return { color: "#7EA7B2", bg: "#f8fafc" }; // Draft/Default
     };
 
     const statusStyle = getStatusColor();
@@ -59,7 +61,7 @@ export default function AccidentNotificationModal({
     const userRoles = (authUser?.roles || []).map(r => r.toLowerCase());
     const isCrs = userRoles.includes('crs');
     const isApproved = initialValues?.status_id == 7;
-    
+
 
     const {
         isHpri, setIsHpri,
@@ -104,7 +106,7 @@ export default function AccidentNotificationModal({
         if (visible && !isDetail) {
             const actual = severity.actual_k3;
             const potential = severity.potential_k3;
-            
+
             let type = null;
             // Rules:
             // LPKL: Actual 4,5 OR Potential 3,4,5
@@ -114,7 +116,7 @@ export default function AccidentNotificationModal({
             } else if ((actual === 1 || actual === 2) && (potential === 1 || potential === 2 || potential === 3)) {
                 type = 'LPKS';
             }
-            
+
             // Only overwrite if type is found, or if we are in 'add' mode,
             // or if the user has changed the severity levels from their initial database values.
             const hasChanged = initialValues ? (
@@ -130,21 +132,42 @@ export default function AccidentNotificationModal({
         }
     }, [severity.actual_k3, severity.potential_k3, visible, isDetail, mode, initialValues]);
 
+    useEffect(() => {
+        if (visible && !isDetail) {
+            const hasPotentialAbove3 = 
+                (severity.potential_k3 > 3) ||
+                (severity.potential_kk > 3) ||
+                (severity.potential_lh > 3) ||
+                (severity.potential_ksl > 3) ||
+                (severity.potential_pp > 3);
+            setIsHpri(hasPotentialAbove3);
+        }
+    }, [
+        severity.potential_k3,
+        severity.potential_kk,
+        severity.potential_lh,
+        severity.potential_ksl,
+        severity.potential_pp,
+        visible,
+        isDetail,
+        setIsHpri
+    ]);
+
     const cardStyle = {
         marginBottom: 24,
         borderRadius: 20,
-        border: isDarkMode ? '1px solid #334155' : '1px solid #e2e8f0',
-        background: isDarkMode ? "#1e293b" : "#ffffff",
-        boxShadow: isDarkMode ? "0 4px 6px -1px rgba(0,0,0,0.2)" : "0 4px 6px -1px rgba(0,0,0,0.05)",
+        border: isDarkMode ? '1px solid #034561' : '1px solid #e2e8f0',
+        background: isDarkMode ? "#02374e" : "#ffffff",
+        boxShadow: isDarkMode ? "0 4px 12px rgba(1, 43, 61, 0.5)" : "0 4px 12px rgba(15, 130, 138, 0.05)",
         overflow: 'hidden'
     };
 
     const headerTitleStyle = {
         margin: 0,
         fontWeight: 900,
-        fontSize: 32,
+        fontSize: 28,
         letterSpacing: '-0.02em',
-        color: isDarkMode ? '#f8fafc' : '#0f172a',
+        color: isDarkMode ? '#f8fafc' : '#013B52',
         lineHeight: 1.2
     };
 
@@ -161,22 +184,22 @@ export default function AccidentNotificationModal({
             footer={null}
             width={1200}
             style={{ top: 20 }}
-            styles={{ body: { padding: '32px 24px' } }}
+            styles={{ body: { padding: '32px 24px' }, content: { borderRadius: '20px', background: isDarkMode ? '#012b3d' : '#ffffff' } }}
             destroyOnHidden
             centered
         >
             <div style={{ padding: '0 8px' }}>
-                <Row justify="space-between" align="middle" style={{ marginBottom: 32, borderBottom: `2px solid ${isDarkMode ? '#334155' : '#f1f5f9'}`, paddingBottom: 24 }}>
+                <Row justify="space-between" align="middle" style={{ marginBottom: 32, borderBottom: `2px solid ${isDarkMode ? '#034561' : '#f1f5f9'}`, paddingBottom: 24 }}>
                     <Col>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
                             <h1 style={headerTitleStyle}>
                                 {getTitle()} NOTIFIKASI KECELAKAAN
                             </h1>
                             {initialValues?.status && (
-                                <Tag color={statusStyle.color} style={{ 
-                                    borderRadius: 6, 
-                                    fontSize: 12, 
-                                    fontWeight: 800, 
+                                <Tag color={statusStyle.color} style={{
+                                    borderRadius: 6,
+                                    fontSize: 12,
+                                    fontWeight: 800,
                                     padding: '4px 12px',
                                     border: 'none',
                                     background: `${statusStyle.color}15`,
@@ -189,14 +212,14 @@ export default function AccidentNotificationModal({
                         </div>
                         {showApproveButton && (
                             <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-                                <Button 
-                                    onClick={() => onReturn(initialValues)} 
-                                    loading={loading} 
-                                    style={{ 
-                                        color: "#d97706", 
-                                        borderColor: "#f59e0b", 
-                                        fontWeight: 700, 
-                                        borderRadius: 8, 
+                                <Button
+                                    onClick={() => onReturn(initialValues)}
+                                    loading={loading}
+                                    style={{
+                                        color: "#ED832D",
+                                        borderColor: "#ED832D",
+                                        fontWeight: 700,
+                                        borderRadius: 10,
                                         height: 38,
                                         padding: '0 16px',
                                         fontSize: 13
@@ -204,19 +227,19 @@ export default function AccidentNotificationModal({
                                 >
                                     Return for Correction
                                 </Button>
-                                <Button 
-                                    type="primary" 
-                                    onClick={() => onApprove(initialValues)} 
-                                    loading={loading} 
-                                    style={{ 
-                                        background: "linear-gradient(135deg, #059669 0%, #10b981 100%)", 
-                                        border: "none", 
-                                        fontWeight: 700, 
-                                        borderRadius: 8, 
-                                        height: 38, 
+                                <Button
+                                    type="primary"
+                                    onClick={() => onApprove(initialValues)}
+                                    loading={loading}
+                                    style={{
+                                        background: "linear-gradient(135deg, #6CBB5D 0%, #11713B 100%)",
+                                        border: "none",
+                                        fontWeight: 700,
+                                        borderRadius: 10,
+                                        height: 38,
                                         padding: '0 24px',
                                         fontSize: 13,
-                                        boxShadow: "0 4px 12px rgba(5, 150, 105, 0.15)"
+                                        boxShadow: "0 4px 12px rgba(108, 187, 93, 0.2)"
                                     }}
                                 >
                                     Approve Now
@@ -226,22 +249,22 @@ export default function AccidentNotificationModal({
                     </Col>
                     <Col style={{ textAlign: "right" }}>
                         <div style={{ marginBottom: 12 }}>
-                            <div style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 2 }}>
+                            <div style={{ color: isDarkMode ? '#7EA7B2' : '#64748b', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 2 }}>
                                 DOCUMENT ID
                             </div>
-                            <div style={{ color: '#3b82f6', fontSize: 13, fontWeight: 900 }}>
+                            <div style={{ color: '#0F828A', fontSize: 13, fontWeight: 900 }}>
                                 F-MAC-IMS-14-001 Rev. 4.0
                             </div>
                         </div>
                         {initialValues && (
                             <div style={{ display: 'flex', gap: 24, justifyContent: 'flex-end' }}>
                                 <div>
-                                    <div style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 2 }}>ACCIDENT NO</div>
+                                    <div style={{ color: isDarkMode ? '#7EA7B2' : '#64748b', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 2 }}>ACCIDENT NO</div>
                                     <div style={{ color: '#ef4444', fontSize: 16, fontWeight: 900 }}>{initialValues.accident_number}</div>
                                 </div>
                                 <div>
-                                    <div style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 2 }}>NOTIFICATION NO</div>
-                                    <div style={{ color: isDarkMode ? '#f8fafc' : '#1e293b', fontSize: 16, fontWeight: 900 }}>{initialValues.notification_number}</div>
+                                    <div style={{ color: isDarkMode ? '#7EA7B2' : '#64748b', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 2 }}>NOTIFICATION NO</div>
+                                    <div style={{ color: isDarkMode ? '#f8fafc' : '#013B52', fontSize: 16, fontWeight: 900 }}>{initialValues.notification_number}</div>
                                 </div>
                             </div>
                         )}
@@ -254,104 +277,33 @@ export default function AccidentNotificationModal({
                         description={<div style={{ fontWeight: 600, fontSize: 14, marginTop: 4 }}>{initialValues.approval_comment}</div>}
                         type="warning"
                         showIcon
-                        style={{ marginBottom: 32, borderRadius: 16, border: '1px solid #fde68a', background: '#fffbeb', padding: '16px 24px' }}
+                        style={{ marginBottom: 32, borderRadius: 20, border: '1px solid #ED832D', background: isDarkMode ? '#02374e' : '#fff7ed', padding: '16px 24px', color: isDarkMode ? '#cbd5e1' : undefined }}
                     />
                 )}
 
                 <Form form={form} layout="vertical" disabled={isDetail} className={isDetail ? 'readonly-form' : ''}>
                     <Row gutter={24}>
-                        <Col xs={24} lg={17}>
+                        <Col xs={24} lg={24}>
                             <Card
-                                title={<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <div style={{ width: 4, height: 16, background: '#3b82f6', borderRadius: 2 }}></div>
-                                    <span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800, letterSpacing: 0.5 }}>RINGKASAN INSIDEN</span>
-                                </div>}
-                                styles={{ 
-                                    header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px', minHeight: 56 },
+                                title={<span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#013B52', fontWeight: 800, letterSpacing: 0.5 }}>RINGKASAN INSIDEN</span>}
+                                styles={{
+                                    header: { borderBottom: isDarkMode ? '1px solid #034561' : '1px solid #f1f5f9', padding: '0 24px', minHeight: 56 },
                                     body: { padding: '24px' }
                                 }}
                                 style={cardStyle}
                             >
-                                <IncidentOverviewSection master={master} disabled={isDetail} />
+                                <IncidentOverviewSection master={master} disabled={isDetail} isHpri={isHpri} />
                             </Card>
-                        </Col>
-                        <Col xs={24} lg={7}>
-                            <div style={{
-                                display: 'flex', 
-                                flexDirection: 'column', 
-                                alignItems: 'center', 
-                                padding: '40px 24px', 
-                                borderRadius: 20,
-                                border: isHpri ? '2px solid #22c55e' : `2px dashed ${isDarkMode ? '#334155' : '#cbd5e1'}`,
-                                background: isHpri ? (isDarkMode ? 'rgba(34, 197, 94, 0.1)' : '#f0fdf4') : (isDarkMode ? '#1e293b' : '#ffffff'),
-                                height: 'auto', 
-                                marginBottom: 24, 
-                                minHeight: 300, 
-                                justifyContent: 'center',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                boxShadow: isHpri ? '0 10px 15px -3px rgba(34, 197, 94, 0.1)' : 'none'
-                            }}>
-                                <span style={{ 
-                                    fontSize: 12, 
-                                    fontWeight: 900, 
-                                    color: isHpri ? '#16a34a' : (isDarkMode ? '#94a3b8' : '#64748b'), 
-                                    textTransform: 'uppercase', 
-                                    letterSpacing: '3px', 
-                                    marginBottom: 16 
-                                }}>POTENSI BAHAYA TINGGI</span>
-                                
-                                <div style={{ 
-                                    fontSize: 56, 
-                                    fontWeight: 950, 
-                                    margin: '0 0 24px 0', 
-                                    color: isHpri ? '#16a34a' : (isDarkMode ? '#f8fafc' : '#0f172a'), 
-                                    lineHeight: 1,
-                                    letterSpacing: '-0.05em'
-                                }}>HPRI?</div>
-                                
-                                <Space align="center" style={{ marginBottom: 24 }}>
-                                    <Switch 
-                                        checked={isHpri} 
-                                        onChange={setIsHpri} 
-                                        size="large" 
-                                        style={{ 
-                                            background: isHpri ? '#22c55e' : '#94a3b8', 
-                                            transform: 'scale(1.4)' 
-                                        }} 
-                                        disabled={isDetail} 
-                                    />
-                                    <span style={{ 
-                                        fontSize: 24, 
-                                        fontWeight: 900, 
-                                        color: isHpri ? '#16a34a' : (isDarkMode ? '#94a3b8' : '#64748b'), 
-                                        marginLeft: 20,
-                                        width: 80
-                                    }}>{isHpri ? 'YA' : 'TIDAK'}</span>
-                                </Space>
-                                
-                                <p style={{ 
-                                    fontSize: 13, 
-                                    color: isHpri ? '#166534' : (isDarkMode ? '#94a3b8' : '#64748b'), 
-                                    margin: 0, 
-                                    textAlign: 'center', 
-                                    lineHeight: 1.6, 
-                                    fontWeight: 600,
-                                    maxWidth: 200
-                                }}>High Potential Risk Incident classification as per IMS-14-001</p>
-                            </div>
                         </Col>
                     </Row>
 
                     <Row gutter={24}>
                         <Col xs={24} md={12}>
-                            <Card 
-                                title={<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <div style={{ width: 4, height: 16, background: '#ef4444', borderRadius: 2 }}></div>
-                                    <span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800, letterSpacing: 0.5 }}>KEPARAHAN AKTUAL</span>
-                                </div>} 
+                            <Card
+                                title={<span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#013B52', fontWeight: 800, letterSpacing: 0.5 }}>KEPARAHAN AKTUAL</span>}
                                 style={cardStyle}
-                                styles={{ 
-                                    header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px' },
+                                styles={{
+                                    header: { borderBottom: isDarkMode ? '1px solid #034561' : '1px solid #f1f5f9', padding: '0 24px' },
                                     body: { padding: '24px' }
                                 }}
                             >
@@ -359,14 +311,11 @@ export default function AccidentNotificationModal({
                             </Card>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Card 
-                                title={<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <div style={{ width: 4, height: 16, background: '#f59e0b', borderRadius: 2 }}></div>
-                                    <span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800, letterSpacing: 0.5 }}>KEPARAHAN POTENSIAL</span>
-                                </div>} 
+                            <Card
+                                title={<span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#013B52', fontWeight: 800, letterSpacing: 0.5 }}>KEPARAHAN POTENSIAL</span>}
                                 style={cardStyle}
-                                styles={{ 
-                                    header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px' },
+                                styles={{
+                                    header: { borderBottom: isDarkMode ? '1px solid #034561' : '1px solid #f1f5f9', padding: '0 24px' },
                                     body: { padding: '24px' }
                                 }}
                             >
@@ -379,14 +328,11 @@ export default function AccidentNotificationModal({
 
                     <Row gutter={24}>
                         <Col xs={24} lg={16}>
-                            <Card 
-                                title={<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <div style={{ width: 4, height: 16, background: '#0ea5e9', borderRadius: 2 }}></div>
-                                    <span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800, letterSpacing: 0.5 }}>KRONOLOGI AWAL & FAKTA KEJADIAN</span>
-                                </div>} 
+                            <Card
+                                title={<span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#013B52', fontWeight: 800, letterSpacing: 0.5 }}>KRONOLOGI AWAL & FAKTA KEJADIAN</span>}
                                 style={cardStyle}
-                                styles={{ 
-                                    header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px' },
+                                styles={{
+                                    header: { borderBottom: isDarkMode ? '1px solid #034561' : '1px solid #f1f5f9', padding: '0 24px' },
                                     body: { padding: '24px' }
                                 }}
                             >
@@ -399,14 +345,11 @@ export default function AccidentNotificationModal({
                             </Card>
                         </Col>
                         <Col xs={24} lg={8}>
-                            <Card 
-                                title={<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <div style={{ width: 4, height: 16, background: '#f43f5e', borderRadius: 2 }}></div>
-                                    <span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800, letterSpacing: 0.5 }}>AKIBAT KECELAKAAN</span>
-                                </div>} 
+                            <Card
+                                title={<span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#013B52', fontWeight: 800, letterSpacing: 0.5 }}>AKIBAT KECELAKAAN</span>}
                                 style={cardStyle}
-                                styles={{ 
-                                    header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px' },
+                                styles={{
+                                    header: { borderBottom: isDarkMode ? '1px solid #034561' : '1px solid #f1f5f9', padding: '0 24px' },
                                     body: { padding: '24px' }
                                 }}
                             >
@@ -415,14 +358,11 @@ export default function AccidentNotificationModal({
                         </Col>
                     </Row>
 
-                    <Card 
-                        title={<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div style={{ width: 4, height: 16, background: '#6366f1', borderRadius: 2 }}></div>
-                            <span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800, letterSpacing: 0.5 }}>LAMPIRAN MEDIA (PHOTOS)</span>
-                        </div>} 
+                    <Card
+                        title={<span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#013B52', fontWeight: 800, letterSpacing: 0.5 }}>LAMPIRAN MEDIA (PHOTOS)</span>}
                         style={cardStyle}
-                        styles={{ 
-                            header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px' },
+                        styles={{
+                            header: { borderBottom: isDarkMode ? '1px solid #034561' : '1px solid #f1f5f9', padding: '0 24px' },
                             body: { padding: '24px' }
                         }}
                     >
@@ -432,11 +372,11 @@ export default function AccidentNotificationModal({
 
                     <Row gutter={24}>
                         <Col xs={24} md={12}>
-                            <div style={{ 
-                                background: isDarkMode ? 'rgba(59, 130, 246, 0.05)' : '#f8fafc', 
-                                padding: '32px', 
-                                borderRadius: 20, 
-                                border: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`, 
+                            <div style={{
+                                background: isDarkMode ? '#012535' : '#f8fafc',
+                                padding: '32px',
+                                borderRadius: 20,
+                                border: `1px solid ${isDarkMode ? '#034561' : '#e2e8f0'}`,
                                 marginBottom: 24,
                                 boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
                             }}>
@@ -444,11 +384,11 @@ export default function AccidentNotificationModal({
                             </div>
                         </Col>
                         <Col xs={24} md={12}>
-                            <div style={{ 
-                                background: isDarkMode ? 'rgba(59, 130, 246, 0.05)' : '#f8fafc', 
-                                padding: '32px', 
-                                borderRadius: 20, 
-                                border: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`, 
+                            <div style={{
+                                background: isDarkMode ? '#012535' : '#f8fafc',
+                                padding: '32px',
+                                borderRadius: 20,
+                                border: `1px solid ${isDarkMode ? '#034561' : '#e2e8f0'}`,
                                 marginBottom: 24,
                                 boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
                             }}>
@@ -458,38 +398,38 @@ export default function AccidentNotificationModal({
                     </Row>
 
                     {/* Metadata Section */}
-                    <div style={{ 
-                        marginTop: 16, 
-                        padding: '24px 32px', 
-                        borderRadius: 20, 
-                        background: isDarkMode ? '#0f172a' : '#f1f5f9', 
-                        border: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
+                    <div style={{
+                        marginTop: 16,
+                        padding: '24px 32px',
+                        borderRadius: 20,
+                        background: isDarkMode ? '#012535' : '#f1f5f9',
+                        border: `1px solid ${isDarkMode ? '#034561' : '#e2e8f0'}`,
                         fontSize: 13
                     }}>
                         <Row gutter={[32, 24]}>
                             <Col xs={24} sm={12} md={6}>
-                                <div style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5, fontSize: 11 }}>Created By</div>
-                                <div style={{ color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800 }}>
+                                <div style={{ color: isDarkMode ? '#7EA7B2' : '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5, fontSize: 11 }}>Created By</div>
+                                <div style={{ color: isDarkMode ? '#f8fafc' : '#013B52', fontWeight: 800 }}>
                                     {initialValues ? initialValues.created_by : authUser.name}
                                 </div>
                             </Col>
                             <Col xs={24} sm={12} md={6}>
-                                <div style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5, fontSize: 11 }}>Created At</div>
-                                <div style={{ color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800 }}>
+                                <div style={{ color: isDarkMode ? '#7EA7B2' : '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5, fontSize: 11 }}>Created At</div>
+                                <div style={{ color: isDarkMode ? '#f8fafc' : '#013B52', fontWeight: 800 }}>
                                     {initialValues ? dayjs(initialValues.created_at).format('DD MMM YYYY, HH:mm') : dayjs().format('DD MMM YYYY, HH:mm')}
                                 </div>
                             </Col>
                             {initialValues && (
                                 <>
                                     <Col xs={24} sm={12} md={6}>
-                                        <div style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5, fontSize: 11 }}>Updated By</div>
-                                        <div style={{ color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800 }}>
+                                        <div style={{ color: isDarkMode ? '#7EA7B2' : '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5, fontSize: 11 }}>Updated By</div>
+                                        <div style={{ color: isDarkMode ? '#f8fafc' : '#013B52', fontWeight: 800 }}>
                                             {initialValues.updated_by || '-'}
                                         </div>
                                     </Col>
                                     <Col xs={24} sm={12} md={6}>
-                                        <div style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5, fontSize: 11 }}>Updated At</div>
-                                        <div style={{ color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800 }}>
+                                        <div style={{ color: isDarkMode ? '#7EA7B2' : '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6, letterSpacing: 0.5, fontSize: 11 }}>Updated At</div>
+                                        <div style={{ color: isDarkMode ? '#f8fafc' : '#013B52', fontWeight: 800 }}>
                                             {dayjs(initialValues.updated_at).format('DD MMM YYYY, HH:mm')}
                                         </div>
                                     </Col>
@@ -497,10 +437,9 @@ export default function AccidentNotificationModal({
                             )}
                         </Row>
                     </div>
+        </Form>
 
-                </Form>
-
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, paddingTop: 40, marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, paddingTop: 40, borderTop: `1px solid ${isDarkMode ? '#034561' : '#e2e8f0'}`, marginBottom: 16 }}>
                     <Button onClick={onCancel} style={{ borderRadius: 10, fontWeight: 700, padding: '0 24px', height: 40, fontSize: 14 }}>
                         {isDetail ? 'Close' : 'Cancel'}
                     </Button>
@@ -510,19 +449,19 @@ export default function AccidentNotificationModal({
                             <Button onClick={() => onFinish(form, 'draft')} loading={loading} style={{ borderRadius: 10, fontWeight: 700, padding: '0 24px', height: 40, fontSize: 14 }}>
                                 Save As Draft
                             </Button>
-                            <Button 
-                                type="primary" 
-                                onClick={() => onFinish(form, 'submitted')} 
-                                loading={loading} 
-                                style={{ 
-                                    background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", 
-                                    border: "none", 
-                                    fontWeight: 700, 
-                                    borderRadius: 10, 
-                                    padding: '0 40px', 
-                                    height: 40, 
+                            <Button
+                                type="primary"
+                                onClick={() => onFinish(form, 'submitted')}
+                                loading={loading}
+                                style={{
+                                    background: "linear-gradient(135deg, #0F828A 0%, #005C96 100%)",
+                                    border: "none",
+                                    fontWeight: 700,
+                                    borderRadius: 10,
+                                    padding: '0 40px',
+                                    height: 40,
                                     fontSize: 14,
-                                    boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.2)" 
+                                    boxShadow: "0 4px 12px rgba(15, 130, 138, 0.3)"
                                 }}
                             >
                                 Submit Notification
@@ -540,7 +479,7 @@ export default function AccidentNotificationModal({
                 .readonly-form .ant-picker-disabled input,
                 .readonly-form .ant-checkbox-disabled + span,
                 .readonly-form .ant-radio-disabled + span {
-                    color: ${isDarkMode ? '#f8fafc' : '#0f172a'} !important;
+                    color: ${isDarkMode ? '#f8fafc' : '#013B52'} !important;
                     background-color: transparent !important;
                     cursor: default !important;
                     border-color: transparent !important;
@@ -553,12 +492,12 @@ export default function AccidentNotificationModal({
                     display: none !important;
                 }
                 .readonly-form .ant-form-item-label > label {
-                    color: ${isDarkMode ? '#94a3b8' : '#64748b'} !important;
+                    color: ${isDarkMode ? '#7EA7B2' : '#64748b'} !important;
                 }
                 .readonly-form .ant-switch-disabled {
                     opacity: 0.8 !important;
                 }
-                .readonly-form .ant-btn-icon-only, 
+                .readonly-form .ant-btn-icon-only,
                 .readonly-form .ant-btn-dashed {
                     display: none !important;
                 }
@@ -569,7 +508,7 @@ export default function AccidentNotificationModal({
                     padding-bottom: 8px !important;
                 }
                 .ant-input, .ant-select-selector, .ant-picker {
-                    border-radius: 8px !important;
+                    border-radius: 10px !important;
                 }
             `}</style>
         </Modal>

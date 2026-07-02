@@ -19,6 +19,7 @@ use App\Http\Controllers\MasterData\Api\IntervalAgeController;
 use App\Http\Controllers\MasterData\Api\IntervalExperienceController;
 use App\Http\Controllers\MasterData\Api\IntervalTimeController;
 use App\Http\Controllers\MasterData\Api\JabatanController;
+use App\Http\Controllers\MasterData\Api\MobileEquipmentController;
 use App\Http\Controllers\MasterData\Api\JobFactorController;
 use App\Http\Controllers\MasterData\Api\KriteriaController;
 use App\Http\Controllers\MasterData\Api\LocationController;
@@ -77,6 +78,7 @@ Route::middleware('auth:api')->name('api.')->group(function () {
     Route::apiResource('job-factor', JobFactorController::class);
     Route::apiResource('location', LocationController::class);
     Route::apiResource('employee', EmployeeController::class);
+    Route::apiResource('mobile-equipment', MobileEquipmentController::class);
 
     // Accident Notification
     Route::post('accident-notification/{id}/approve', [AccidentNotificationController::class, 'approve']);
@@ -99,4 +101,12 @@ Route::middleware('auth:api')->name('api.')->group(function () {
 
     // PICA
     Route::apiResource('pica', \App\Http\Controllers\Api\PicaItemController::class);
+
+    // Safety Performance API
+    Route::get('safety-performance', [\App\Http\Controllers\Api\SafetyPerformanceController::class, 'index']);
+    Route::post('safety-performance/sync', [\App\Http\Controllers\Api\SafetyPerformanceController::class, 'sync']);
+    Route::post('safety-performance/update', [\App\Http\Controllers\Api\SafetyPerformanceController::class, 'update']);
+
+    // Dashboard API
+    Route::get('dashboard', [\App\Http\Controllers\Api\DashboardController::class, 'index']);
 });

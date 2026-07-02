@@ -78,7 +78,8 @@ export default function FrequencyRateChart({ data = [], isDarkMode }) {
                 display: false,
                 grid: {
                     display: false
-                }
+                },
+                suggestedMax: Math.max(...values, 0) * 1.15 || 10,
             }
         }
     };
@@ -88,7 +89,7 @@ export default function FrequencyRateChart({ data = [], isDarkMode }) {
             style={{
                 background: cardBg,
                 border: cardBorder,
-                borderRadius: 16,
+                borderRadius: 20,
                 boxShadow: "0 4px 20px -2px rgba(0,0,0,0.05)",
                 marginBottom: 24,
                 overflow: "hidden"

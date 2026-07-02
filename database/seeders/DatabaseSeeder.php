@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             AppSettingSeeder::class,
             EmployeeSeeder::class,
+            ManhourSeeder::class,
             UserApprovalSeeder::class,
             InvestigationRoleSeeder::class,
             AccidentNotificationSampleSeeder::class,

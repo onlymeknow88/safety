@@ -28,16 +28,21 @@ class AccidentNotificationController extends Controller
         $load = $request->load ?? 10;
         $user = auth('api')->user();
 
-        // Cek apakah user memiliki role CRS, superadmin, atau memiliki hak akses approval
         $isCrs = $user && (
-            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') ||
+            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin', 'hse admin', 'hse_admin') ||
             ($user->employee && $user->employee->can_approve)
         );
 
-        $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status', 'department', 'companyContractor', 'reporter', 'approver'])
+        $query = AccidentNotification::with(['photos', 'ccow', 'company', 'location', 'incidentType', 'status', 'department', 'companyContractor', 'reporter', 'approver', 'investigationReport', 'day'])
             // Filter berdasarkan company_id jika bukan CRS/Approver
             ->when(!$isCrs && $user && $user->employee_id, function($q) use ($user) {
                 return $q->where('company_id', $user->employee->company_id);
+            })
+            ->when($request->company_id, function($q) use ($request) {
+                return $q->where('company_id', $request->company_id);
+            })
+            ->when($request->ccow_id, function($q) use ($request) {
+                return $q->where('ccow_id', $request->ccow_id);
             })
             ->when($search, fn ($q) => $q
                 ->where(function($sq) use ($search) {
@@ -154,7 +159,7 @@ class AccidentNotificationController extends Controller
             ($user->employee && $user->employee->can_approve)
         );
 
-        $query = AccidentNotification::with(['photos', 'location', 'ccow', 'company', 'incidentType', 'department', 'companyContractor', 'reporter', 'approver']);
+        $query = AccidentNotification::with(['photos', 'location', 'ccow', 'company', 'incidentType', 'department', 'companyContractor', 'reporter', 'approver', 'day']);
 
         // Filter detail jika bukan CRS/Approver
         if (!$isCrs && $user && $user->employee_id) {
@@ -333,7 +338,7 @@ class AccidentNotificationController extends Controller
      */
     public function exportPdf(Request $request, string $id)
     {
-        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos', 'department', 'companyContractor', 'reporter', 'approver'])->find($id);
+        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos', 'department', 'companyContractor', 'reporter', 'approver', 'day'])->find($id);
 
         if (! $record) {
             return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
@@ -395,9 +400,9 @@ class AccidentNotificationController extends Controller
             return SafetyResponse::error(null, 'Data tidak ditemukan', 404);
         }
 
-        // Cari status 'Return' (biasanya ID 8)
+        // Cari status 'Returned' (biasanya ID 10)
         $status = Status::where('name', 'like', '%return%')->first();
-        $statusId = $status ? $status->id : 8;
+        $statusId = $status ? $status->id : 10;
 
         $record->update([
             'status_id' => $statusId,
@@ -425,7 +430,7 @@ class AccidentNotificationController extends Controller
             return SafetyResponse::error($validator->errors(), 'Validasi Gagal', 422);
         }
 
-        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos', 'department', 'companyContractor', 'reporter', 'approver'])->find($request->accident_id);
+        $record = AccidentNotification::with(['ccow', 'location', 'incidentType', 'company', 'photos', 'department', 'companyContractor', 'reporter', 'approver', 'day'])->find($request->accident_id);
 
         // 1. Generate PDF
         $pdf = Pdf::loadView('pdf.accident_notification', compact('record'));

@@ -26,9 +26,8 @@ class InvestigationReportController extends Controller
         $load = $request->load ?? 10;
         $user = auth('api')->user();
 
-        // Check if user is CRS, admin, super-admin, or approver
         $isCrs = $user && (
-            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin') ||
+            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin', 'hse admin', 'hse_admin') ||
             ($user->employee && $user->employee->can_approve)
         );
 
@@ -44,12 +43,23 @@ class InvestigationReportController extends Controller
             'source',
             'workExperienceInterval',
             'injuryCondition',
-            'bodyPart'
+            'bodyPart',
+            'mobileEquipment'
         ])
         // Filter by company if not CRS
         ->when(!$isCrs && $user && $user->employee_id, function ($q) use ($user) {
             $q->whereHas('accidentNotification', function ($sq) use ($user) {
                 $sq->where('company_id', $user->employee->company_id);
+            });
+        })
+        ->when($request->company_id, function ($q) use ($request) {
+            $q->whereHas('accidentNotification', function ($sq) use ($request) {
+                $sq->where('company_id', $request->company_id);
+            });
+        })
+        ->when($request->ccow_id, function ($q) use ($request) {
+            $q->whereHas('accidentNotification', function ($sq) use ($request) {
+                $sq->where('ccow_id', $request->ccow_id);
             });
         })
         // Search by report number or associated notification/accident number
@@ -84,7 +94,7 @@ class InvestigationReportController extends Controller
             'documents.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,ppt,pptx,xls,xlsx|max:5120', // Max 5MB per file
             'incident_type_id' => 'nullable|exists:m_incident_types,id',
             'source_id' => 'nullable|exists:m_sources,id',
-            'mobile_equipment' => 'nullable|string',
+            'mobile_equipment_id' => 'nullable|exists:m_mobile_equipments,id',
             'work_experience_interval_id' => 'nullable|exists:m_interval_experiences,id',
             'hour_of_shift' => 'nullable|string',
             'injury_condition_id' => 'nullable|exists:m_injury_conditions,id',
@@ -115,8 +125,8 @@ class InvestigationReportController extends Controller
             $data['updated_by'] = $user->name ?? 'System';
             $data['is_environmental'] = $request->boolean('is_environmental');
             $data['safe_draft'] = $request->boolean('safe_draft', true);
-            $data['current_approval_level'] = 'KTT'; // Default level approval dimulai dari KTT
-            $data['investigation_status'] = $data['safe_draft'] ? 'Draft' : 'Waiting for KTT';
+            $data['current_approval_level'] = 'PJA'; // Default level approval dimulai dari PJA
+            $data['investigation_status'] = $data['safe_draft'] ? 'Draft' : 'Waiting for PJA';
 
             $report = InvestigationReport::create($data);
 
@@ -134,11 +144,10 @@ class InvestigationReportController extends Controller
                 }
             }
 
-            // Inisialisasi approval log per level
-            $levels = ['KTT', 'OHS_DH', 'PJA'];
+            // Inisialisasi approval log per level (PJA -> ENV_DH -> OHS_DH -> KTT)
+            $levels = ['PJA', 'OHS_DH', 'KTT'];
             if ($report->is_environmental) {
-                // Tambahkan ENV_DH jika conditional environmental true
-                $levels = ['KTT', 'OHS_DH', 'ENV_DH', 'PJA'];
+                $levels = ['PJA', 'ENV_DH', 'OHS_DH', 'KTT'];
             }
 
             foreach ($levels as $level) {
@@ -152,9 +161,11 @@ class InvestigationReportController extends Controller
             // Update status di accident_notifications jika ada
             $notification = AccidentNotification::find($report->accident_notification_id);
             if ($notification) {
+                $inInvestigationStatus = Status::where('name', 'In Investigation')->first();
                 $notification->update([
                     'has_lpks_lpkl' => true,
                     'lpks_lpkl' => $report->report_type,
+                    'status_id' => $inInvestigationStatus ? $inInvestigationStatus->id : 9,
                 ]);
             }
 
@@ -195,7 +206,8 @@ class InvestigationReportController extends Controller
             'source',
             'workExperienceInterval',
             'injuryCondition',
-            'bodyPart'
+            'bodyPart',
+            'mobileEquipment'
         ]);
 
         // Filter detail if not CRS
@@ -226,6 +238,7 @@ class InvestigationReportController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
+            'accident_notification_id' => 'required|exists:accident_notifications,id|unique:analisa_kecelakaan,accident_notification_id,' . $id,
             'report_type' => 'required|in:LPKS,LPKL',
             'is_environmental' => 'nullable|boolean',
             'investigation_detail' => 'nullable|string',
@@ -237,7 +250,7 @@ class InvestigationReportController extends Controller
             'documents.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,ppt,pptx,xls,xlsx|max:5120',
             'incident_type_id' => 'nullable|exists:m_incident_types,id',
             'source_id' => 'nullable|exists:m_sources,id',
-            'mobile_equipment' => 'nullable|string',
+            'mobile_equipment_id' => 'nullable|exists:m_mobile_equipments,id',
             'work_experience_interval_id' => 'nullable|exists:m_interval_experiences,id',
             'hour_of_shift' => 'nullable|string',
             'injury_condition_id' => 'nullable|exists:m_injury_conditions,id',
@@ -261,6 +274,7 @@ class InvestigationReportController extends Controller
         DB::beginTransaction();
         try {
             $user = auth('api')->user();
+            $oldNotificationId = $report->accident_notification_id;
 
             $data = $request->except(['documents', 'existing_documents', 'corrective_action_plan']);
             if ($request->has('corrective_action_plan')) {
@@ -272,7 +286,7 @@ class InvestigationReportController extends Controller
             if ($request->has('safe_draft')) {
                 $data['safe_draft'] = $request->boolean('safe_draft');
                 if (!$data['safe_draft'] && $report->investigation_status === 'Draft') {
-                    $data['investigation_status'] = 'Waiting for KTT';
+                    $data['investigation_status'] = 'Waiting for PJA';
                 }
             }
 
@@ -323,11 +337,26 @@ class InvestigationReportController extends Controller
                 $report->approvals()->where('approval_level', 'ENV_DH')->delete();
             }
 
-            // Update status di accident_notifications
+            // Update status di accident_notifications jika ada perubahan
+            if ($oldNotificationId != $report->accident_notification_id) {
+                $oldNotification = AccidentNotification::find($oldNotificationId);
+                if ($oldNotification) {
+                    $approvedStatus = Status::where('name', 'like', '%approved%')->first();
+                    $oldNotification->update([
+                        'has_lpks_lpkl' => false,
+                        'lpks_lpkl' => null,
+                        'status_id' => $approvedStatus ? $approvedStatus->id : 7,
+                    ]);
+                }
+            }
+
             $notification = AccidentNotification::find($report->accident_notification_id);
             if ($notification) {
+                $inInvestigationStatus = Status::where('name', 'In Investigation')->first();
                 $notification->update([
+                    'has_lpks_lpkl' => true,
                     'lpks_lpkl' => $report->report_type,
+                    'status_id' => $inInvestigationStatus ? $inInvestigationStatus->id : 9,
                 ]);
             }
 
@@ -365,8 +394,10 @@ class InvestigationReportController extends Controller
             // Reset status has_lpks_lpkl di accident_notifications
             $notification = AccidentNotification::find($report->accident_notification_id);
             if ($notification) {
+                $approvedStatus = Status::where('name', 'like', '%approved%')->first();
                 $notification->update([
                     'has_lpks_lpkl' => false,
+                    'status_id' => $approvedStatus ? $approvedStatus->id : 7,
                 ]);
             }
 
@@ -438,13 +469,13 @@ class InvestigationReportController extends Controller
 
             // Tentukan level approval berikutnya
             $nextLevel = null;
-            if ($level === 'KTT') {
+            if ($level === 'PJA') {
+                $nextLevel = $report->is_environmental ? 'ENV_DH' : 'OHS_DH';
+            } elseif ($level === 'ENV_DH') {
                 $nextLevel = 'OHS_DH';
             } elseif ($level === 'OHS_DH') {
-                $nextLevel = $report->is_environmental ? 'ENV_DH' : 'PJA';
-            } elseif ($level === 'ENV_DH') {
-                $nextLevel = 'PJA';
-            } elseif ($level === 'PJA') {
+                $nextLevel = 'KTT';
+            } elseif ($level === 'KTT') {
                 $nextLevel = 'COMPLETED';
             }
 
@@ -527,11 +558,16 @@ class InvestigationReportController extends Controller
             }
 
             // Kembalikan ke level sebelumnya
-            $prevLevel = 'KTT'; // Default return ke KTT
-            if ($level === 'PJA') {
-                $prevLevel = $report->is_environmental ? 'ENV_DH' : 'OHS_DH';
-            } elseif ($level === 'ENV_DH') {
+            $prevLevel = 'PJA';
+            $isReturnedToDraft = false;
+            if ($level === 'KTT') {
                 $prevLevel = 'OHS_DH';
+            } elseif ($level === 'OHS_DH') {
+                $prevLevel = $report->is_environmental ? 'ENV_DH' : 'PJA';
+            } elseif ($level === 'ENV_DH') {
+                $prevLevel = 'PJA';
+            } elseif ($level === 'PJA') {
+                $isReturnedToDraft = true;
             }
 
             $report->update([
@@ -542,19 +578,29 @@ class InvestigationReportController extends Controller
             ]);
 
             // Reset status approvals yang dikembalikan
-            $report->approvals()->where('approval_level', $prevLevel)->update([
-                'status' => 'Pending',
-                'tick_box' => false,
-                'approved_by' => null,
-            ]);
+            if (!$isReturnedToDraft) {
+                $report->approvals()->where('approval_level', $prevLevel)->update([
+                    'status' => 'Pending',
+                    'tick_box' => false,
+                    'approved_by' => null,
+                ]);
 
-            $prevColumn = strtolower($prevLevel) . '_approved';
-            if ($prevLevel === 'ENV_DH') {
-                $prevColumn = 'env_approved';
-            } elseif ($prevLevel === 'OHS_DH') {
-                $prevColumn = 'ohs_approved';
+                $prevColumn = strtolower($prevLevel) . '_approved';
+                if ($prevLevel === 'ENV_DH') {
+                    $prevColumn = 'env_approved';
+                } elseif ($prevLevel === 'OHS_DH') {
+                    $prevColumn = 'ohs_approved';
+                }
+                $report->update([$prevColumn => false]);
+            } else {
+                // Jika dikembalikan pada level pertama (PJA), reset approval PJA itu sendiri
+                $report->approvals()->where('approval_level', 'PJA')->update([
+                    'status' => 'Pending',
+                    'tick_box' => false,
+                    'approved_by' => null,
+                ]);
+                $report->update(['pja_approved' => false]);
             }
-            $report->update([$prevColumn => false]);
 
             DB::commit();
             return SafetyResponse::success($report->load('approvals'), "Laporan berhasil dikembalikan dari level {$level} ke {$prevLevel}");
@@ -590,7 +636,7 @@ class InvestigationReportController extends Controller
         try {
             $report->update([
                 'investigation_status' => 'Returned',
-                'current_approval_level' => 'KTT',
+                'current_approval_level' => 'PJA',
                 'ktt_approved' => false,
                 'ohs_approved' => false,
                 'env_approved' => false,

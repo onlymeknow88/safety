@@ -17,7 +17,7 @@ class PublicApprovalController extends Controller
         $record = AccidentNotification::with([
             'status', 'ccow', 'location', 'incidentType', 'department', 
             'company', 'companyContractor',
-            'reporter', 'approver', 'progressStatus'
+            'reporter', 'approver', 'progressStatus', 'day'
         ])->where('uuid', $uuid)->firstOrFail();
 
         return Inertia::render('Public/AccidentApproval', [

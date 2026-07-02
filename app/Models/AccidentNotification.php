@@ -24,9 +24,30 @@ class AccidentNotification extends Model
     // Auto-generate notification_number sebelum create
     protected static function booted(): void
     {
+        static::saving(function ($model) {
+            if ($model->incident_date) {
+                $daysMap = [
+                    0 => 'Minggu',
+                    1 => 'Senin',
+                    2 => 'Selasa',
+                    3 => 'Rabu',
+                    4 => 'Kamis',
+                    5 => 'Jumat',
+                    6 => 'Sabtu'
+                ];
+                $dayOfWeek = \Carbon\Carbon::parse($model->incident_date)->dayOfWeek;
+                $dayName = $daysMap[$dayOfWeek];
+                $dayId = \Illuminate\Support\Facades\DB::table('m_days')->where('name', $dayName)->value('id');
+                if ($dayId) {
+                    $model->day_id = $dayId;
+                }
+            }
+        });
+
         static::creating(function ($model) {
-            $year = now()->format('Y');
-            $month = now()->format('m');
+            $dateParsed = $model->incident_date ? \Carbon\Carbon::parse($model->incident_date) : now();
+            $year = $dateParsed->format('Y');
+            $month = $dateParsed->format('m');
             $romanMonths = [
                 '01' => 'I', '02' => 'II', '03' => 'III', '04' => 'IV', '05' => 'V', '06' => 'VI',
                 '07' => 'VII', '08' => 'VIII', '09' => 'IX', '10' => 'X', '11' => 'XI', '12' => 'XII',
@@ -37,8 +58,10 @@ class AccidentNotification extends Model
             $ccow = $model->ccow_id ? Ccow::find($model->ccow_id) : null;
             $ccowCode = $ccow ? strtoupper($ccow->inisial ?? 'LC') : 'LC';
 
-            // Hitung nomor urut berdasarkan tahun
-            $count = static::whereYear('created_at', $year)->count() + 1;
+            // Hitung nomor urut berdasarkan tahun dan CCOW
+            $count = static::whereYear('incident_date', $year)
+                ->where('ccow_id', $model->ccow_id)
+                ->count() + 1;
             $formattedCount = sprintf('%02d', $count);
 
             // Set No Investigasi (IR)
@@ -50,10 +73,19 @@ class AccidentNotification extends Model
                 $model->notification_number = "{$formattedCount}/NI-{$ccowCode}/{$romanMonth}/{$year}";
             }
 
+            if (empty($model->hse_alert_no)) {
+                $model->hse_alert_no = "{$formattedCount}/HSE-{$ccowCode}/{$romanMonth}/{$year}";
+            }
+
             if (empty($model->uuid)) {
                 $model->uuid = (string) \Illuminate\Support\Str::uuid();
             }
         });
+    }
+
+    public function day()
+    {
+        return $this->belongsTo(\App\Models\MasterData\Day::class, 'day_id');
     }
 
     public function ccow()

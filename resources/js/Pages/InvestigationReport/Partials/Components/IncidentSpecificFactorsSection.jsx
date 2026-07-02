@@ -10,12 +10,10 @@ export default function IncidentSpecificFactorsSection({
     setIncidentTypeId,
     sourceId,
     setSourceId,
-    mobileEquipment,
-    setMobileEquipment,
+    mobileEquipmentId,
+    setMobileEquipmentId,
     workExperienceIntervalId,
     setWorkExperienceIntervalId,
-    hourOfShift,
-    setHourOfShift,
     injuryConditionId,
     setInjuryConditionId,
     bodyPartId,
@@ -52,33 +50,11 @@ export default function IncidentSpecificFactorsSection({
         letterSpacing: "0.05em",
     };
 
-    // Common mobile equipment options
-    const mobileEquipmentOptions = [
-        { label: "Haul Truck - HD785", value: "Haul Truck - HD785" },
-        { label: "Haul Truck - CAT 777", value: "Haul Truck - CAT 777" },
-        { label: "Excavator - PC2000", value: "Excavator - PC2000" },
-        { label: "Dozer - D8R", value: "Dozer - D8R" },
-        { label: "Grader - GD825", value: "Grader - GD825" },
-        { label: "Light Vehicle (LV)", value: "Light Vehicle (LV)" },
-        { label: "Support Equipment", value: "Support Equipment" },
-        { label: "None / N/A", value: "None / N/A" }
-    ];
-
-    // Hour of shift options
-    const hourOfShiftOptions = [
-        { label: "Hour 1", value: "Hour 1" },
-        { label: "Hour 2", value: "Hour 2" },
-        { label: "Hour 3", value: "Hour 3" },
-        { label: "Hour 4", value: "Hour 4" },
-        { label: "Hour 5", value: "Hour 5" },
-        { label: "Hour 6 - Fatigue window", value: "Hour 6 - Fatigue window" },
-        { label: "Hour 7", value: "Hour 7" },
-        { label: "Hour 8", value: "Hour 8" },
-        { label: "Hour 9", value: "Hour 9" },
-        { label: "Hour 10", value: "Hour 10" },
-        { label: "Hour 11", value: "Hour 11" },
-        { label: "Hour 12", value: "Hour 12" }
-    ];
+    // Common mobile equipment options from Master Data
+    const mobileEquipmentOptions = (master.mobileEquipments || []).map(m => ({
+        label: m.name,
+        value: m.id
+    }));
 
     return (
         <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
@@ -136,12 +112,15 @@ export default function IncidentSpecificFactorsSection({
                         <Col xs={24} sm={12}>
                             <label style={labelStyle}>Jenis Mobile Equipment</label>
                             <Select
-                                placeholder="Pilih/Masukkan Jenis Unit..."
+                                placeholder="Pilih Jenis Unit..."
                                 style={{ width: "100%" }}
-                                value={mobileEquipment}
-                                onChange={setMobileEquipment}
+                                value={mobileEquipmentId}
+                                onChange={setMobileEquipmentId}
                                 disabled={disabled}
                                 showSearch
+                                filterOption={(input, option) =>
+                                    (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                                }
                                 options={mobileEquipmentOptions}
                             />
                         </Col>
@@ -161,18 +140,6 @@ export default function IncidentSpecificFactorsSection({
                                     label: e.label,
                                     value: e.id
                                 }))}
-                            />
-                        </Col>
-                        <Col xs={24}>
-                            <label style={labelStyle}>Hour of Shift</label>
-                            <Select
-                                placeholder="Pilih Jam Shift..."
-                                style={{ width: "100%" }}
-                                value={hourOfShift}
-                                onChange={setHourOfShift}
-                                disabled={disabled}
-                                showSearch
-                                options={hourOfShiftOptions}
                             />
                         </Col>
                     </Row>

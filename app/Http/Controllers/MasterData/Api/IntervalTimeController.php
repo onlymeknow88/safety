@@ -13,10 +13,10 @@ class IntervalTimeController extends Controller
     public function index(Request $request)
     {
         $search = $request->search;
-        $load = $request->load ?? 10;
+        $load = $request->load ?? 50;
         $query = IntervalTime::query();
         if ($search) $query->where('label', 'like', "%$search%");
-        $paginateData = $query->orderBy('label', 'asc')->paginate($load);
+        $paginateData = $query->orderBy('sort_order', 'asc')->paginate($load);
         return SafetyResponse::success($paginateData, "Berhasil mengambil data");
     }
 

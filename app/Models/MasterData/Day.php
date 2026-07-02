@@ -7,5 +7,5 @@ use Illuminate\Database\Eloquent\Model;
 class Day extends Model
 {
     protected $table = 'm_days';
-    protected $fillable = ['name', 'is_active'];
+    protected $fillable = ['name', 'is_active', 'sort_order'];
 }

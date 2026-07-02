@@ -227,9 +227,10 @@ export default function MenuTableAntd({
 
     return (
         <div style={{ 
-            background: isDarkMode ? "#141414" : "#fff",
-            borderRadius: "16px",
+            background: isDarkMode ? "#1e293b" : "#fff",
+            borderRadius: "20px",
             padding: "1px",
+            border: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
             boxShadow: isDarkMode ? "none" : "0 4px 24px rgba(0,0,0,0.04)",
             overflow: "hidden"
         }}>
@@ -261,7 +262,7 @@ export default function MenuTableAntd({
                             expandRowByClick: true,
                         }}
                         className={`custom-antd-table ${isDarkMode ? 'dark-mode' : ''}`}
-                        style={{ borderRadius: "16px" }}
+                        style={{ borderRadius: "20px" }}
                     />
                 </SortableContext>
             </DndContext>
@@ -269,7 +270,8 @@ export default function MenuTableAntd({
             {/* Premium Pagination Bar using Antd Pagination + TanStack State */}
             <div style={{
                 padding: "16px 24px",
-                borderTop: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
+                background: isDarkMode ? '#1e293b' : '#f8fafc',
+                borderTop: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
@@ -309,19 +311,19 @@ export default function MenuTableAntd({
                     /* Background transparent dihapus agar footer tidak tembus pandang */
                 }
                 .custom-antd-table .ant-table-thead > tr > th {
-                    background: ${isDarkMode ? "#1d1d1d" : "#fafafa"} !important;
-                    color: ${isDarkMode ? "#d9d9d9" : "#475569"} !important;
+                    background: ${isDarkMode ? "#1e293b" : "#f8fafc"} !important;
+                    color: ${isDarkMode ? "#cbd5e1" : "#475569"} !important;
                     font-weight: 700 !important;
-                    border-bottom: 2px solid ${isDarkMode ? "#303030" : "#f1f5f9"} !important;
+                    border-bottom: 2px solid ${isDarkMode ? "#334155" : "#e2e8f0"} !important;
                     padding: 16px !important;
                 }
                 .custom-antd-table .ant-table-tbody > tr > td {
                     padding: 16px !important;
-                    border-bottom: 1px solid ${isDarkMode ? "#303030" : "#f1f5f9"} !important;
+                    border-bottom: 1px solid ${isDarkMode ? "#334155" : "#f1f5f9"} !important;
                     transition: all 0.2s;
                 }
                 .custom-antd-table .ant-table-tbody > tr:hover > td {
-                    background: ${isDarkMode ? "#1f1f1f" : "#f8fafc"} !important;
+                    background: ${isDarkMode ? "#334155" : "#f0f9ff"} !important;
                 }
                 
                 /* Selection state override if needed */

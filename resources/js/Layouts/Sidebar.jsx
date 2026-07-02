@@ -14,8 +14,17 @@ import {
     MedicineBoxOutlined,
     WarningOutlined,
     SafetyCertificateOutlined,
+    ClusterOutlined,
+    ApartmentOutlined,
+    CarOutlined,
+    SafetyOutlined,
+    FileSearchOutlined,
+    SearchOutlined,
+    SunOutlined,
+    MoonOutlined,
 } from "@ant-design/icons";
-import { Button, Layout, Menu, Drawer } from "antd";
+import { useState, useEffect } from "react";
+import { Button, Layout, Menu, Drawer, Input, Switch, Space } from "antd";
 import { Link, usePage } from "@inertiajs/react";
 
 import { useTheme } from "../Contexts/ThemeContext";
@@ -36,12 +45,19 @@ const iconMap = {
     MedicineBoxOutlined: <MedicineBoxOutlined />,
     WarningOutlined: <WarningOutlined />,
     SafetyCertificateOutlined: <SafetyCertificateOutlined />,
+    ClusterOutlined: <ClusterOutlined />,
+    ApartmentOutlined: <ApartmentOutlined />,
+    CarOutlined: <CarOutlined />,
+    SafetyOutlined: <SafetyOutlined />,
+    FileSearchOutlined: <FileSearchOutlined />,
 };
 
 export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawerOpen }) {
     const { url, props } = usePage();
     const { auth } = props;
-    const { isDarkMode } = useTheme();
+    const { isDarkMode, toggleTheme } = useTheme();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [openKeys, setOpenKeys] = useState([]);
 
     const getActiveKey = () => {
         const currentPath = url.split("?")[0].split("#")[0]; // Clean URL
@@ -76,6 +92,45 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
         return [];
     };
 
+    useEffect(() => {
+        if (searchQuery) {
+            const parents = auth.user?.menus?.filter(m => !m.parent_id && m.slug).map(m => m.slug) || [];
+            setOpenKeys(parents);
+        } else {
+            setOpenKeys(getOpenKeys());
+        }
+    }, [searchQuery, url]);
+
+    const filterMenus = (menus, query) => {
+        if (!menus) return [];
+        if (!query) return menus;
+
+        const queryLower = query.toLowerCase();
+        const matchedIds = new Set();
+
+        menus.forEach((menu) => {
+            if (menu.name && menu.name.toLowerCase().includes(queryLower)) {
+                matchedIds.add(menu.id);
+                if (menu.parent_id) {
+                    matchedIds.add(menu.parent_id);
+                }
+            }
+        });
+
+        let addedAny = true;
+        while (addedAny) {
+            addedAny = false;
+            menus.forEach((menu) => {
+                if (matchedIds.has(menu.id) && menu.parent_id && !matchedIds.has(menu.parent_id)) {
+                    matchedIds.add(menu.parent_id);
+                    addedAny = true;
+                }
+            });
+        }
+
+        return menus.filter((menu) => matchedIds.has(menu.id));
+    };
+
     const buildMenuTree = (menus) => {
         if (!menus) return [];
 
@@ -107,24 +162,63 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
         });
 
         // Helper to cleanup items without children and sort by order
-        const finalize = (items) => {
-            return items
-                .sort((a, b) => (a.order || 0) - (b.order || 0))
-                .map((item) => {
+        const finalize = (items, isTopLevel = false) => {
+            const sorted = items.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            if (!isTopLevel) {
+                return sorted.map((item) => {
                     const newItem = { ...item };
                     if (newItem.children && newItem.children.length > 0) {
-                        newItem.children = finalize(newItem.children);
+                        newItem.children = finalize(newItem.children, false);
                     } else {
                         delete newItem.children;
                     }
                     return newItem;
                 });
+            }
+
+            const result = [];
+            sorted.forEach((item) => {
+                const newItem = { ...item };
+                if (newItem.children && newItem.children.length > 0) {
+                    newItem.children = finalize(newItem.children, false);
+                } else {
+                    delete newItem.children;
+                }
+
+                if (newItem.key === "safety") {
+                    result.push({
+                        key: "grp-laporan",
+                        type: "group",
+                        label: <div style={{ color: "#64748b", fontSize: 10, fontWeight: 700, letterSpacing: "1px", margin: "16px 0 8px 8px" }}>LAPORAN</div>,
+                        children: newItem.children || [],
+                    });
+                } else if (newItem.key === "master-data") {
+                    result.push({
+                        key: "grp-master-data",
+                        type: "group",
+                        label: <div style={{ color: "#64748b", fontSize: 10, fontWeight: 700, letterSpacing: "1px", margin: "16px 0 8px 8px" }}>MASTER DATA</div>,
+                        children: [newItem],
+                    });
+                } else if (newItem.key === "administrator") {
+                    result.push({
+                        key: "grp-konfigurasi",
+                        type: "group",
+                        label: <div style={{ color: "#64748b", fontSize: 10, fontWeight: 700, letterSpacing: "1px", margin: "16px 0 8px 8px" }}>KONFIGURASI</div>,
+                        children: newItem.children || [],
+                    });
+                } else {
+                    result.push(newItem);
+                }
+            });
+            return result;
         };
 
-        return finalize(tree);
+        return finalize(tree, true);
     };
 
-    const menuItems = buildMenuTree(auth.user?.menus);
+    const filteredMenus = filterMenus(auth.user?.menus, searchQuery);
+    const menuItems = buildMenuTree(filteredMenus);
 
     const sidebarStyles = `
              /* General Sidebar Overrides */
@@ -138,9 +232,9 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
                     padding: 0 16px !important;
                     height: 48px !important; /* Slightly taller for more premium feel */
                     line-height: 48px !important;
-                    transition: all 0.1s ease;
+                    transition: all 0.15s ease;
                     font-weight: 600 !important; /* Semi-bold for clear visibility */
-                    color: ${isDarkMode ? "#a6a6a6" : "#475569"} !important;
+                    color: #8a99ad !important;
                     font-size: 14px !important;
                 }
                 .custom-tree-menu .ant-menu-item a,
@@ -148,51 +242,52 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
                     color: inherit !important;
                     text-decoration: none !important;
                 }
-                /* Hover State - Improved Contrast & Theme Alignment */
+                /* Hover State - Improved Contrast */
                 .custom-tree-menu .ant-menu-item:not(.ant-menu-item-selected):hover,
                 .custom-tree-menu .ant-menu-submenu-title:hover {
-                    background-color: ${isDarkMode ? "rgba(255, 255, 255, 0.05)" : "#f0f7ff"} !important;
+                    background-color: rgba(255, 255, 255, 0.08) !important;
+                    color: #ffffff !important;
                     transition: all 0.2s ease !important;
                 }
 
                 .custom-tree-menu .ant-menu-item:not(.ant-menu-item-selected):hover *,
                 .custom-tree-menu .ant-menu-submenu-title:hover * {
-                    color: ${isDarkMode ? "#fff" : "#1a1a1a"} !important;
+                    color: #ffffff !important;
                 }
 
                 .custom-tree-menu .ant-menu-item:not(.ant-menu-item-selected):hover .anticon,
                 .custom-tree-menu .ant-menu-submenu-title:hover .anticon {
-                    color: ${isDarkMode ? "#ff5722" : "#2563eb"} !important;
+                    color: #ffffff !important;
                 }
 
                 /* Submenu Title Style when has Active Child (NOT HOVERED) */
                 .custom-tree-menu .ant-menu-submenu-selected > .ant-menu-submenu-title:not(:hover) {
-                    background-color: ${isDarkMode ? "rgba(255, 87, 34, 0.12)" : "#e6f4ff"} !important;
-                    color: ${isDarkMode ? "#ffffff" : "#2563eb"} !important;
+                    background-color: rgba(255, 255, 255, 0.05) !important;
+                    color: #ffffff !important;
                     font-weight: 700 !important;
                 }
 
                 .custom-tree-menu .ant-menu-submenu-selected > .ant-menu-submenu-title:not(:hover) * {
-                    color: ${isDarkMode ? "#ffffff" : "#2563eb"} !important;
+                    color: #ffffff !important;
                 }
 
                 .custom-tree-menu .ant-menu-submenu-selected > .ant-menu-submenu-title:not(:hover) .anticon {
-                    color: ${isDarkMode ? "#ff5722" : "#2563eb"} !important;
+                    color: #ffffff !important;
                 }
 
                 /* Active/Selected State - PILL LOOK */
                 .custom-tree-menu .ant-menu-item-selected,
                 .custom-tree-menu.ant-menu-light .ant-menu-item-selected,
                 .custom-tree-menu.ant-menu-dark .ant-menu-item-selected {
-                    background-color: ${isDarkMode ? "#ff5722" : "#2563eb"} !important;
+                    background-color: #0F828A !important;
                     color: #ffffff !important;
                     font-weight: 700 !important; /* Bold for selected */
-                    box-shadow: ${isDarkMode ? "0 4px 16px rgba(255, 87, 34, 0.4)" : "0 4px 12px rgba(37, 99, 235, 0.25)"};
+                    box-shadow: 0 4px 16px rgba(15, 130, 138, 0.4);
                 }
 
                 /* Ensure Selected state stays consistent even when hovered */
                 .custom-tree-menu .ant-menu-item-selected:hover {
-                    background-color: ${isDarkMode ? "#e64a19" : "#1d4ed8"} !important;
+                    background-color: #128383 !important;
                     color: #ffffff !important;
                 }
                 .custom-tree-menu .ant-menu-item-selected a,
@@ -210,7 +305,7 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
                 /* Tree lines for nested menus */
                 .custom-tree-menu .ant-menu-submenu .ant-menu-sub.ant-menu-inline {
                     position: relative;
-                    background-color: ${isDarkMode ? "rgba(255, 255, 255, 0.05)" : "#f8fafc"};
+                    background-color: #00202e;
                     border-radius: 14px;
                     margin: 4px 12px !important;
                     width: calc(100% - 24px) !important;
@@ -223,7 +318,7 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
                     bottom: 20px;
                     left: 20px;
                     width: 1px;
-                    background-color: ${isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)"};
+                    background-color: rgba(15, 130, 138, 0.2);
                     z-index: 1;
                 }
 
@@ -273,75 +368,122 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
                 `;
 
     const SidebarContent = (
-        <>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#013B52" }}>
             <style>{sidebarStyles}</style>
-            <div
-                style={{
-                    height: 80,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: (collapsed && !isMobile) ? "center" : "flex-start",
-                    padding: (collapsed && !isMobile) ? "0" : "0 24px",
-                    transition: "all 0.2s",
-                    marginBottom: 8,
-                }}
-            >
+            <div>
                 <div
                     style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 10,
-                        background: "linear-gradient(135deg, #2563eb, #3b82f6)",
+                        height: 80,
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
+                        justifyContent: (collapsed && !isMobile) ? "center" : "flex-start",
+                        padding: (collapsed && !isMobile) ? "0" : "0 24px",
+                        transition: "all 0.2s",
+                        marginBottom: 4,
                     }}
                 >
-                    <span
-                        style={{ color: "#fff", fontWeight: 800, fontSize: 18 }}
+                    <div
+                        style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 10,
+                            background: "linear-gradient(135deg, #0F828A 0%, #013B52 100%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                            boxShadow: "0 4px 12px rgba(15, 130, 138, 0.2)",
+                        }}
                     >
-                        P
-                    </span>
+                        <span
+                            style={{ color: "#fff", fontWeight: 800, fontSize: 18 }}
+                        >
+                            A
+                        </span>
+                    </div>
+                    {(!collapsed || isMobile) && (
+                        <div style={{ marginLeft: 12, lineHeight: 1.2 }}>
+                            <div
+                                style={{
+                                    color: "#ffffff",
+                                    fontWeight: 800,
+                                    fontSize: 16,
+                                    letterSpacing: "-0.5px",
+                                }}
+                            >
+                                AIM-SAFE
+                            </div>
+                            <div
+                                style={{
+                                    fontSize: 10,
+                                    color: "#ABD096",
+                                    fontWeight: 600,
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.5px",
+                                }}
+                            >
+                                SAFETY MANAGEMENT SYSTEM
+                            </div>
+                        </div>
+                    )}
                 </div>
+
                 {(!collapsed || isMobile) && (
-                    <div style={{ marginLeft: 12, lineHeight: 1.2 }}>
-                        <div
+                    <div style={{ padding: "0 16px 12px 16px" }}>
+                        <Input
+                            placeholder="Search menus..."
+                            prefix={<SearchOutlined style={{ color: "#7EA7B2" }} />}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             style={{
-                                color: isDarkMode ? "#fff" : "#1a1a1a",
-                                fontWeight: 800,
-                                fontSize: 16,
-                                letterSpacing: "-0.5px",
+                                borderRadius: 10,
+                                background: "#012535",
+                                border: "1px solid #034561",
+                                color: "#ffffff",
+                                height: 38,
                             }}
-                        >
-                            Panicle Sales
-                        </div>
-                        <div
-                            style={{
-                                fontSize: 10,
-                                color: "#8c8c8c",
-                                fontWeight: 500,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.5px",
-                            }}
-                        >
-                            Modern CRM
-                        </div>
+                            allowClear
+                        />
                     </div>
                 )}
             </div>
 
-            <Menu
-                className="custom-tree-menu"
-                theme={isDarkMode ? "dark" : "light"}
-                mode="inline"
-                selectedKeys={[getActiveKey()]}
-                defaultOpenKeys={getOpenKeys()}
-                items={menuItems}
-                style={{ border: "none", marginTop: 8 }}
-            />
-        </>
+            <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }} className="custom-sidebar-scroll">
+                <Menu
+                    className="custom-tree-menu"
+                    theme="dark"
+                    mode="inline"
+                    selectedKeys={[getActiveKey()]}
+                    openKeys={openKeys}
+                    onOpenChange={setOpenKeys}
+                    items={menuItems}
+                    style={{ border: "none", background: "transparent" }}
+                />
+            </div>
+
+            {(!collapsed || isMobile) && (
+                <div style={{
+                    marginTop: "auto",
+                    padding: "16px 24px",
+                    borderTop: "1px solid #034561",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                }}>
+                    <Space size={8}>
+                        <span style={{ fontSize: 13, color: "#cbd5e1", fontWeight: 600 }}>
+                            Tema {isDarkMode ? "Dark" : "Light"}
+                        </span>
+                    </Space>
+                    <Switch
+                        checked={isDarkMode}
+                        onChange={toggleTheme}
+                        checkedChildren={<MoonOutlined />}
+                        unCheckedChildren={<SunOutlined />}
+                    />
+                </div>
+            )}
+        </div>
     );
 
     if (isMobile) {
@@ -356,7 +498,7 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
                 width={280}
                 closable={false}
                 drawerStyle={{
-                    background: isDarkMode ? "#0d0d12" : "#ffffff",
+                    background: "#013B52",
                 }}
             >
                 <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
@@ -371,21 +513,17 @@ export default function Sidebar({ collapsed, isMobile, isDrawerOpen, setIsDrawer
             trigger={null}
             collapsible
             collapsed={collapsed}
-            theme={isDarkMode ? "dark" : "light"}
+            theme="dark"
             width={280}
             style={{
-                overflow: "auto",
+                overflow: "hidden",
                 height: "100vh",
                 position: "fixed",
                 insetInlineStart: 0,
                 top: 0,
                 bottom: 0,
-                scrollbarWidth: "thin",
-                scrollbarColor: "unset",
-                boxShadow: isDarkMode ? "none" : "2px 0 8px rgba(0,0,0,0.05)",
-                borderRight: isDarkMode
-                    ? "1px solid #2d2d3a"
-                    : "1px solid #f0f0f0",
+                background: "#013B52",
+                borderRight: "1px solid #034561",
                 zIndex: 100,
             }}
         >

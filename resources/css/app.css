@@ -48,11 +48,11 @@
 
 /* Premium Global Dark Mode Customizations (Cosmic Obsidian terinspirasi referensi gambar) */
 body.dark-mode {
-    background-color: #0d0d12 !important;
+    background-color: #0f172a !important;
     color: #ffffff !important;
 }
 
-/* Memastikan elemen dengan style inline dengan warna gelap / abu-abu (misal #64748b, #1e293b, #475569) tetap terlihat elegan di dark mode */
+/* Memastikan elemen dengan style inline dengan warna gelap / abu-abu tetap terlihat elegan di dark mode */
 body.dark-mode [style*="color: #64748b"],
 body.dark-mode [style*="color:#64748b"],
 body.dark-mode [style*="color: rgb(100, 116, 139)"],
@@ -60,7 +60,7 @@ body.dark-mode [style*="color: #475569"],
 body.dark-mode [style*="color:#475569"],
 body.dark-mode [style*="color: rgb(71, 85, 105)"],
 body.dark-mode .ant-typography-secondary {
-    color: #a2a2ae !important;
+    color: #94a3b8 !important;
 }
 
 body.dark-mode [style*="color: #1e293b"],
@@ -81,7 +81,7 @@ body.dark-mode [style*="color: rgb(26, 26, 26)"] {
 body.dark-mode [style*="background: #f8fafc"],
 body.dark-mode [style*="background:#f8fafc"],
 body.dark-mode [style*="background: rgb(248, 250, 252)"] {
-    background-color: #262631 !important;
+    background-color: #334155 !important;
 }
 
 /* Custom premium scrollbar for dark mode */
@@ -90,36 +90,36 @@ body.dark-mode ::-webkit-scrollbar {
     height: 8px;
 }
 body.dark-mode ::-webkit-scrollbar-track {
-    background: #0d0d12;
+    background: #0f172a;
 }
 body.dark-mode ::-webkit-scrollbar-thumb {
-    background: #262631;
+    background: #334155;
     border-radius: 4px;
 }
 body.dark-mode ::-webkit-scrollbar-thumb:hover {
-    background: #3a3a4a;
+    background: #475569;
 }
 
 /* Smooth Background & Color transitions for premium feel */
 body, .ant-layout, .ant-layout-sider, .ant-layout-header, .ant-card, .ant-modal-content, .ant-table-wrapper {
-    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* Premium Card and Table containers in dark mode */
 body.dark-mode .ant-card {
-    background: #1c1c24 !important;
-    border-color: #2d2d3a !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
-    border-radius: 16px !important;
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35) !important;
+    border-radius: 20px !important; /* Guideline Card radius 20px */
 }
 
 /* ReadOnly/Disabled inputs in dark mode */
 body.dark-mode .ant-input[readonly],
 body.dark-mode .ant-input-disabled,
 body.dark-mode .ant-select-disabled .ant-select-selector {
-    background-color: #262631 !important;
-    border-color: #3a3a4a !important;
-    color: #a2a2ae !important;
+    background-color: #334155 !important;
+    border-color: #475569 !important;
+    color: #94a3b8 !important;
 }
 
 /* Override inline hardcoded table styles globally for premium dark mode aesthetics */
@@ -127,17 +127,17 @@ body.dark-mode [style*="background: #141414"],
 body.dark-mode [style*="background:#141414"],
 body.dark-mode [style*="background: rgb(20, 20, 20)"],
 body.dark-mode [style*='background: "#141414"'] {
-    background-color: #1c1c24 !important;
+    background-color: #1e293b !important;
 }
 
 body.dark-mode .custom-antd-table .ant-table-thead > tr > th {
-    background-color: #262631 !important;
+    background-color: #334155 !important;
     color: #ffffff !important;
-    border-bottom: 2px solid #2d2d3a !important;
+    border-bottom: 2px solid #334155 !important;
 }
 
 body.dark-mode .custom-antd-table .ant-table-tbody > tr > td {
-    border-bottom: 1px solid #2d2d3a !important;
+    border-bottom: 1px solid #334155 !important;
     color: #ffffff !important;
 }
 
@@ -146,34 +146,52 @@ body.dark-mode .custom-antd-table .ant-table-tbody > tr > td div {
 }
 
 body.dark-mode .custom-antd-table .ant-table-tbody > tr:hover > td {
-    background-color: #262631 !important;
+    background-color: #334155 !important;
 }
 
 /* Pagination container inside tables */
 body.dark-mode .custom-antd-table + div {
-    border-top: 1px solid #2d2d3a !important;
-    background-color: #1c1c24 !important;
+    border-top: 1px solid #334155 !important;
+    background-color: #1e293b !important;
 }
 
 /* Override inline hardcoded header controls background globally for cohesive premium palette */
 body.dark-mode [style*="background: #1f1f1f"],
 body.dark-mode [style*="background:#1f1f1f"],
 body.dark-mode [style*="background: rgb(31, 31, 31)"] {
-    background-color: #1c1c24 !important;
+    background-color: #1e293b !important;
 }
 
 body.dark-mode .ant-input-affix-wrapper[style*="background: #141414"],
 body.dark-mode .ant-input-affix-wrapper[style*="background:#141414"],
 body.dark-mode .ant-btn[style*="background: #141414"],
 body.dark-mode .ant-btn[style*="background:#141414"] {
-    background-color: #262631 !important;
-    border-color: #2d2d3a !important;
+    background-color: #334155 !important;
+    border-color: #334155 !important;
 }
 
 body.dark-mode .ant-btn-primary[style*="background: #1677ff"],
 body.dark-mode .ant-btn-primary[style*="background:#1677ff"],
 body.dark-mode .ant-btn-primary[style*='background: "#1677ff"'] {
     background-color: #3b82f6 !important;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
     border: none !important;
+}
+
+/* Custom Select styles for filtering */
+.custom-filter-select .ant-select-selector {
+    border-radius: 10px !important;
+    height: 40px !important;
+    align-items: center !important;
+    border: none !important;
+    background-color: #f1f5f9 !important;
+}
+
+body.dark-mode .custom-filter-select .ant-select-selector {
+    background-color: #334155 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .custom-filter-select .ant-select-selection-placeholder {
+    color: rgba(255, 255, 255, 0.45) !important;
 }

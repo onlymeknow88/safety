@@ -104,7 +104,7 @@ export default function CostChart({ data = [], isDarkMode }) {
             style={{
                 background: cardBg,
                 border: cardBorder,
-                borderRadius: 16,
+                borderRadius: 20,
                 boxShadow: "0 4px 20px -2px rgba(0,0,0,0.05)",
                 marginBottom: 24,
                 overflow: "hidden"

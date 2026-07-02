@@ -12,21 +12,53 @@ export default function SourceChart({ data = [], isDarkMode, palette = [] }) {
     // Limit to top 8 sources
     const displayData = data.slice(0, 8);
 
+    const chartColor = '#f97316'; // Uniform Orange for Source
+
     const chartData = {
         labels: displayData.map(item => item.label.length > 25 ? item.label.substring(0, 22) + '...' : item.label),
         datasets: [{
             label: 'Jumlah',
             data: displayData.map(item => item.value),
-            backgroundColor: palette.slice(0, displayData.length),
-            borderColor: isDarkMode ? '#1e293b' : '#ffffff',
-            borderWidth: 1.5,
-            hoverBackgroundColor: palette.map(c => `${c}ee`).slice(0, displayData.length)
+            backgroundColor: chartColor,
+            borderWidth: 0,
+            borderRadius: 6,
+            borderSkipped: 'bottom',
+            barPercentage: 0.45,
+            categoryPercentage: 0.8,
+            hoverBackgroundColor: `${chartColor}ee`
         }]
+    };
+
+    const datalabelsPlugin = {
+        id: 'datalabels',
+        afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            ctx.save();
+            ctx.font = 'bold 11px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+
+            chart.data.datasets.forEach((dataset, i) => {
+                const meta = chart.getDatasetMeta(i);
+                meta.data.forEach((bar, index) => {
+                    const val = dataset.data[index];
+                    ctx.fillStyle = isDarkMode ? '#f8fafc' : '#1e293b';
+                    ctx.fillText(val, bar.x, bar.y - 4);
+                });
+            });
+            ctx.restore();
+        }
     };
 
     const options = {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: {
+                bottom: 20,
+                top: 15
+            }
+        },
         plugins: {
             legend: {
                 display: false,
@@ -42,8 +74,7 @@ export default function SourceChart({ data = [], isDarkMode, palette = [] }) {
                 titleFont: { family: 'Inter', weight: 'bold', size: 12 },
                 bodyFont: { family: 'Inter', size: 12 },
                 callbacks: {
-                    title: function(context) {
-                        // Return the full label instead of truncated label
+                    title: function (context) {
                         const index = context[0].dataIndex;
                         return displayData[index].label;
                     }
@@ -52,7 +83,7 @@ export default function SourceChart({ data = [], isDarkMode, palette = [] }) {
         },
         scales: {
             x: {
-                grid: { color: gridColor },
+                grid: { display: false },
                 ticks: {
                     color: secondaryTextColor,
                     font: { family: 'Inter', size: 9, weight: '600' },
@@ -61,7 +92,12 @@ export default function SourceChart({ data = [], isDarkMode, palette = [] }) {
                 }
             },
             y: {
-                grid: { color: gridColor },
+                grid: { 
+                    color: gridColor,
+                    drawBorder: false
+                },
+                border: { display: false },
+                grace: '10%',
                 ticks: {
                     color: secondaryTextColor,
                     font: { family: 'Inter', size: 10, weight: '500' },
@@ -82,7 +118,7 @@ export default function SourceChart({ data = [], isDarkMode, palette = [] }) {
             style={{
                 background: cardBg,
                 border: cardBorder,
-                borderRadius: 16,
+                borderRadius: 20,
                 boxShadow: "0 4px 20px -2px rgba(0,0,0,0.05)",
                 marginBottom: 24,
                 overflow: "hidden"
@@ -91,7 +127,7 @@ export default function SourceChart({ data = [], isDarkMode, palette = [] }) {
         >
             <div style={{ height: 320, position: 'relative' }}>
                 {data.length > 0 ? (
-                    <Bar data={chartData} options={options} />
+                    <Bar data={chartData} options={options} plugins={[datalabelsPlugin]} />
                 ) : (
                     <Empty description="Belum ada data sumber kecelakaan" style={{ paddingTop: 80 }} />
                 )}

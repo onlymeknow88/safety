@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
     Modal, Form, Row, Col, Select, Switch, Input, Button, Card,
-    Tag, Space, Divider, Empty, Descriptions, Avatar, Typography, Checkbox
+    Tag, Space, Divider, Empty, Descriptions, Avatar, Typography, Checkbox, Drawer, Grid
 } from "antd";
 import {
     FileSearchOutlined,
@@ -37,6 +37,8 @@ export default function InvestigationReportModal({
     const { isDarkMode } = useTheme();
     const { auth } = usePage().props;
     const [form] = Form.useForm();
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.md;
     const [isActionModalOpen, setIsActionModalOpen] = useState(false);
     const [actionType, setActionType] = useState("");
     const [comment, setComment] = useState("");
@@ -99,12 +101,10 @@ export default function InvestigationReportModal({
         setIncidentTypeId,
         sourceId,
         setSourceId,
-        mobileEquipment,
-        setMobileEquipment,
+        mobileEquipmentId,
+        setMobileEquipmentId,
         workExperienceIntervalId,
         setWorkExperienceIntervalId,
-        hourOfShift,
-        setHourOfShift,
         injuryConditionId,
         setInjuryConditionId,
         bodyPartId,
@@ -142,7 +142,14 @@ export default function InvestigationReportModal({
                 });
             } else {
                 form.resetFields();
-                if (resetForm) resetForm();
+                if (selectedNotification) {
+                    form.setFieldsValue({
+                        accident_notification_id: selectedNotification.id,
+                        report_type: selectedNotification.lpks_lpkl || "LPKS"
+                    });
+                } else {
+                    if (resetForm) resetForm();
+                }
             }
         } else {
             form.resetFields();
@@ -231,15 +238,34 @@ export default function InvestigationReportModal({
         return "BUAT";
     };
 
+    const selectOptions = useMemo(() => {
+        const opts = (approvedNotifications || []).map(n => ({
+            label: `${n.notification_number || n.accident_number || ('No. Notif ' + n.id)} - ${n.incident_title || '(Tanpa Judul)'}`,
+            value: n.id
+        }));
+
+        const currentNotif = selectedNotification || initialValues?.accident_notification;
+        if (currentNotif) {
+            const hasNotif = opts.some(opt => opt.value === currentNotif.id);
+            if (!hasNotif) {
+                opts.push({
+                    label: `${currentNotif.notification_number || currentNotif.accident_number || ('No. Notif ' + currentNotif.id)} - ${currentNotif.incident_title || '(Tanpa Judul)'}`,
+                    value: currentNotif.id
+                });
+            }
+        }
+        return opts;
+    }, [approvedNotifications, initialValues, selectedNotification]);
+
     return (
         <Modal
             title={null}
             open={visible}
             onCancel={onCancel}
             footer={null}
-            width="96%"
-            style={{ top: 20, maxWidth: "96vw" }}
-            styles={{ body: { padding: "32px 24px" } }}
+            width={1200}
+            style={{ top: 20 }}
+            styles={{ body: { padding: '32px 24px' }, content: { borderRadius: '20px' } }}
             destroyOnClose
             centered
         >
@@ -280,14 +306,14 @@ export default function InvestigationReportModal({
                 {!isCompleted && userCanAct && isDetail && (
                     <div style={{ marginBottom: 24, display: 'flex', gap: 12 }}>
                         <Button 
-                            style={{ borderRadius: 8, borderColor: '#f59e0b', color: '#d97706', fontWeight: 700 }}
+                            style={{ borderRadius: 10, borderColor: '#f59e0b', color: '#d97706', fontWeight: 700 }}
                             onClick={() => { setActionType('return'); setIsActionModalOpen(true); }}
                         >
                             Return for Correction
                         </Button>
                         <Button 
                             type="primary" 
-                            style={{ borderRadius: 8, background: '#10b981', border: 'none', fontWeight: 700 }}
+                            style={{ borderRadius: 10, background: '#10b981', border: 'none', fontWeight: 700 }}
                             onClick={() => { setActionType('approve'); setIsActionModalOpen(true); }}
                         >
                             Approve Now
@@ -313,8 +339,8 @@ export default function InvestigationReportModal({
                             rows={4}
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                            placeholder={`Masukkan komentar peninjauan atau alasan ${actionType === 'return' ? 'perbaikan' : 'persetujuan'}...`}
-                            style={{ borderRadius: 8 }}
+                            placeholder={`Masukkan komentar peninjauan or alasan ${actionType === 'return' ? 'perbaikan' : 'persetujuan'}...`}
+                            style={{ borderRadius: 10 }}
                         />
                     </div>
 
@@ -331,7 +357,7 @@ export default function InvestigationReportModal({
                     )}
 
                     <Space style={{ display: "flex", justifyContent: "flex-end", width: "100%", marginTop: 24 }}>
-                        <Button onClick={() => setIsActionModalOpen(false)} style={{ borderRadius: 8 }}>
+                        <Button onClick={() => setIsActionModalOpen(false)} style={{ borderRadius: 10 }}>
                             Batal
                         </Button>
                         <Button 
@@ -350,7 +376,7 @@ export default function InvestigationReportModal({
                             style={{ 
                                 background: actionType === 'approve' ? ((currentLevel !== "ENV_DH" && !tickBox) ? undefined : "linear-gradient(135deg, #059669 0%, #10b981 100%)") : undefined, 
                                 border: actionType === 'approve' ? "none" : undefined, 
-                                borderRadius: 8, 
+                                borderRadius: 10, 
                                 fontWeight: 700, 
                                 padding: "0 24px"
                             }}
@@ -364,10 +390,7 @@ export default function InvestigationReportModal({
 
                     {/* SECTION 1: Pilih Notifikasi Kecelakaan (Form Input / Dropdown) */}
                     <Card
-                        title={<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <div style={{ width: 4, height: 16, background: "#3b82f6", borderRadius: 2 }}></div>
-                            <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>PILIH NOTIFIKASI KECELAKAAN</span>
-                        </div>}
+                        title={<span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>PILIH NOTIFIKASI KECELAKAAN</span>}
                         style={cardStyle}
                         styles={{
                             header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
@@ -384,12 +407,9 @@ export default function InvestigationReportModal({
                                     <Select
                                         placeholder="Pilih nomor notifikasi..."
                                         onChange={handleNotificationChange}
-                                        disabled={!isAdd}
+                                        disabled={isDetail}
                                         allowClear
-                                        options={approvedNotifications.map(n => ({
-                                            label: `${n.notification_number} - ${n.incident_title}`,
-                                            value: n.id
-                                        }))}
+                                        options={selectOptions}
                                         showSearch
                                         filterOption={(input, option) =>
                                             (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
@@ -413,10 +433,7 @@ export default function InvestigationReportModal({
                     {/* SECTION 2: Tampilkan Data Ter-Populate (Read Only) */}
                     {selectedNotification && (
                         <Card
-                            title={<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                <div style={{ width: 4, height: 16, background: "#8b5cf6", borderRadius: 2 }}></div>
-                                <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>RINGKASAN DATA NOTIFIKASI KECELAKAAN (AUTO-POPULATE)</span>
-                            </div>}
+                            title={<span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>RINGKASAN DATA NOTIFIKASI KECELAKAAN (AUTO-POPULATE)</span>}
                             style={cardStyle}
                             styles={{
                                 header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
@@ -530,12 +547,10 @@ export default function InvestigationReportModal({
                             setIncidentTypeId={setIncidentTypeId}
                             sourceId={sourceId}
                             setSourceId={setSourceId}
-                            mobileEquipment={mobileEquipment}
-                            setMobileEquipment={setMobileEquipment}
+                            mobileEquipmentId={mobileEquipmentId}
+                            setMobileEquipmentId={setMobileEquipmentId}
                             workExperienceIntervalId={workExperienceIntervalId}
                             setWorkExperienceIntervalId={setWorkExperienceIntervalId}
-                            hourOfShift={hourOfShift}
-                            setHourOfShift={setHourOfShift}
                             injuryConditionId={injuryConditionId}
                             setInjuryConditionId={setInjuryConditionId}
                             bodyPartId={bodyPartId}
@@ -577,10 +592,7 @@ export default function InvestigationReportModal({
                     {/* SECTION 5: Narasi & Kesimpulan Penyelidikan */}
                     {selectedNotification && (
                         <Card
-                            title={<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                <div style={{ width: 4, height: 16, background: "#ef4444", borderRadius: 2 }}></div>
-                                <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>RINGKASAN NARASI INVESTIGASI</span>
-                            </div>}
+                            title={<span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>RINGKASAN NARASI INVESTIGASI</span>}
                             style={cardStyle}
                             styles={{
                                 header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
@@ -653,10 +665,7 @@ export default function InvestigationReportModal({
 
                     {/* SECTION 5: Pendukung (Attachments) */}
                     <Card
-                        title={<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <div style={{ width: 4, height: 16, background: "#6366f1", borderRadius: 2 }}></div>
-                            <span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>DOKUMEN INVESTIGASI PENDUKUNG (MAKS 10 BERKAS)</span>
-                        </div>}
+                        title={<span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>DOKUMEN INVESTIGASI PENDUKUNG (MAKS 10 BERKAS)</span>}
                         style={cardStyle}
                         styles={{
                             header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
@@ -705,22 +714,27 @@ export default function InvestigationReportModal({
                                 onClick={() => onFinish(form, "submitted")}
                                 loading={loading}
                                 style={{
-                                    background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                                    background: isDarkMode ? "#3b82f6" : "#2563eb",
                                     border: "none",
                                     fontWeight: 700,
                                     borderRadius: 10,
                                     padding: "0 40px",
                                     height: 40,
-                                    boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.2)"
+                                    boxShadow: isDarkMode ? "0 4px 12px rgba(59, 130, 246, 0.3)" : "0 4px 12px rgba(37, 99, 235, 0.25)"
                                 }}
                             >
-                                Kirim Penyelidikan (Submit)
+                                Simpan
                             </Button>
                         </>
                     )}
                 </div>
 
             </div>
+            <style>{`
+                .ant-input, .ant-select-selector, .ant-picker {
+                    border-radius: 10px !important;
+                }
+            `}</style>
         </Modal>
     );
 }

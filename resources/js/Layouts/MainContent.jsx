@@ -6,7 +6,8 @@ export default function MainContent({ children, isMobile }) {
     return (
         <Content
             style={{
-                margin: isMobile ? "12px" : "24px",
+                padding: isMobile ? "16px" : "24px",
+                margin: 0,
                 display: "flex",
                 flexDirection: "column",
                 flex: "1 0 auto",

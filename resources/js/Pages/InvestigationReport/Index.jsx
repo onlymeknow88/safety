@@ -1,19 +1,20 @@
-import React from "react";
-import { Head } from "@inertiajs/react";
-import { Button, Space, Card, Row, Col, Statistic } from "antd";
+import { Button, Card, Col, Row, Space, Statistic } from "antd";
 import {
-    ReloadOutlined,
-    FileSearchOutlined,
+    CheckCircleOutlined,
     ClockCircleOutlined,
-    CheckCircleOutlined
+    FileSearchOutlined,
+    ReloadOutlined
 } from "@ant-design/icons";
+
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { useTheme } from "@/Contexts/ThemeContext";
-import useInvestigationReport from "./Hooks/useInvestigationReport";
-import InvestigationReportModal from "./Partials/InvestigationReportModal";
-import InvestigationReportHeader from "./Partials/InvestigationReportHeader";
-import InvestigationReportTable from "./Partials/InvestigationReportTable";
 import DeleteConfirmModal from "@/Components/DeleteConfirmModal";
+import { Head } from "@inertiajs/react";
+import InvestigationReportHeader from "./Partials/InvestigationReportHeader";
+import InvestigationReportModal from "./Partials/InvestigationReportModal";
+import InvestigationReportTable from "./Partials/InvestigationReportTable";
+import React from "react";
+import useInvestigationReport from "./Hooks/useInvestigationReport";
+import { useTheme } from "@/Contexts/ThemeContext";
 
 export default function InvestigationReportIndex({ investigationReports = [], approvedNotifications = [], master = {} }) {
     const { isDarkMode } = useTheme();
@@ -48,6 +49,22 @@ export default function InvestigationReportIndex({ investigationReports = [], ap
     const totalLPKL = data.filter(r => r.report_type === 'LPKL').length;
     const totalPending = data.filter(r => r.investigation_status !== 'Completed').length;
     const totalCompleted = data.filter(r => r.investigation_status === 'Completed').length;
+
+    React.useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const notificationId = urlParams.get("accident_notification_id");
+        if (notificationId && approvedNotifications.length > 0) {
+            const notif = approvedNotifications.find(n => String(n.id) === String(notificationId));
+            if (notif) {
+                // Clear the query parameter from URL without reloading
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+                
+                // Open the modal
+                handleAdd(notif);
+            }
+        }
+    }, [approvedNotifications, handleAdd]);
 
     // Form submission wrapper
     const onModalFinish = async (form, statusIntent) => {
@@ -98,7 +115,7 @@ export default function InvestigationReportIndex({ investigationReports = [], ap
                 </Row>
 
                 {/* Metrics Cards */}
-                <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>
+                {/* <Row gutter={[20, 20]} style={{ marginBottom: 32 }}>
                     <Col xs={12} sm={6}>
                         <Card bordered={false} style={{ ...cardStyle, background: isDarkMode ? '#1e293b' : '#ffffff' }} styles={{ body: { padding: 24 } }}>
                             <Statistic
@@ -139,7 +156,7 @@ export default function InvestigationReportIndex({ investigationReports = [], ap
                             />
                         </Card>
                     </Col>
-                </Row>
+                </Row> */}
 
                 <Row gutter={[24, 24]}>
                     {/* Main Table Section */}
