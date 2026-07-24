@@ -57,6 +57,39 @@ class AccidentNotificationController extends Controller
     }
 
     /**
+     * GET /api/accident-notification/approved-for-investigation
+     * Mengembalikan daftar notifikasi yang statusnya Approved atau In Investigation
+     * untuk digunakan sebagai dropdown saat membuat/edit Investigation Report
+     */
+    public function approvedForInvestigation(Request $request)
+    {
+        $user = auth('api')->user();
+
+        $isCrs = $user && (
+            $user->hasRole('crs', 'CRS', 'superadmin', 'super-admin', 'admin', 'hse admin', 'hse_admin') ||
+            ($user->employee && $user->employee->can_approve)
+        );
+
+        $approvedStatusId       = \App\Models\MasterData\Status::where('name', 'Approved')->value('id') ?? 9;
+        $inInvestigationStatusId = \App\Models\MasterData\Status::where('name', 'In Investigation')->value('id') ?? 3;
+
+        $query = AccidentNotification::with([
+            'ccow', 'company', 'location', 'incidentType',
+            'photos', 'department', 'companyContractor',
+            'reporter', 'approver', 'status', 'day',
+        ])
+        ->whereIn('status_id', [$approvedStatusId, $inInvestigationStatusId])
+        ->when(!$isCrs && $user && $user->employee_id, function ($q) use ($user) {
+            $q->where('company_id', $user->employee->company_id);
+        })
+        ->latest();
+
+        $data = $query->get();
+
+        return SafetyResponse::success($data, 'Berhasil mengambil daftar notifikasi untuk investigasi');
+    }
+
+    /**
      * POST /api/accident-notification
      */
     public function store(Request $request)

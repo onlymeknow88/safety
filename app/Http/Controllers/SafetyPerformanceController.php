@@ -52,8 +52,10 @@ class SafetyPerformanceController extends Controller
             return redirect()->back()->with('error', 'Template file tidak ditemukan.');
         }
 
-        // Load spreadsheet
-        $spreadsheet = IOFactory::load($templatePath);
+        // Load spreadsheet dengan menyertakan chart agar template tidak corrupt
+        $reader = IOFactory::createReaderForFile($templatePath);
+        $reader->setIncludeCharts(true);
+        $spreadsheet = $reader->load($templatePath);
         $sheet = $spreadsheet->getSheetByName('Safety Performance');
 
         if (!$sheet) {
@@ -133,12 +135,22 @@ class SafetyPerformanceController extends Controller
             }
         }
 
+        // Hapus semua sheet selain 'Safety Performance'
+        foreach ($spreadsheet->getSheetNames() as $sheetName) {
+            if ($sheetName !== 'Safety Performance') {
+                $spreadsheet->removeSheetByIndex(
+                    $spreadsheet->getIndex($spreadsheet->getSheetByName($sheetName))
+                );
+            }
+        }
+
         // Tulis output ke file temporary
         $fileName = "Safety_Performance_Report_{$tahun}.xlsx";
         $tempFile = tempnam(sys_get_temp_dir(), 'excel');
 
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
-        $writer->setPreCalculateFormulas(true); // Hitung formula agar ketika dibuka nilainya sudah ter-update
+        $writer->setIncludeCharts(true); // Sertakan chart pada file output agar tidak corrupt
+        $writer->setPreCalculateFormulas(false); // Serahkan perhitungan formula ke Excel saat dibuka untuk mencegah file corrupt
         $writer->save($tempFile);
 
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);

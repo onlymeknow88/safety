@@ -403,7 +403,7 @@ export default function useAccidentNotification(master = {}) {
             if (values.bcc && values.bcc.length > 0) fd.append('bcc', values.bcc.join(','));
             fd.append('subject', values.subject);
             fd.append('body', values.body);
-            
+
             if (values.attachments) {
                 values.attachments.forEach(file => {
                     if (file.originFileObj) {
@@ -429,9 +429,9 @@ export default function useAccidentNotification(master = {}) {
                 return true;
             }
         } catch (error) {
-            notification.error({ 
-                message: "Gagal mengirim email", 
-                description: error.response?.data?.message || "Terjadi kesalahan pada server." 
+            notification.error({
+                message: "Gagal mengirim email",
+                description: error.response?.data?.message || "Terjadi kesalahan pada server."
             });
         } finally {
             setLoading(false);
@@ -911,6 +911,35 @@ export default function useAccidentNotification(master = {}) {
     useEffect(() => {
         fetchItems();
     }, [pagination.pageIndex, pagination.pageSize, companyFilter, ccowFilter]);
+
+    // Auto-open detail modal jika ada ?open_id di URL (dari halaman Approval Queue)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const openId = params.get('open_id');
+        if (!openId) return;
+
+        // Fetch detail record langsung via API
+        const token = TokenManager.getToken();
+        axios({
+            method: 'GET',
+            url: `/api/accident-notification/${openId}`,
+            headers: {
+                Authorization: 'Bearer ' + token,
+                Accept: 'application/json',
+            },
+        }).then((res) => {
+            if (res.data?.meta?.status === 'success') {
+                const record = res.data.result;
+                handleDetail(record);
+                // Bersihkan query param dari URL tanpa reload
+                const url = new URL(window.location.href);
+                url.searchParams.delete('open_id');
+                window.history.replaceState({}, '', url.toString());
+            }
+        }).catch(() => {
+            // Jika gagal fetch, abaikan saja
+        });
+    }, []);
 
     return {
         table,

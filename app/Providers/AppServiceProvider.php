@@ -23,9 +23,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Vite::prefetch(concurrency: 3);
 
-        if (env('APP_ENV') !== 'local') {
-            URL::forceScheme('https');
-        }
+        // if (env('APP_ENV') !== 'local') {
+        //     URL::forceScheme('https');
+        // }
 
         // Register safety performance observers
         \App\Models\AccidentNotification::observe(\App\Observers\AccidentNotificationObserver::class);

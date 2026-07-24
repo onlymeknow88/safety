@@ -113,8 +113,8 @@ export default function SafetyPerformanceIndex({ filters = {} }) {
         boxShadow: isDarkMode ? "0 10px 15px -3px rgba(0,0,0,0.3)" : "0 10px 15px -3px rgba(0,0,0,0.05)"
     };
 
-    // Chart Data config
-    const chartData = {
+    // FR Chart Data config
+    const frChartData = {
         labels: monthNames,
         datasets: [
             {
@@ -143,18 +143,18 @@ export default function SafetyPerformanceIndex({ filters = {} }) {
                 fill: false,
             },
             {
-                label: "MTD LTI-SR (Severity)",
-                data: kpiData.map(row => row.last_synced_at === null ? 0 : (row.mtd_lti_sr || 0)),
-                borderColor: "#f59e0b",
-                backgroundColor: "rgba(245, 158, 11, 0.1)",
+                label: "YTD LTI-FR",
+                data: kpiData.map(row => row.last_synced_at === null ? 0 : (row.ytd_lti_fr || 0)),
+                borderColor: "#ef4444",
+                backgroundColor: "rgba(239, 68, 68, 0.1)",
                 tension: 0.3,
                 fill: false,
-                yAxisID: "y1",
+                borderDash: [5, 5],
             }
         ]
     };
 
-    const chartOptions = {
+    const frChartOptions = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -193,18 +193,69 @@ export default function SafetyPerformanceIndex({ filters = {} }) {
                 ticks: {
                     color: isDarkMode ? "#94a3b8" : "#64748b"
                 }
+            }
+        }
+    };
+
+    // SR Chart Data config
+    const srChartData = {
+        labels: monthNames,
+        datasets: [
+            {
+                label: "MTD LTI-SR",
+                data: kpiData.map(row => row.last_synced_at === null ? 0 : (row.mtd_lti_sr || 0)),
+                borderColor: "#f59e0b",
+                backgroundColor: "rgba(245, 158, 11, 0.1)",
+                tension: 0.3,
+                fill: true,
             },
-            y1: {
+            {
+                label: "YTD LTI-SR",
+                data: kpiData.map(row => row.last_synced_at === null ? 0 : (row.ytd_lti_sr || 0)),
+                borderColor: "#f59e0b",
+                backgroundColor: "rgba(245, 158, 11, 0.1)",
+                tension: 0.3,
+                fill: false,
+                borderDash: [5, 5],
+            }
+        ]
+    };
+
+    const srChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    color: isDarkMode ? "#fff" : "#0f172a"
+                }
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    color: isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"
+                },
+                ticks: {
+                    color: isDarkMode ? "#94a3b8" : "#64748b"
+                }
+            },
+            y: {
                 type: 'linear',
                 display: true,
-                position: 'right',
+                position: 'left',
                 title: {
                     display: true,
                     text: 'Severity Rate (SR)',
                     color: isDarkMode ? "#94a3b8" : "#64748b"
                 },
                 grid: {
-                    drawOnChartArea: false,
+                    color: isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"
                 },
                 ticks: {
                     color: isDarkMode ? "#94a3b8" : "#64748b"
@@ -612,12 +663,28 @@ export default function SafetyPerformanceIndex({ filters = {} }) {
                         cardStyle={cardStyle}
                     />
 
-                    <SafetyPerformanceChart
-                        chartData={chartData}
-                        chartOptions={chartOptions}
-                        cardStyle={cardStyle}
-                        isDarkMode={isDarkMode}
-                    />
+                    <div style={{ 
+                        display: "grid", 
+                        gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 500px), 1fr))", 
+                        gap: "24px", 
+                        marginBottom: "32px" 
+                    }}>
+                        <SafetyPerformanceChart
+                            title="Tren Frequency Rate (FR) Bulanan (MTD vs YTD)"
+                            chartData={frChartData}
+                            chartOptions={frChartOptions}
+                            cardStyle={cardStyle}
+                            isDarkMode={isDarkMode}
+                        />
+
+                        <SafetyPerformanceChart
+                            title="Tren Severity Rate (SR) Bulanan (MTD vs YTD)"
+                            chartData={srChartData}
+                            chartOptions={srChartOptions}
+                            cardStyle={cardStyle}
+                            isDarkMode={isDarkMode}
+                        />
+                    </div>
 
                     <SafetyPerformanceTable
                         kpiData={kpiData}

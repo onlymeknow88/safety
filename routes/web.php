@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\EmailGroupController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\ApprovalQueueController;
 use App\Http\Controllers\Auth\AzureAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SafetyPerformanceController;
@@ -260,11 +261,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             $reports = $query->latest()->get();
 
+            $approvedStatusId = \App\Models\MasterData\Status::where('name', 'Approved')->value('id') ?? 9;
+            $inInvestigationStatusId = \App\Models\MasterData\Status::where('name', 'In Investigation')->value('id') ?? 3;
             $approvedNotificationsQuery = AccidentNotification::with([
                 'ccow', 'company', 'location', 'incidentType', 'photos', 'department',
                 'companyContractor', 'reporter', 'approver', 'status', 'day',
             ])
-                ->where('status_id', 7); // 7 is Approved
+                // Tampilkan yang Approved (belum ada LPKS/LPKL) ATAU In Investigation (sudah ada LPKS/LPKL, untuk edit)
+                ->whereIn('status_id', [$approvedStatusId, $inInvestigationStatusId]);
 
             if (! $isCrs && $user && $user->employee_id) {
                 $approvedNotificationsQuery->where('company_id', $user->employee->company_id);
@@ -306,6 +310,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [SafetyPerformanceController::class, 'index'])->name('index');
         Route::get('/export', [SafetyPerformanceController::class, 'export'])->name('export');
     });
+
+    // Approval Queue - Dashboard Approval
+    Route::get('/approval-queue', [ApprovalQueueController::class, 'index'])->name('approval-queue.index');
 
     // Master Data Employee (API for Select2/Autocomplete)
     Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');

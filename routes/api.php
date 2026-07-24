@@ -80,12 +80,13 @@ Route::middleware('auth:api')->name('api.')->group(function () {
     Route::apiResource('employee', EmployeeController::class);
     Route::apiResource('mobile-equipment', MobileEquipmentController::class);
 
-    // Accident Notification
-    Route::post('accident-notification/{id}/approve', [AccidentNotificationController::class, 'approve']);
-    Route::post('accident-notification/{id}/return', [AccidentNotificationController::class, 'return']);
+    // Accident Notification — custom routes HARUS sebelum apiResource
+    Route::get('accident-notification/approved-for-investigation', [AccidentNotificationController::class, 'approvedForInvestigation']);
     Route::post('accident-notification/send-email', [AccidentNotificationController::class, 'sendEmail']);
     Route::get('accident-notification/{id}/export-pdf', [AccidentNotificationController::class, 'exportPdf']);
     Route::delete('accident-notification/{id}/photos/{photoId}', [AccidentNotificationController::class, 'destroyPhoto']);
+    Route::post('accident-notification/{id}/approve', [AccidentNotificationController::class, 'approve']);
+    Route::post('accident-notification/{id}/return', [AccidentNotificationController::class, 'return']);
     Route::apiResource('email-groups', \App\Http\Controllers\Admin\Api\EmailGroupController::class);
     Route::apiResource('accident-notification', AccidentNotificationController::class);
 
