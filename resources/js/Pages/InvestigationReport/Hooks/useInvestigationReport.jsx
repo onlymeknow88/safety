@@ -28,7 +28,7 @@ export default function useInvestigationReport(initialReports = []) {
     const canCreate = hasFullAccess;
     const canEdit = hasFullAccess;
     const canDelete = hasFullAccess;
-    
+
     // Check if user is an approver at any level
     const canApprove = isAdministrator || auth?.user?.can_approve || userRoles.includes("ktt") || userRoles.includes("ohs_dh") || userRoles.includes("env_dh") || userRoles.includes("pja") || userRoles.includes("crs");
 
@@ -48,6 +48,31 @@ export default function useInvestigationReport(initialReports = []) {
     });
     const [totalRows, setTotalRows] = useState(initialReports.length);
     const debounceRef = useRef(null);
+
+    // Approved notifications untuk dropdown (fetch via API)
+    const [approvedNotifications, setApprovedNotifications] = useState([]);
+    const [loadingNotifications, setLoadingNotifications] = useState(false);
+
+    const fetchApprovedNotifications = useCallback(async () => {
+        setLoadingNotifications(true);
+        try {
+            const res = await axios({
+                method: 'GET',
+                url: '/api/accident-notification/approved-for-investigation',
+                headers: {
+                    Authorization: 'Bearer ' + TokenManager.getToken(),
+                    Accept: 'application/json',
+                },
+            });
+            if (res.data?.meta?.status === 'success') {
+                setApprovedNotifications(res.data.result || []);
+            }
+        } catch (error) {
+            // silent fail — dropdown akan kosong
+        } finally {
+            setLoadingNotifications(false);
+        }
+    }, []);
 
     // Modal & CRUD States
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -769,6 +794,39 @@ export default function useInvestigationReport(initialReports = []) {
         fetchItems();
     }, [pagination.pageIndex, pagination.pageSize]);
 
+    // Fetch approved notifications saat hook mount
+    useEffect(() => {
+        fetchApprovedNotifications();
+    }, [fetchApprovedNotifications]);
+
+    // Auto-open detail modal jika ada ?open_id di URL (dari halaman Approval Queue)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const openId = params.get('open_id');
+        if (!openId) return;
+
+        const token = TokenManager.getToken();
+        axios({
+            method: 'GET',
+            url: `/api/investigation-report/${openId}`,
+            headers: {
+                Authorization: 'Bearer ' + token,
+                Accept: 'application/json',
+            },
+        }).then((res) => {
+            if (res.data?.meta?.status === 'success') {
+                const record = res.data.result;
+                handleDetail(record);
+                // Bersihkan query param dari URL tanpa reload
+                const url = new URL(window.location.href);
+                url.searchParams.delete('open_id');
+                window.history.replaceState({}, '', url.toString());
+            }
+        }).catch(() => {
+            // Jika gagal fetch, abaikan saja
+        });
+    }, []);
+
     return {
         table,
         data,
@@ -794,7 +852,10 @@ export default function useInvestigationReport(initialReports = []) {
         totalRows,
         fetchItems,
         resetForm,
-        
+        approvedNotifications,
+        fetchApprovedNotifications,
+        loadingNotifications,
+
         // Form states
         selectedNotification,
         setSelectedNotification,

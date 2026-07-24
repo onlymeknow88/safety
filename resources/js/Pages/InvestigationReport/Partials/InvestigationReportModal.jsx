@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import {
     Modal, Form, Row, Col, Select, Switch, Input, Button, Card,
-    Tag, Space, Divider, Empty, Descriptions, Avatar, Typography, Checkbox, Drawer, Grid
+    Tag, Space, Divider, Empty, Descriptions, Typography, Checkbox, Grid,
+    Steps, Alert, Tooltip, Badge
 } from "antd";
 import {
     FileSearchOutlined,
@@ -9,7 +10,13 @@ import {
     UserOutlined,
     BookOutlined,
     FileImageOutlined,
-    CheckCircleOutlined
+    CheckCircleOutlined,
+    SafetyOutlined,
+    AuditOutlined,
+    PaperClipOutlined,
+    NodeIndexOutlined,
+    FileTextOutlined,
+    WarningOutlined
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { usePage } from "@inertiajs/react";
@@ -79,6 +86,11 @@ export default function InvestigationReportModal({
     const isEdit = mode === "edit";
     const isAdd = mode === "add";
 
+    const getStatusColor = (status) => {
+        const map = { Completed: '#10b981', Returned: '#ef4444', Draft: '#f59e0b' };
+        return map[status] || '#3b82f6';
+    };
+
     const {
         selectedNotification,
         setSelectedNotification,
@@ -134,28 +146,26 @@ export default function InvestigationReportModal({
     // Reset or populate form values on visible changes
     useEffect(() => {
         if (visible) {
-            if (initialValues) {
+            if (initialValues && !isAdd) {
+                // Mode edit/detail — populate dari initialValues
                 form.setFieldsValue({
-                    ...initialValues,
                     accident_notification_id: initialValues.accident_notification_id,
-                    report_type: initialValues.report_type
+                    report_type: initialValues.report_type,
                 });
             } else {
+                // Mode add — selalu reset bersih
                 form.resetFields();
-                if (selectedNotification) {
-                    form.setFieldsValue({
-                        accident_notification_id: selectedNotification.id,
-                        report_type: selectedNotification.lpks_lpkl || "LPKS"
-                    });
-                } else {
-                    if (resetForm) resetForm();
-                }
+                form.setFieldsValue({
+                    accident_notification_id: undefined,
+                    report_type: undefined,
+                });
+                if (resetForm) resetForm();
             }
         } else {
             form.resetFields();
             if (resetForm) resetForm();
         }
-    }, [visible, initialValues]);
+    }, [visible, initialValues, isAdd]);
 
     // Reset action modal states on close
     useEffect(() => {
@@ -244,18 +254,24 @@ export default function InvestigationReportModal({
             value: n.id
         }));
 
-        const currentNotif = selectedNotification || initialValues?.accident_notification;
-        if (currentNotif) {
-            const hasNotif = opts.some(opt => opt.value === currentNotif.id);
-            if (!hasNotif) {
-                opts.push({
-                    label: `${currentNotif.notification_number || currentNotif.accident_number || ('No. Notif ' + currentNotif.id)} - ${currentNotif.incident_title || '(Tanpa Judul)'}`,
-                    value: currentNotif.id
-                });
+        // Saat mode edit/detail, pastikan notifikasi yang dipilih ada di list
+        // meskipun tidak ada di approvedNotifications (sudah In Investigation)
+        if (!isAdd) {
+            const currentNotif = selectedNotification || initialValues?.accident_notification;
+            if (currentNotif && currentNotif.id && currentNotif.notification_number) {
+                const hasNotif = opts.some(opt => opt.value === currentNotif.id);
+                if (!hasNotif) {
+                    opts.push({
+                        label: `${currentNotif.notification_number} - ${currentNotif.incident_title || '(Tanpa Judul)'}`,
+                        value: currentNotif.id
+                    });
+                }
             }
         }
         return opts;
-    }, [approvedNotifications, initialValues, selectedNotification]);
+    }, [approvedNotifications, initialValues, selectedNotification, isAdd]);
+
+    const statusColor = getStatusColor(initialValues?.investigation_status);
 
     return (
         <Modal
@@ -263,61 +279,94 @@ export default function InvestigationReportModal({
             open={visible}
             onCancel={onCancel}
             footer={null}
-            width={1200}
-            style={{ top: 20 }}
-            styles={{ body: { padding: '32px 24px' }, content: { borderRadius: '20px' } }}
+            width={1280}
+            style={{ top: 16 }}
+            styles={{ body: { padding: 0 }, content: { borderRadius: 24, overflow: 'hidden' } }}
             destroyOnClose
             centered
         >
-            <div style={{ padding: "0 8px", userSelect: (isDetail && initialValues?.investigation_status === 'Completed') ? 'none' : 'auto' }}>
-                {/* Header Title Section */}
-                <Row justify="space-between" align="middle" style={{ marginBottom: 32, borderBottom: `2px solid ${isDarkMode ? "#334155" : "#f1f5f9"}`, paddingBottom: 24 }}>
-                    <Col>
-                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                            <h1 style={{
-                                margin: 0,
-                                fontWeight: 900,
-                                fontSize: 28,
-                                letterSpacing: "-0.02em",
-                                color: isDarkMode ? "#f8fafc" : "#0f172a"
-                            }}>
-                                {getTitle()} LAPORAN PENYELIDIKAN
-                            </h1>
-                            {initialValues?.investigation_status && (
-                                <Tag color={initialValues.investigation_status === "Completed" ? "green" : "orange"} style={{ borderRadius: 6, fontWeight: 800, padding: "4px 12px" }}>
-                                    {initialValues.investigation_status.toUpperCase()}
-                                </Tag>
-                            )}
-                        </div>
-                    </Col>
-                    <Col style={{ textAlign: "right" }}>
-                        <div style={{ color: "#3b82f6", fontSize: 13, fontWeight: 900 }}>
-                            F-MAC-IMS-14-002 Rev. 2.0
-                        </div>
-                        {initialValues?.report_number && (
-                            <div style={{ color: isDarkMode ? "#f8fafc" : "#1e293b", fontSize: 16, fontWeight: 900, marginTop: 4 }}>
-                                {initialValues.report_number}
-                            </div>
-                        )}
-                    </Col>
-                </Row>
+            <div style={{ userSelect: (isDetail && initialValues?.investigation_status === 'Completed') ? 'none' : 'auto' }}>
 
-                {/* Header Action Buttons */}
-                {!isCompleted && userCanAct && isDetail && (
-                    <div style={{ marginBottom: 24, display: 'flex', gap: 12 }}>
-                        <Button 
-                            style={{ borderRadius: 10, borderColor: '#f59e0b', color: '#d97706', fontWeight: 700 }}
-                            onClick={() => { setActionType('return'); setIsActionModalOpen(true); }}
-                        >
-                            Return for Correction
-                        </Button>
-                        <Button 
-                            type="primary" 
-                            style={{ borderRadius: 10, background: '#10b981', border: 'none', fontWeight: 700 }}
-                            onClick={() => { setActionType('approve'); setIsActionModalOpen(true); }}
-                        >
-                            Approve Now
-                        </Button>
+                {/* ── HEADER ──────────────────────────────────────────────── */}
+                <div style={{
+                    background: isDarkMode ? '#1e293b' : '#ffffff',
+                    padding: '20px 28px 16px',
+                    borderBottom: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
+                }}>
+                    <Row justify="space-between" align="middle" wrap={false}>
+                        <Col flex="auto">
+                            <Space size={12} align="center">
+                                <div style={{
+                                    width: 40, height: 40, borderRadius: 10,
+                                    background: 'rgba(255,255,255,0.15)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                    <SafetyOutlined style={{ fontSize: 20, color: '#fff' }} />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: isDarkMode ? '#94a3b8' : '#64748b', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                                        F-MAC-IMS-14-002 Rev. 2.0
+                                    </div>
+                                    <div style={{ fontSize: 20, fontWeight: 900, color: isDarkMode ? '#f8fafc' : '#0f172a', letterSpacing: '-0.5px' }}>
+                                        {getTitle()} LAPORAN PENYELIDIKAN
+                                    </div>
+                                </div>
+                            </Space>
+                        </Col>
+                        <Col>
+                            <Space direction="vertical" size={4} align="end">
+                                {initialValues?.report_number && (
+                                    <span style={{ fontSize: 14, fontWeight: 900, color: isDarkMode ? '#f8fafc' : '#0f172a' }}>
+                                        {initialValues.report_number}
+                                    </span>
+                                )}
+                                {initialValues?.investigation_status && (
+                                    <Tag style={{
+                                        background: statusColor + '20',
+                                        border: `1.5px solid ${statusColor}`,
+                                        color: statusColor, borderRadius: 6,
+                                        fontWeight: 800, padding: '2px 10px', margin: 0,
+                                    }}>
+                                        {initialValues.investigation_status.toUpperCase()}
+                                    </Tag>
+                                )}
+                                {initialValues?.report_type && (
+                                    <Tag color={initialValues.report_type === 'LPKL' ? 'red' : 'blue'}
+                                        style={{ fontWeight: 800, borderRadius: 6, margin: 0 }}>
+                                        {initialValues.report_type}
+                                    </Tag>
+                                )}
+                            </Space>
+                        </Col>
+                    </Row>
+
+                    {/* Approve/Return buttons di header */}
+                    {!isCompleted && userCanAct && isDetail && (
+                        <Space style={{ marginTop: 12 }} size={8}>
+                            <Button size="middle"
+                                style={{ borderRadius: 8, fontWeight: 700, borderColor: '#f59e0b', color: '#d97706' }}
+                                onClick={() => { setActionType('return'); setIsActionModalOpen(true); }}
+                            >
+                                ↩ Return for Correction
+                            </Button>
+                            <Button size="middle" type="primary"
+                                style={{ borderRadius: 8, fontWeight: 700, background: '#10b981', border: 'none' }}
+                                onClick={() => { setActionType('approve'); setIsActionModalOpen(true); }}
+                            >
+                                ✓ Approve — {getLevelLabel(currentLevel)}
+                            </Button>
+                        </Space>
+                    )}
+                </div>
+
+                {/* Returned banner */}
+                {initialValues?.investigation_status === 'Returned' && (
+                    <div style={{ padding: '12px 28px 0' }}>
+                        <Alert type="error" showIcon
+                            message="Laporan dikembalikan untuk diperbaiki"
+                            description="Periksa komentar di tab Approval, perbaiki laporan, lalu kirim ulang."
+                            style={{ borderRadius: 10 }}
+                        />
                     </div>
                 )}
 
@@ -360,7 +409,7 @@ export default function InvestigationReportModal({
                         <Button onClick={() => setIsActionModalOpen(false)} style={{ borderRadius: 10 }}>
                             Batal
                         </Button>
-                        <Button 
+                        <Button
                             type="primary"
                             danger={actionType === 'return'}
                             disabled={actionType === 'approve' && currentLevel !== "ENV_DH" && !tickBox}
@@ -373,11 +422,11 @@ export default function InvestigationReportModal({
                                 setIsActionModalOpen(false);
                             }}
                             loading={loading}
-                            style={{ 
-                                background: actionType === 'approve' ? ((currentLevel !== "ENV_DH" && !tickBox) ? undefined : "linear-gradient(135deg, #059669 0%, #10b981 100%)") : undefined, 
-                                border: actionType === 'approve' ? "none" : undefined, 
-                                borderRadius: 10, 
-                                fontWeight: 700, 
+                            style={{
+                                background: actionType === 'approve' ? ((currentLevel !== "ENV_DH" && !tickBox) ? undefined : "linear-gradient(135deg, #059669 0%, #10b981 100%)") : undefined,
+                                border: actionType === 'approve' ? "none" : undefined,
+                                borderRadius: 10,
+                                fontWeight: 700,
                                 padding: "0 24px"
                             }}
                         >
@@ -386,16 +435,15 @@ export default function InvestigationReportModal({
                     </Space>
                 </Modal>
 
+                {/* ── SCROLLABLE BODY ─────────────────────────────────── */}
+                <div style={{ padding: '20px 28px', maxHeight: '68vh', overflowY: 'auto' }}>
                 <Form form={form} layout="vertical" disabled={isDetail}>
 
-                    {/* SECTION 1: Pilih Notifikasi Kecelakaan (Form Input / Dropdown) */}
+                    {/* SECTION 1: Notifikasi */}
                     <Card
-                        title={<span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>PILIH NOTIFIKASI KECELAKAAN</span>}
+                        title={<Space><FileSearchOutlined style={{ color: '#3b82f6' }} /><span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800 }}>PILIH NOTIFIKASI KECELAKAAN</span></Space>}
                         style={cardStyle}
-                        styles={{
-                            header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
-                            body: { padding: "24px" }
-                        }}
+                        styles={{ header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px' }, body: { padding: '24px' } }}
                     >
                         <Row gutter={24}>
                             <Col xs={24} md={12}>
@@ -430,15 +478,11 @@ export default function InvestigationReportModal({
                         </Row>
                     </Card>
 
-                    {/* SECTION 2: Tampilkan Data Ter-Populate (Read Only) */}
                     {selectedNotification && (
                         <Card
-                            title={<span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>RINGKASAN DATA NOTIFIKASI KECELAKAAN (AUTO-POPULATE)</span>}
+                            title={<Space><CheckCircleOutlined style={{ color: '#10b981' }} /><span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800 }}>RINGKASAN NOTIFIKASI (AUTO-POPULATE)</span></Space>}
                             style={cardStyle}
-                            styles={{
-                                header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
-                                body: { padding: "24px" }
-                            }}
+                            styles={{ header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px' }, body: { padding: '24px' } }}
                         >
                             <Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }} size="middle">
                                 <Descriptions.Item label="Judul Insiden" span={2}>
@@ -492,7 +536,7 @@ export default function InvestigationReportModal({
                                     <div style={{ padding: "16px", background: isDarkMode ? "#0f172a" : "#f8fafc", borderRadius: 12, border: `1px solid ${isDarkMode ? "#334155" : "#e2e8f0"}`, height: "170px", overflowY: "auto" }}>
                                         <div style={{ fontWeight: 800, fontSize: 12, color: "#3b82f6", marginBottom: 6 }}>KRONOLOGI AWAL:</div>
                                         <p style={{ margin: "0 0 16px 0", fontSize: 13, lineHeight: 1.6 }}>{selectedNotification.initial_chronology || "-"}</p>
- 
+
                                         <div style={{ fontWeight: 800, fontSize: 12, color: "#ef4444", marginBottom: 6 }}>FAKTA-FAKTA LAPANGAN:</div>
                                         <ul style={{ paddingLeft: 16, margin: 0, fontSize: 13, lineHeight: 1.6 }}>
                                             {(selectedNotification.incident_facts || []).map((fact, idx) => (
@@ -537,9 +581,8 @@ export default function InvestigationReportModal({
                         </Card>
                     )}
 
-                    {/* SECTION 3: Faktor Spesifik & Dampak Korban */}
-                    {selectedNotification && (
-                        <IncidentSpecificFactorsSection
+                    {/* SECTION 2: Faktor & Dampak */}
+                    {selectedNotification && <IncidentSpecificFactorsSection
                             disabled={isDetail}
                             isDarkMode={isDarkMode}
                             master={master}
@@ -563,12 +606,10 @@ export default function InvestigationReportModal({
                             setActualCost={setActualCost}
                             potentialCost={potentialCost}
                             setPotentialCost={setPotentialCost}
-                        />
-                    )}
+                        />}
 
-                    {/* SECTION 4: Analisa Akar Masalah (RCA) & Checklist */}
-                    {selectedNotification && (
-                        <RootCauseFactorsSection
+                    {/* SECTION 3: Analisa RCA */}
+                    {selectedNotification && <RootCauseFactorsSection
                             disabled={isDetail}
                             isDarkMode={isDarkMode}
                             master={master}
@@ -586,18 +627,14 @@ export default function InvestigationReportModal({
                             setInvestigationChecklist={setInvestigationChecklist}
                             correctiveActions={correctiveActions}
                             setCorrectiveActions={setCorrectiveActions}
-                        />
-                    )}
+                        />}
 
-                    {/* SECTION 5: Narasi & Kesimpulan Penyelidikan */}
+                    {/* SECTION 4: Narasi */}
                     {selectedNotification && (
                         <Card
-                            title={<span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>RINGKASAN NARASI INVESTIGASI</span>}
+                            title={<Space><FileTextOutlined style={{ color: '#8b5cf6' }} /><span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800 }}>RINGKASAN NARASI INVESTIGASI</span></Space>}
                             style={cardStyle}
-                            styles={{
-                                header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
-                                body: { padding: "24px" }
-                            }}
+                            styles={{ header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px' }, body: { padding: '24px' } }}
                         >
                             <Row gutter={24} style={{ marginBottom: 16 }}>
                                 <Col span={24}>
@@ -659,28 +696,26 @@ export default function InvestigationReportModal({
                                     </Form.Item>
                                 </Col>
                             </Row>
+                                                </Card>
+                    )}
+
+                    {/* SECTION 5: Dokumen — hanya muncul setelah notifikasi dipilih */}
+                    {selectedNotification && (
+                        <Card
+                            title={<Space><PaperClipOutlined style={{ color: '#f59e0b' }} /><span style={{ fontSize: 14, color: isDarkMode ? '#f8fafc' : '#0f172a', fontWeight: 800 }}>DOKUMEN INVESTIGASI PENDUKUNG (MAKS 10 BERKAS)</span></Space>}
+                            style={cardStyle}
+                            styles={{ header: { borderBottom: isDarkMode ? '1px solid #334155' : '1px solid #f1f5f9', padding: '0 24px' }, body: { padding: '24px' } }}
+                        >
+                            <DocumentUploadSection
+                                fileList={fileList}
+                                setFileList={setFileList}
+                                disabled={isDetail}
+                                isDarkMode={isDarkMode}
+                            />
                         </Card>
                     )}
 
-
-                    {/* SECTION 5: Pendukung (Attachments) */}
-                    <Card
-                        title={<span style={{ fontSize: 14, color: isDarkMode ? "#f8fafc" : "#0f172a", fontWeight: 800 }}>DOKUMEN INVESTIGASI PENDUKUNG (MAKS 10 BERKAS)</span>}
-                        style={cardStyle}
-                        styles={{
-                            header: { borderBottom: isDarkMode ? "1px solid #334155" : "1px solid #f1f5f9", padding: "0 24px" },
-                            body: { padding: "24px" }
-                        }}
-                    >
-                        <DocumentUploadSection
-                            fileList={fileList}
-                            setFileList={setFileList}
-                            disabled={isDetail}
-                            isDarkMode={isDarkMode}
-                        />
-                    </Card>
-
-                    {/* SECTION 6: Multi-level Approval UI */}
+                    {/* SECTION 6: Approval Chain */}
                     {(isDetail || isEdit) && initialValues && (
                         <ApprovalChainSection
                             record={initialValues}
@@ -693,37 +728,30 @@ export default function InvestigationReportModal({
                     )}
 
                 </Form>
+                </div>{/* end scrollable body */}
 
-                {/* Footer Buttons */}
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, paddingTop: 40, borderTop: `1px solid ${isDarkMode ? "#334155" : "#e2e8f0"}`, marginBottom: 16 }}>
-                    <Button onClick={onCancel} style={{ borderRadius: 10, fontWeight: 700, padding: "0 24px", height: 40 }}>
-                        {isDetail ? "Tutup" : "Batal"}
+                {/* ── FOOTER ────────────────────────────────────────────── */}
+                <div style={{
+                    display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
+                    padding: '14px 28px', gap: 10,
+                    borderTop: `1px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`,
+                    background: isDarkMode ? '#1e293b' : '#f8fafc',
+                }}>
+                    <Button onClick={onCancel}
+                        style={{ borderRadius: 8, fontWeight: 700, height: 38 }}>
+                        {isDetail ? 'Tutup' : 'Batal'}
                     </Button>
-
                     {!isDetail && (
                         <>
-                            <Button
-                                onClick={() => onFinish(form, "draft")}
-                                loading={loading}
-                                style={{ borderRadius: 10, fontWeight: 700, padding: "0 24px", height: 40 }}
-                            >
+                            <Button onClick={() => onFinish(form, 'draft')} loading={loading}
+                                style={{ borderRadius: 8, fontWeight: 700, height: 38 }}>
                                 Simpan Draf
                             </Button>
-                            <Button
-                                type="primary"
-                                onClick={() => onFinish(form, "submitted")}
-                                loading={loading}
-                                style={{
-                                    background: isDarkMode ? "#3b82f6" : "#2563eb",
-                                    border: "none",
-                                    fontWeight: 700,
-                                    borderRadius: 10,
-                                    padding: "0 40px",
-                                    height: 40,
-                                    boxShadow: isDarkMode ? "0 4px 12px rgba(59, 130, 246, 0.3)" : "0 4px 12px rgba(37, 99, 235, 0.25)"
-                                }}
-                            >
-                                Simpan
+                            <Button type="primary" onClick={() => onFinish(form, 'submitted')} loading={loading}
+                                style={{ borderRadius: 8, fontWeight: 700, height: 38, padding: '0 24px',
+                                    background: 'linear-gradient(135deg,#2563eb,#3b82f6)', border: 'none',
+                                    boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}>
+                                Kirim Laporan
                             </Button>
                         </>
                     )}
@@ -733,6 +761,10 @@ export default function InvestigationReportModal({
             <style>{`
                 .ant-input, .ant-select-selector, .ant-picker {
                     border-radius: 10px !important;
+                }
+                .ant-modal-close {
+                    top: 18px !important;
+                    inset-inline-end: 20px !important;
                 }
             `}</style>
         </Modal>

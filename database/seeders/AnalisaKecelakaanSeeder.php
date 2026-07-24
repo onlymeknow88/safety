@@ -17,7 +17,7 @@ class AnalisaKecelakaanSeeder extends Seeder
         if (empty($companies)) {
             $companies = [1];
         }
-        
+
         $departments = DB::table('m_department')->where('is_active', true)->limit(5)->pluck('id')->toArray();
         if (empty($departments)) {
             $departments = [1];
@@ -61,8 +61,8 @@ class AnalisaKecelakaanSeeder extends Seeder
                 'date' => '2026-05-20',
                 'unit' => 'DT-5678',
                 'is_hpri' => false,
-                'status' => 'Draft',
-                'current_level' => 'KTT',
+                'status' => 'Waiting for PJA',
+                'current_level' => 'PJA',
                 'report_type' => 'LPKS',
                 'report_num' => '01/LPKS-LC/V/2026',
                 'lost_days' => 0,
@@ -84,7 +84,8 @@ class AnalisaKecelakaanSeeder extends Seeder
                         'recommendation_id' => 2
                     ]
                 ],
-                'approved' => false
+                'approved' => false,
+                'safe_draft' => false
             ],
             [
                 'id' => 3,
@@ -387,7 +388,7 @@ class AnalisaKecelakaanSeeder extends Seeder
                 'root_cause_analysis' => "Analisis akar penyebab kecelakaan unit {$inc['unit']}.",
                 'corrective_action_plan' => json_encode($inc['pica']),
                 'preventive_action' => 'Melakukan pencegahan dan pelatihan ulang pekerja.',
-                'safe_draft' => !$inc['approved'],
+                'safe_draft' => isset($inc['safe_draft']) ? $inc['safe_draft'] : !$inc['approved'],
                 'ktt_approved' => $inc['approved'],
                 'ohs_approved' => $inc['approved'],
                 'env_approved' => $inc['approved'] && ($inc['spill_qty'] > 0),
@@ -477,7 +478,7 @@ class AnalisaKecelakaanSeeder extends Seeder
             DB::table('accident_notifications')->where('id', $id)->delete();
         }
 
-        $statusId = DB::table('m_statuses')->where('name', 'Submitted')->value('id')
+        $statusId = DB::table('m_statuses')->where('name', 'Approved')->value('id')
             ?? DB::table('m_statuses')->where('name', 'Open')->value('id')
             ?? 1;
 

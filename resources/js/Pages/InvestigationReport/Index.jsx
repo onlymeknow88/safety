@@ -16,7 +16,7 @@ import React from "react";
 import useInvestigationReport from "./Hooks/useInvestigationReport";
 import { useTheme } from "@/Contexts/ThemeContext";
 
-export default function InvestigationReportIndex({ investigationReports = [], approvedNotifications = [], master = {} }) {
+export default function InvestigationReportIndex({ investigationReports = [], master = {} }) {
     const { isDarkMode } = useTheme();
 
     // Connect hook
@@ -41,7 +41,8 @@ export default function InvestigationReportIndex({ investigationReports = [], ap
         editingItem,
         totalRows,
         handleApprove,
-        handleReturn
+        handleReturn,
+        approvedNotifications,
     } = hook;
 
     // Calculate metrics
@@ -59,7 +60,7 @@ export default function InvestigationReportIndex({ investigationReports = [], ap
                 // Clear the query parameter from URL without reloading
                 const newUrl = window.location.pathname;
                 window.history.replaceState({}, document.title, newUrl);
-                
+
                 // Open the modal
                 handleAdd(notif);
             }
